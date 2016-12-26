@@ -1,0 +1,434 @@
+[[plugins]]
+repo = 'Shougo/dein.vim'
+
+
+# Code Completion
+
+
+[[plugins]]
+repo = 'Konfekt/FastFold'
+
+[[plugins]]
+repo = 'Shougo/deoplete.nvim'
+if = 'has("nvim")'
+on_i = 1
+hook_add = '''
+    let g:python_host_prog = expand('$HOME') . '/.pyenv/shims/python2'
+    let g:python3_host_prog = expand('$HOME') . '/.pyenv/shims/python3'
+    let g:deoplete#enable_at_startup = 1
+'''
+
+# python
+[[plugins]]
+repo = 'zchee/deoplete-jedi'
+on_ft = 'python'
+
+# swift
+[[plugins]]
+repo = 'landaire/deoplete-swift'
+on_ft = 'swift'
+hook_add = '''
+    if executable('brew') && !executable('sourcekitten')
+        execute '!brew install sourcekitten'
+    endif
+
+    let g:deoplete#sources#swift#daemon_autostart = 1
+'''
+
+
+# Run Script
+
+
+[[plugins]]
+repo = 'Shougo/vimproc.vim'
+hook_add = '''
+    if dein#util#_is_windows()
+        let cmd = 'tools\\update-dll-mingw'
+    elseif dein#util#_is_cygwin()
+        let cmd = 'make -f make_cygwin.mak'
+    elseif executable('gmake')
+        let cmd = 'gmake'
+    else
+        let cmd = 'make'
+    endif
+
+    let g:dein#plugin.build = cmd
+'''
+
+[[plugins]]
+repo = 'thinca/vim-quickrun'
+depends = ['Shougo/vimproc.vim']
+hook_add = '''
+    nmap <silent> <Leader>ru :QuickRun<CR>
+    let g:quickrun_config = {}
+    let g:quickrun_config._ = {
+    \   'runner' : 'vimproc',
+    \   'runner/vimproc/updatetime' : 40,
+    \}
+    let g:quickrun_config.swift = {
+    \ 'command': 'xcrun',
+    \ 'cmdopt': 'swift',
+    \ 'exec': '%c %o %s',
+    \}
+'''
+
+
+# File Explorer
+
+
+[[plugins]]
+repo = 'Shougo/vimfiler.vim'
+hook_add = '''
+    autocmd FileType vimfiler call unite#custom_default_action('directory', 'lcd')
+    nnoremap <silent> <Leader>ev :VimFiler<CR>
+
+    let g:vimfiler_as_default_explorer=1
+    let g:vimfiler_enable_auto_cd = 1
+    let g:vimfiler_tree_opened_icon = '▾'
+    let g:vimfiler_tree_closed_icon = '▸'
+    let g:vimfiler_ignore_pattern =
+    \ '^\%(\.git\|\.env\|\.tox\|\.toxenv\|\.idea\|\.DS_Store\|\.vagrant\|\.stversions\|\.tmp'
+    \ .'\|node_modules\|.*\.pyc\|.*\.egg-info\|__pycache__\)$'
+'''
+
+[[plugins]]
+repo = 'scrooloose/nerdtree'
+hook_add = '''
+    nnoremap [nerdtree] <Nop>
+    nmap <Leader>e [nerdtree]
+    autocmd MyAutoCmd VimEnter * NERDTree ./
+    nnoremap <silent> [nerdtree]n :NERDTreeToggle<CR>
+    nnoremap <silent> [nerdtree]r :NERDTree .<CR>
+
+    let g:NERDTreeShowHidden=1
+    let g:NERDTreeChDirMode=2
+'''
+
+[[plugins]]
+repo = 'Xuyuanp/nerdtree-git-plugin'
+hook_add = '''
+    let g:NERDTreeIndicatorMapCustom = {
+        \ "Modified"  : "✹",
+        \ "Staged"    : "✚",
+        \ "Untracked" : "✭",
+        \ "Renamed"   : "➜",
+        \ "Unmerged"  : "═",
+        \ "Deleted"   : "✖",
+        \ "Dirty"     : "✗",
+        \ "Clean"     : "✔︎",
+        \ "Unknown"   : "?"
+        \ }
+'''
+
+[[plugins]]
+repo = 'pe-ter-/fzf.vim'
+rev = 'ag-default-options'
+if = 'executable("fzf")'
+on_cmd = ['FZF','fzf#run']
+hook_add = '''
+    set rtp+=~/.fzf
+    nnoremap [fzf] <Nop>
+    nmap <Leader>z [fzf]
+    nnoremap <silent> [fzf]w :Windows<CR>
+    nnoremap <silent> [fzf]f :Files<CR>
+    nnoremap <silent> [fzf]b :Buffers<CR>
+    nnoremap <silent> [fzf]l :Lines<CR>
+    nnoremap <silent> [fzf]c :BLines<CR>
+    nnoremap <silent> [fzf]m :Marks<CR>
+    nnoremap <silent> [fzf]/ :History/<CR>
+    nnoremap <silent> [fzf]h :History:<CR>
+    nnoremap <silent> [fzf]t :Filetypes<CR>
+    nnoremap [fzf]a :Ag<Space>
+    nnoremap <silent> [fzf]g :Ag<Space><C-R><C-W><CR>
+'''
+
+[[plugins]]
+repo = 'Shougo/neomru.vim'
+
+[[plugins]]
+repo = 'Shougo/unite.vim'
+hook_add = '''
+    nnoremap    [unite]   <Nop>
+    nmap    <Leader>u [unite]
+    nnoremap [unite]u  :<C-u>Unite -no-split<Space>
+    nnoremap <silent> [unite]f :<C-u>Unite<Space>buffer<CR>
+    nnoremap <silent> [unite]b :<C-u>Unite<Space>bookmark<CR>
+    nnoremap <silent> [unite]a :<C-u>UniteBookmarkAdd<CR>
+    nnoremap <silent> [unite]m :<C-u>Unite<Space>file_mru<CR>
+    nnoremap <silent> [unite]d :<C-u>Unite<Space>directory_mru<CR>
+    nnoremap <silent> [unite]r :<C-u>UniteWithBufferDir file<CR>
+    nnoremap <silent> [unite]y :<C-u>Unite history/yank<CR>
+    nnoremap <silent> ,vr :UniteResume<CR>
+    let g:unite_source_history_yank_enable = 1
+    let g:unite_source_file_mru_limit = 200
+'''
+
+
+# Edit Utils
+
+
+[[plugins]]
+repo = 'gorodinskiy/vim-coloresque'
+
+[[plugins]]
+repo = 'Chiel92/vim-autoformat'
+hook_add = '''
+  " python
+  if !executable('yapf')
+    execute '!pip3 install yapf'
+  endif
+
+  " html, js, css
+  if !executable('js-beautify')
+    execute '!npm i -g js-beautify'
+  endif
+
+  " scss
+  if !executable('sass-convert')
+    execute '!gem install --no-document sass'
+  endif
+
+  " ruby
+  if !executable('rbeautify')
+    execute '!gem install --no-document ruby-beautify'
+  endif
+
+  " markdown
+  if !executable('remark')
+    execute '!npm i -g remark'
+  endif
+
+
+  " Configure
+  let g:formatter_yapf_style = 'pep8'
+  let g:formatdef_yapf = "'yapf --style=\"{based_on_style:'.g:formatter_yapf_style.',indent_width:'.&shiftwidth.'}\" -l '.a:firstline.'-'.a:lastline"
+  let g:formatters_python = ['yapf']
+
+  " Key mapping
+
+  nnoremap <Leader>ff :Autoformat<CR>
+'''
+
+[[plugins]]
+repo = 'honza/vim-snippets'
+
+[[plugins]]
+repo = 'SirVer/ultisnips'
+depends = ['honza/vim-snippets']
+hook_add = '''
+  let g:UltiSnipsExpandTrigger="<tab>"
+  let g:UltiSnipsJumpForwardTrigger="<c-n>"
+  let g:UltiSnipsJumpBackwardTrigger="<c-p>"
+  let g:UltiSnipsEditSplit="vertical"
+'''
+
+[[plugins]]
+repo = 'tpope/vim-surround'
+
+[[plugins]]
+repo = 'tpope/vim-repeat'
+
+[[plugins]]
+repo = 'vim-scripts/Align'
+
+[[plugins]]
+repo = 'vim-scripts/YankRing.vim'
+
+[[plugins]]
+repo = 'vim-scripts/VisIncr'
+
+
+# Window Utils
+
+
+[[plugins]]
+repo = 'simeji/winresizer'
+
+
+# git Utils
+
+
+[[plugins]]
+repo = 'tpope/vim-fugitive.git'
+hook_add = '''
+    nnoremap [fugitive] <Nop>
+    nmap     <Leader>g   [fugitive]
+    nnoremap <silent> [fugitive]b :Gblame<CR>
+    nnoremap <silent> [fugitive]s :Gstatus<CR>
+    nnoremap <silent> [fugitive]w :Gwrite<CR>
+    nnoremap <silent> [fugitive]c :Gcommit<CR>
+    nnoremap <silent> [fugitive]d :Gdiff<CR>
+'''
+
+
+[[plugins]]
+repo = 'airblade/vim-gitgutter'
+
+
+[[plugins]]
+repo = 'gregsexton/gitv.git'
+hook_add = '''
+    nnoremap <silent> <Leader>gv :Gitv --all<CR>
+    nnoremap <silent> <Leader>gV :Gitv!<CR>
+'''
+
+
+# Ctags
+
+
+[[plugins]]
+repo = 'soramugi/auto-ctags.vim'
+hook_add = '''
+    augroup CtagsGroup
+        autocmd!
+        au BufNewFile,BufRead *.py,*.rb let g:auto_ctags = 1
+        au BufNewFile,BufRead *.py let g:auto_ctags_tags_args = "--languages=python -f ~/py.tags `pwd`"
+        au BufNewFile,BufRead *.rb let g:auto_ctags_tags_args = "--languages=ruby -f ~/rb.tags `pwd`"
+    augroup END
+'''
+
+
+# Linter
+
+
+[[plugins]]
+repo = "scrooloose/syntastic"
+hook_add = '''
+    let g:syntastic_python_checkers = ["flake8"]
+    let g:syntastic_python_flake8_args = '--ignore="E501"'
+    let g:syntastic_javascript_checkers = ['eslint']
+    let g:syntastic_enable_signs = 1
+    let g:syntastic_always_populate_loc_list = 0
+    let g:syntastic_auto_loc_list = 0
+    let g:syntastic_check_on_open = 1
+    let g:syntastic_check_on_wq = 0
+'''
+
+# python
+[[plugins]]
+repo = "nvie/vim-flake8"
+hook_add = '''
+    let g:flake8_ignore = 'E501'
+'''
+
+# javascript
+[[plugins]]
+repo = 'pmsorhaindo/syntastic-local-eslint.vim'
+
+
+# Syntax highlight
+
+
+# html enclosing tags
+[[plugins]]
+repo = 'valloric/MatchTagAlways'
+on_ft = 'html'
+
+# js(x)
+[[plugins]]
+repo = 'pangloss/vim-javascript'
+
+[[plugins]]
+repo = 'mxw/vim-jsx'
+hook_add = '''
+    augroup ES6ScriptGroup
+      autocmd!
+      au BufRead,BufNewFile,BufReadPre *.es6 set filetype=javascript.jsx
+    augroup END
+'''
+
+# less
+[[plugins]]
+repo = 'groenewege/vim-less'
+
+# nginx
+[[plugins]]
+repo = "evanmiller/nginx-vim-syntax"
+
+# toml
+[[plugins]]
+repo = 'cespare/vim-toml'
+
+# swift
+[[plugins]]
+repo = 'keith/swift.vim'
+
+[[plugins]]
+repo = 'kballard/vim-swift'
+
+# jinja2
+[[plugins]]
+repo = 'Glench/Vim-Jinja2-Syntax'
+
+
+# Editor Utils
+
+
+[[plugins]]
+repo = 'kana/vim-operator-user.git'
+
+[[plugins]]
+repo = 'kana/vim-operator-replace.git'
+hook_add = '''
+    map R <Plug>(operator-replace)
+'''
+
+# cursor moving
+[[plugins]]
+repo = 'easymotion/vim-easymotion'
+hook_add = '''
+    let g:EasyMotion_do_mapping = 0
+    let g:EasyMotion_keys = ';a,oqepughtcrnwv'
+    let g:EasyMotion_smartcase = 1
+    nmap s <Plug>(easymotion-s2)
+    xmap s <Plug>(easymotion-s2)
+    nmap <Leader>s <Plug>(easymotion-sn)
+    xmap <Leader>s <Plug>(easymotion-sn)
+    map <Leader>j <Plug>(easymotion-j)
+    map <Leader>k <Plug>(easymotion-k)
+    let g:EasyMotion_enter_jump_first = 1
+    let g:EasyMotion_space_jump_first = 1
+    let g:EasyMotion_startofline = 0
+'''
+
+# rich search
+[[plugins]]
+repo = 'haya14busa/incsearch.vim'
+hook_add = '''
+    let g:incsearch#auto_nohlsearch = 1
+    map #  <Plug>(incsearch-nohl-#)
+    map /  <Plug>(incsearch-forward)
+    map ?  <Plug>(incsearch-backward)
+    " map g/ <Plug>(incsearch-stay)
+'''
+
+[[plugins]]
+repo = 'haya14busa/incsearch-fuzzy.vim'
+hook_add = '''
+    map f/ <Plug>(incsearch-fuzzy-/)
+    map f? <Plug>(incsearch-fuzzy-?)
+    map fg/ <Plug>(incsearch-fuzzy-stay)
+'''
+
+
+# python class outline
+[[plugins]]
+repo = "majutsushi/tagbar"
+hook_add = '''
+    nmap <Leader>c :TagbarToggle<CR>
+'''
+
+# indent line
+[[plugins]]
+repo = 'Yggdroot/indentLine'
+hook_add = '''
+    let g:indentLine_enabled = 1
+    let g:indentLine_color_term = 239
+'''
+
+
+# Layout
+
+
+[[plugins]]
+repo = 'vim-airline/vim-airline'

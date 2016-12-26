@@ -1,0 +1,47 @@
+" base
+set relativenumber
+set nobackup
+set noswapfile
+set hlsearch
+highlight Search guibg=#378369
+
+" clipboard
+set clipboard=unnamed
+
+" search
+set incsearch
+set wrapscan
+set ignorecase
+set smartcase
+" Search prefixing
+cnoremap <expr> / getcmdtype() == '/' ? '\/' : '/'
+cnoremap <expr> ? getcmdtype() == '?' ? '\?' : '?'
+
+" indent
+set autoindent
+set cindent
+set tabstop=4
+set shiftwidth=4
+set softtabstop=4
+set expandtab
+
+" enable moving cursol while INSERT mode
+inoremap <c-n> <down>
+inoremap <c-p> <up>
+inoremap <c-b> <left>
+inoremap <c-f> <right>
+inoremap <c-a> <Esc>_i
+inoremap <c-e> <Esc>$a
+
+" switch window
+nnoremap <c-l> <c-w>l
+nnoremap <c-h> <c-w>h
+
+" key map
+" v->f short cut
+nnoremap vv vf
+nnoremap vV vF
+nnoremap gr gT
+" paging
+noremap <Space>j <c-f>
+noremap <Space>k <c-b>
