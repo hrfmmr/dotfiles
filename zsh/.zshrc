@@ -204,6 +204,8 @@ bindkey '^x^w' peco-tmux
 if which pyenv > /dev/null; then eval "$(pyenv init -)"; fi
 if which pyenv-virtualenv-init > /dev/null; then eval "$(pyenv virtualenv-init -)"; fi
 PYENV_ROOT=~/.pyenv
+# export PYENV_VERSION=2.7.11
+export PYENV_VERSION=3.5.1
 
 
 #
