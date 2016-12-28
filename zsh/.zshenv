@@ -14,6 +14,8 @@ path=(
     /usr/local/mysql/bin(N-/)
     /Applications/Vagrant/bin(N-/)
     $HOME/bin/FDK/Tools/osx(N-/)
+    $HOME/.pyenv/bin(N-/)
+    $HOME/.rbenv/bin(N-/)
     $HOME/.nodebrew/current/bin(N-)
     $GOPATH/bin(N-/)
     $HOME/bin(N-/)
