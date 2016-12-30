@@ -56,7 +56,6 @@ hook_add = '''
 
 [[plugins]]
 repo = 'thinca/vim-quickrun'
-depends = ['Shougo/vimproc.vim']
 hook_add = '''
     nmap <silent> <Leader>ru :QuickRun<CR>
     let g:quickrun_config = {}
@@ -213,7 +212,6 @@ repo = 'honza/vim-snippets'
 
 [[plugins]]
 repo = 'SirVer/ultisnips'
-depends = ['honza/vim-snippets']
 hook_add = '''
   let g:UltiSnipsExpandTrigger="<tab>"
   let g:UltiSnipsJumpForwardTrigger="<c-n>"
