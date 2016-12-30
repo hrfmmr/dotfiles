@@ -127,6 +127,7 @@ alias brew="env PATH=${PATH/$HOME/\.pyenv\/shims:/} brew"
 alias weather='curl -4 wttr.in'
 alias v='nvim'
 alias vim='nvim'
+alias va='vagrant'
 alias updatedb='sudo /usr/libexec/locate.updatedb'
 
 function mkcd() {
