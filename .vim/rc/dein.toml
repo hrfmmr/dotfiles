@@ -147,6 +147,9 @@ hook_add = '''
 repo = 'Shougo/neomru.vim'
 
 [[plugins]]
+repo = 'Shougo/neoyank.vim'
+
+[[plugins]]
 repo = 'Shougo/unite.vim'
 hook_add = '''
     nnoremap    [unite]   <Nop>
