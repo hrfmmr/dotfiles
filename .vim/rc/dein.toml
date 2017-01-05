@@ -75,7 +75,7 @@ hook_add = '''
 
 
 [[plugins]]
-repo = 'Shougo/vimfiler.vim'
+repo = 'pe-ter-/vimfiler.vim'
 hook_add = '''
     autocmd FileType vimfiler call unite#custom_default_action('directory', 'lcd')
     nnoremap <silent> <Leader>ev :VimFiler<CR>
