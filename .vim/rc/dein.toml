@@ -97,7 +97,6 @@ repo = 'scrooloose/nerdtree'
 hook_add = '''
     nnoremap [nerdtree] <Nop>
     nmap <Leader>e [nerdtree]
-    autocmd MyAutoCmd VimEnter * NERDTree ./
     nnoremap <silent> [nerdtree]n :NERDTreeToggle<CR>
     nnoremap <silent> [nerdtree]r :NERDTree .<CR>
 
