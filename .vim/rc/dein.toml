@@ -326,7 +326,7 @@ repo = 'mxw/vim-jsx'
 hook_add = '''
     augroup ES6ScriptGroup
       autocmd!
-      au BufRead,BufNewFile,BufReadPre *.es6 set filetype=javascript.jsx
+      au BufRead,BufNewFile *.es6 set filetype=javascript.jsx
     augroup END
 '''
 
