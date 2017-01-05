@@ -79,6 +79,7 @@ repo = 'Shougo/vimfiler.vim'
 hook_add = '''
     autocmd FileType vimfiler call unite#custom_default_action('directory', 'lcd')
     nnoremap <silent> <Leader>ev :VimFiler<CR>
+    nnoremap <silent> <Leader>et :VimFilerTab -simple -winwidth=30 -no-quit<CR>
 
     let g:vimfiler_as_default_explorer=1
     let g:vimfiler_enable_auto_cd = 1
