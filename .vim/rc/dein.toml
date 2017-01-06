@@ -301,6 +301,9 @@ hook_add = '''
 repo = 'neomake/neomake'
 if = 'has("nvim")'
 hook_add = '''
+  if !executable('flake8')
+    execute '!pip3 install flake8'
+  endif
   let g:neomake_error_sign = {'text': '>>', 'texthl': 'Error'}
   let g:neomake_warning_sign = {'text': '>>', 'texthl': 'CursorLineNr'}
   let g:neomake_message_sign = {'text': '>>', 'texthl': 'ErrorMsg'}
