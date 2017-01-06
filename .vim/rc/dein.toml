@@ -127,6 +127,9 @@ if = 'executable("fzf")'
 on_cmd = ['FZF','fzf#run']
 hook_add = '''
     set rtp+=~/.fzf
+    if !isdirectory(expand('~/.cache/fzf'))
+      call mkdir(expand('~/.cache/fzf'), 'p')
+    endif
     nnoremap [fzf] <Nop>
     nmap <Leader>z [fzf]
     nnoremap <silent> [fzf]w :Windows<CR>
@@ -140,6 +143,7 @@ hook_add = '''
     nnoremap <silent> [fzf]t :Filetypes<CR>
     nnoremap [fzf]a :Ag<Space>
     nnoremap <silent> [fzf]g :Ag<Space><C-R><C-W><CR>
+    let g:fzf_history_dir = '~/.cache/fzf'
 '''
 
 [[plugins]]
