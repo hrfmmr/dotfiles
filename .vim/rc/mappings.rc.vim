@@ -48,6 +48,9 @@ vnoremap // y/<C-R>"<CR>
 " Search prefixing
 cnoremap <expr> / getcmdtype() == '/' ? '\/' : '/'
 cnoremap <expr> ? getcmdtype() == '?' ? '\?' : '?'
+" Location List
+nnoremap <silent> <leader>lo :lopen<CR>
+nnoremap <silent> <leader>lc :lclose<CR>
 
 " Terminal Emulator
 if has("nvim")
