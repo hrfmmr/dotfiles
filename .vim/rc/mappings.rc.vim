@@ -13,6 +13,9 @@ nnoremap vV vF
 " Switch tab
 nnoremap gc gt
 nnoremap gr gT
+" Move tab
+nnoremap <silent> gC :+tabm<CR>
+nnoremap <silent> gR :-tabm<CR>
 " Emacs key bind for moving cursole while INSERT
 inoremap <c-n> <down>
 inoremap <c-p> <up>
