@@ -37,6 +37,7 @@ noremap <Space>k <c-b>
 " File write/quit/update
 noremap <silent> <Space>w :w<CR>
 noremap <silent> <Space>q :q<CR>
+noremap <silent> <Space>Q :bd!<CR>
 noremap <silent> <Space>e :e!<CR>
 " Tab Handling
 nnoremap <silent> <leader>te :<C-u>tabedit<CR>
