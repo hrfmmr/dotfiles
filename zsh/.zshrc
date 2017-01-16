@@ -240,3 +240,8 @@ fd() {
                   -o -type d -print 2> /dev/null | fzf +m) &&
   cd "$dir"
 }
+
+#
+# * yarn
+#
+if hash yarn 2>/dev/null; then export PATH="$PATH:`yarn global bin`"; fi
