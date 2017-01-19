@@ -1,3 +1,5 @@
+typeset -U path cdpath fpath manpath
+
 #
 # XDG
 #
@@ -10,6 +12,7 @@ export GOPATH=$HOME/go
 
 path=(    
     /usr/local/Cellar/git/2.3.0/share/git-core/contrib/workdir(N-/)
+    /usr/local/Cellar/rsync/3.1.2/bin(N-/)
     /usr/loca/bin(N-/)
     /usr/local/mysql/bin(N-/)
     /Applications/Vagrant/bin(N-/)
