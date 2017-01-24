@@ -176,6 +176,16 @@ hook_add = '''
 # Edit Utils
 
 [[plugins]]
+repo = 'scrooloose/nerdcommenter'
+hook_add = '''
+  let g:NERDCreateDefaultMappings = 0
+  let g:NERDSpaceDelims = 1
+  nmap <Space>/ <Plug>NERDCommenterToggle
+  vmap <Space>/ <Plug>NERDCommenterToggle
+  vmap <Space>s <Plug>NERDCommenterSexy
+'''
+
+[[plugins]]
 repo = 'gorodinskiy/vim-coloresque'
 
 [[plugins]]
