@@ -261,6 +261,9 @@ repo = 'vim-scripts/VisIncr'
 [[plugins]]
 repo = 'simeji/winresizer'
 
+[[plugins]]
+repo = 'wesQ3/vim-windowswap'
+
 
 # git Utils
 
