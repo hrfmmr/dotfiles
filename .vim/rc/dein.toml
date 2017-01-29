@@ -141,9 +141,14 @@ hook_add = '''
   nnoremap <silent> [fzf]/ :History/<CR>
   nnoremap <silent> [fzf]h :History:<CR>
   nnoremap <silent> [fzf]t :Filetypes<CR>
+  nnoremap <silent> [fzf]T :Tags<CR>
   nnoremap [fzf]a :Ag<Space>
   nnoremap <silent> [fzf]g :Ag<Space><C-R><C-W><CR>
   let g:fzf_history_dir = '~/.cache/fzf'
+  augroup FzfTagsGroup
+    autocmd!
+    au BufNewFile,BufRead *.py let g:fzf_tags_command = "ctags -R --languages=python --python-kinds=-iv --exclude=.tox --exclude=.toxenv -f `pwd`/tags `pwd`"
+  augroup END
 '''
 
 [[plugins]]
@@ -302,7 +307,7 @@ hook_add = '''
   augroup CtagsGroup
     autocmd!
     au BufNewFile,BufRead *.py,*.rb let g:auto_ctags = 1
-    au BufNewFile,BufRead *.py let g:auto_ctags_tags_args = "--languages=python -f ~/py.tags `pwd`"
+    au BufNewFile,BufRead *.py let g:auto_ctags_tags_args = "--languages=python -f `pwd`/tags `pwd`"
     au BufNewFile,BufRead *.rb let g:auto_ctags_tags_args = "--languages=ruby -f ~/rb.tags `pwd`"
   augroup END
 '''

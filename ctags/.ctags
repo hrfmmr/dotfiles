@@ -1,9 +1,8 @@
 --append=yes
 --recurse=yes
 --langmap=Python:.py,Ruby:.rb
---python-kinds=-i
+--python-kinds=-iv
 --exclude=.git*
---exclude=.env
 --exclude=.tox
 --exclude=.toxenv
 --exclude=Dropbox
