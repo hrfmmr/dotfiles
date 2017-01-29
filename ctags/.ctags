@@ -1,0 +1,11 @@
+--append=yes
+--recurse=yes
+--langmap=Python:.py,Ruby:.rb
+--python-kinds=-i
+--exclude=.git*
+--exclude=.env
+--exclude=.tox
+--exclude=.toxenv
+--exclude=Dropbox
+--exclude=Dropbox (Personal)
+--exclude=Library
