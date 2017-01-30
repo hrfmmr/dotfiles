@@ -93,34 +93,6 @@ hook_add = '''
 '''
 
 [[plugins]]
-repo = 'scrooloose/nerdtree'
-hook_add = '''
-  nnoremap [nerdtree] <Nop>
-  nmap <Leader>e [nerdtree]
-  nnoremap <silent> [nerdtree]n :NERDTreeToggle<CR>
-  nnoremap <silent> [nerdtree]r :NERDTree .<CR>
-
-  let g:NERDTreeShowHidden=1
-  let g:NERDTreeChDirMode=2
-'''
-
-[[plugins]]
-repo = 'Xuyuanp/nerdtree-git-plugin'
-hook_add = '''
-  let g:NERDTreeIndicatorMapCustom = {
-    \ "Modified"  : "✹",
-    \ "Staged"    : "✚",
-    \ "Untracked" : "✭",
-    \ "Renamed"   : "➜",
-    \ "Unmerged"  : "═",
-    \ "Deleted"   : "✖",
-    \ "Dirty"     : "✗",
-    \ "Clean"     : "✔︎",
-    \ "Unknown"   : "?"
-    \ }
-'''
-
-[[plugins]]
 repo = 'pe-ter-/fzf.vim'
 rev = 'ag-default-options'
 if = 'executable("fzf")'
