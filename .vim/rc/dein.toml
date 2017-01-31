@@ -387,26 +387,6 @@ hook_add = '''
   let g:EasyMotion_startofline = 0
 '''
 
-# rich search
-[[plugins]]
-repo = 'haya14busa/incsearch.vim'
-hook_add = '''
-  let g:incsearch#auto_nohlsearch = 1
-  map #  <Plug>(incsearch-nohl-#)
-  map /  <Plug>(incsearch-forward)
-  map ?  <Plug>(incsearch-backward)
-  " map g/ <Plug>(incsearch-stay)
-'''
-
-[[plugins]]
-repo = 'haya14busa/incsearch-fuzzy.vim'
-hook_add = '''
-  map f/ <Plug>(incsearch-fuzzy-/)
-  map f? <Plug>(incsearch-fuzzy-?)
-  map fg/ <Plug>(incsearch-fuzzy-stay)
-'''
-
-
 # python class outline
 [[plugins]]
 repo = "majutsushi/tagbar"
@@ -421,7 +401,6 @@ hook_add = '''
   let g:indentLine_enabled = 1
   let g:indentLine_color_term = 239
 '''
-
 
 # Layout
 
