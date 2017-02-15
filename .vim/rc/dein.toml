@@ -115,6 +115,7 @@ hook_add = '''
   nnoremap <silent> [fzf]t :Filetypes<CR>
   nnoremap <silent> [fzf]T :Tags<CR>
   nnoremap [fzf]a :Ag<Space>
+  nnoremap [fzf]A :Ag!<Space>
   nnoremap <silent> [fzf]g :Ag<Space><C-R><C-W><CR>
   let g:fzf_history_dir = '~/.cache/fzf'
   augroup FzfTagsGroup
