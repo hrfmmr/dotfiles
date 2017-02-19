@@ -295,27 +295,13 @@ hook_add = '''
 
 
 [[plugins]]
-repo = 'neomake/neomake'
-if = 'has("nvim")'
+repo = 'w0rp/ale'
 hook_add = '''
-  if !executable('flake8')
-    execute '!pip3 install flake8'
-  endif
-  let g:neomake_error_sign = {'text': '>>', 'texthl': 'Error'}
-  let g:neomake_warning_sign = {'text': '>>', 'texthl': 'CursorLineNr'}
-  let g:neomake_message_sign = {'text': '>>', 'texthl': 'ErrorMsg'}
-  let g:neomake_info_sign = {'text': '>>', 'texthl': 'MoreMsg'}
-  let g:neomake_python_enabled_makers = ['flake8']
-  let g:neomake_python_flake8_args = ['--ignore', 'E402,E501']
-
-  let g:neomake_jsx_enabled_makers = ['eslint']
-
-  autocmd! BufWritePost,BufEnter * Neomake
+  let g:ale_statusline_format = ['E%d', 'W%d', '']
+  let g:ale_echo_msg_format = '%linter%: %s'
+  nmap <silent> [a <Plug>(ale_previous_wrap)
+  nmap <silent> ]a <Plug>(ale_next_wrap)
 '''
-
-[[plugins]]
-if = 'has("nvim")'
-repo = 'benjie/neomake-local-eslint.vim'
 
 
 # Syntax highlight
