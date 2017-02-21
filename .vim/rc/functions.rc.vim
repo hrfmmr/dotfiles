@@ -23,3 +23,9 @@ function! s:Filter_lines(cmd, filter)
   0
 endfunction
 command! -nargs=? Scriptnames call s:Filter_lines('scriptnames', <q-args>)
+
+" Add preferable PATH to $PATH
+function! UnshiftPath(p)
+  let $PATH=a:p.':'.$PATH
+endfunction
+command! -nargs=* UnshiftPath call UnshiftPath(<f-args>)
