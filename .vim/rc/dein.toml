@@ -246,6 +246,10 @@ repo = 'simeji/winresizer'
 
 [[plugins]]
 repo = 'wesQ3/vim-windowswap'
+hook_add = '''
+  let g:windowswap_map_keys = 0 
+  nnoremap <silent> <leader>ww :call WindowSwap#EasyWindowSwap()<CR>
+'''
 
 
 # git Utils
