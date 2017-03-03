@@ -3,6 +3,9 @@ let g:mapleader=","
 
 map s <Nop>
 
+" Insert new line
+nmap <CR> i<CR><ESC>
+
 " Dvorak F
 nnoremap t f
 nnoremap T F
