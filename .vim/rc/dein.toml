@@ -217,6 +217,8 @@ hook_add = '''
   nnoremap <silent> [fugitive]w :Gwrite<CR>
   nnoremap <silent> [fugitive]c :Gcommit<CR>
   nnoremap <silent> [fugitive]d :Gdiff<CR>
+  nnoremap <silent> [fugitive]r :Git diff --staged<CR>
+  nnoremap <silent> [fugitive]R :Git diff <CR>
 '''
 
 
