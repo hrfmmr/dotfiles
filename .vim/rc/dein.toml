@@ -184,6 +184,9 @@ repo = 'tpope/vim-surround'
 repo = 'tpope/vim-repeat'
 
 [[plugins]]
+repo = 'tpope/vim-abolish'
+
+[[plugins]]
 repo = 'vim-scripts/Align'
 
 [[plugins]]
