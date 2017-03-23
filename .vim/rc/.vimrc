@@ -99,7 +99,6 @@ endif
 "---------------------------------------------------------------------------
 " GUI:
 "
-colorscheme zenburn
 set t_Co=256
 set visualbell t_vb=
 set cmdheight=4

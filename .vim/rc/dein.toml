@@ -146,6 +146,7 @@ hook_post_source = '''
 
 # Edit Utils
 
+
 [[plugins]]
 repo = 'scrooloose/nerdcommenter'
 hook_add = '''
@@ -319,3 +320,12 @@ hook_add = '''
   let g:indentLine_color_term = 239
 '''
 
+
+# Colorscheme
+
+
+[[plugins]]
+repo = 'chriskempson/base16-vim'
+hook_add = '''
+  colorscheme base16-tomorrow-night
+'''
