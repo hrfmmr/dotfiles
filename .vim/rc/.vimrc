@@ -180,6 +180,13 @@ augroup IndentGroup
     au BufNewFile,BufRead *.{rb,podspec},Vagrantfile,Podfile,Appfile,Fastfile,Matchfile,Gymfile,Snapfile,Scanfile setlocal ts=2 sts=2 sw=2
 augroup END
 
+"---------------------------------------------------------------------------
+" Completion:
+"
+augroup completion
+  autocmd!
+  autocmd CompleteDone * pclose!
+augroup END
 
 "---------------------------------------------------------------------------
 " Ctags:
