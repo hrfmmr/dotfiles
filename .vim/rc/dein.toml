@@ -68,21 +68,11 @@ hook_add = '''
 
 
 [[plugins]]
-repo = 'pe-ter-/vimfiler.vim'
+repo = 'cocopon/vaffle.vim'
 hook_add = '''
-  autocmd FileType vimfiler call unite#custom_default_action('directory', 'lcd')
-  nnoremap <silent> <Leader>ev :VimFiler<CR>
-  nnoremap <silent> <Leader>es :VimFiler -simple -winwidth=30 -no-quit<CR>
-  nnoremap <silent> <Leader>et :VimFilerTab -simple -winwidth=30 -no-quit<CR>
-  nnoremap <silent> <Leader>eN :VimFilerCreate -split -simple -winwidth=30 -no-quit<CR>
-
-  let g:vimfiler_as_default_explorer=1
-  let g:vimfiler_enable_auto_cd = 1
-  let g:vimfiler_tree_opened_icon = '▾'
-  let g:vimfiler_tree_closed_icon = '▸'
-  let g:vimfiler_ignore_pattern =
-  \ '^\%(\.git\|\.env\|\.tox\|\.toxenv\|\.idea\|\.DS_Store\|\.vagrant\|\.stversions\|\.tmp'
-  \ .'\|node_modules\|.*\.pyc\|.*\.egg-info\|__pycache__\)$'
+  let g:vaffle_auto_cd = 1
+  let g:vaffle_show_hidden_files = 1
+  let g:vaffle_force_delete = 1
 '''
 
 [[plugins]]
