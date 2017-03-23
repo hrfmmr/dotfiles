@@ -129,23 +129,28 @@ repo = 'Shougo/neomru.vim'
 repo = 'Shougo/neoyank.vim'
 
 [[plugins]]
-repo = 'Shougo/unite.vim'
+repo = 'Shougo/denite.nvim'
+depends = ['neomru.vim']
+on_event = 'BufRead'
 hook_add = '''
-  nnoremap    [unite]   <Nop>
-  nmap    <Leader>u [unite]
-  nnoremap [unite]u  :<C-u>Unite -no-split<Space>
-
-
-  nnoremap <silent> [unite]f :<C-u>Unite<Space>buffer<CR>
-  nnoremap <silent> [unite]b :<C-u>Unite<Space>bookmark<CR>
-  nnoremap <silent> [unite]a :<C-u>UniteBookmarkAdd<CR>
-  nnoremap <silent> [unite]m :<C-u>Unite<Space>file_mru<CR>
-  nnoremap <silent> [unite]d :<C-u>Unite<Space>directory_mru<CR>
-  nnoremap <silent> [unite]r :<C-u>UniteWithBufferDir file<CR>
-  nnoremap <silent> [unite]y :<C-u>Unite history/yank<CR>
-  nnoremap <silent> ,vr :UniteResume<CR>
-  let g:unite_source_history_yank_enable = 1
-  let g:unite_source_file_mru_limit = 200
+  nmap <silent> <C-u><C-t> :<C-u>Denite filetype -highlight-mode-insert=String<CR>
+  nmap <silent> <C-u><C-p> :<C-u>Denite file_rec -highlight-mode-insert=String<CR>
+  nmap <silent> <C-u><C-j> :<C-u>Denite line -highlight-mode-insert=String<CR>
+  nmap <silent> <C-u><C-a> :<C-u>Denite grep -highlight-mode-insert=String<CR>
+  nmap <silent> <C-u><C-g> :<C-u>DeniteCursorWord grep -highlight-mode-insert=String<CR>
+  nmap <silent> <C-u><C-u> :<C-u>Denite file_mru -highlight-mode-insert=String<CR>
+  nmap <silent> <C-u><C-y> :<C-u>Denite neoyank -highlight-mode-insert=String<CR>
+  nmap <silent> <C-u><C-r> :<C-u>Denite -resume -highlight-mode-insert=String<CR>
+  nmap <silent> <C-u>= :<C-u>Denite -resume -immediately -select=+1<CR>
+  nmap <silent> <C-u>- :<C-u>Denite -resume -immediately -select=-1<CR>
+'''
+hook_post_source = '''
+  call denite#custom#var('file_rec', 'command',
+  \ ['pt', '--follow', '--nocolor', '--nogroup', '--hidden', '-g', ''])
+  call denite#custom#var('grep', 'command',
+  \ ['pt', '--nogroup', '--nocolor', '--smart-case', '--hidden'])
+  call denite#custom#var('grep', 'default_opts', [])
+  call denite#custom#var('grep', 'recursive_opts', [])
 '''
 
 
