@@ -137,8 +137,8 @@ hook_add = '''
   nmap <silent> <C-u><C-u> :<C-u>Denite file_mru<CR>
   nmap <silent> <C-u><C-y> :<C-u>Denite neoyank<CR>
   nmap <silent> <C-u><C-r> :<C-u>Denite -resume<CR>
-  nmap <silent> <C-u>= :<C-u>Denite -resume -immediately -select=+1<CR>
-  nmap <silent> <C-u>- :<C-u>Denite -resume -immediately -select=-1<CR>
+  nmap <silent> <C-u>=     :<C-u>Denite -resume -immediately -select=+1<CR>
+  nmap <silent> <C-u><C-_> :<C-u>Denite -resume -immediately -select=-1<CR>
 '''
 hook_post_source = '''
   call denite#custom#var('file_rec', 'command',
