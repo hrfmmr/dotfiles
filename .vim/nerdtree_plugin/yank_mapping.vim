@@ -7,6 +7,11 @@ call NERDTreeAddKeyMap({
 function! NERDTreeYankCurrentNode()
   let n = g:NERDTreeFileNode.GetSelected()
   if n != {}
-    call setreg('"', n.path.str())
+    if has('mac')
+        call system("pbcopy", n.path.str())
+    else
+        call setreg('"', n.path.str())
+    endif
+    echo "yanked: " . n.path.str()
   endif
 endfunction
