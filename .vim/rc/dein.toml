@@ -334,14 +334,22 @@ hook_add = '''
 repo = 'chriskempson/base16-vim'
 on_event = 'VimEnter'
 hook_post_source = '''
+
   colorscheme base16-tomorrow-night
+
   fun! s:highlight()
-    hi Search guifg=#f8f8f8 guibg=#4f94cd
-    hi CursorLine guifg=#E19972
+    hi Search                                    guifg=#f8f8f8 guibg=#4f94cd
+    hi CursorLine                                guifg=#E19972
+    hi DiffAdd         ctermfg=66    ctermbg=237 guifg=#709080 guibg=#313c36 gui=bold
+    hi DiffChange      ctermbg=236                             guibg=#333333
+    hi DiffDelete      ctermfg=236   ctermbg=238 guifg=#333333 guibg=#464646
+    hi DiffText        ctermfg=217   ctermbg=237 guifg=#ecbcbc guibg=#41363c gui=bold
   endfun
+
   augroup colorscheme
     autocmd!
     autocmd ColorScheme * call s:highlight()
   augroup END
+
   call s:highlight()
 '''
