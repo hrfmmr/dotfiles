@@ -31,16 +31,14 @@ if dein#load_state(s:dein_dir)
     call dein#save_state()
 endif
 
+if has('vim_starting') && dein#check_install()
+  call dein#install()
+endif
+
 if !has('vim_starting')
-  if dein#check_install()
-    call dein#install()
-  endif
-
   call dein#recache_runtimepath()
-
   call dein#call_hook('add')
   call dein#call_hook('source')
   call dein#call_hook('post_source')
 endif
-
 " }}}
