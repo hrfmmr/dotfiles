@@ -68,11 +68,16 @@ hook_add = '''
 
 
 [[plugins]]
-repo = 'cocopon/vaffle.vim'
+repo = 'scrooloose/nerdtree'
 hook_add = '''
-  let g:vaffle_auto_cd = 1
-  let g:vaffle_show_hidden_files = 1
-  let g:vaffle_force_delete = 1
+  nnoremap [nerdtree] <Nop>
+  nmap <Leader>e [nerdtree]
+  nnoremap <silent> [nerdtree]n :NERDTreeToggle<CR>
+  nnoremap <silent> [nerdtree]r :NERDTree .<CR>
+
+  let g:NERDTreeShowHidden=1
+  let g:NERDTreeChDirMode=2
+  let NERDTreeIgnore = ['\.pyc$']
 '''
 
 [[plugins]]
