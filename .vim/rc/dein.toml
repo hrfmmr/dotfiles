@@ -123,9 +123,10 @@ repo = 'Shougo/denite.nvim'
 depends = ['neomru.vim']
 on_event = 'BufRead'
 hook_add = '''
+  nmap <silent> <C-u><C-b> :<C-u>Denite buffer<CR>
   nmap <silent> <C-u><C-t> :<C-u>Denite filetype<CR>
-  nmap <silent> <C-u><C-p> :<C-u>Denite file_rec<CR>
-  nmap <silent> <C-u><C-j> :<C-u>Denite line<CR>
+  nmap <silent> <C-u><C-f> :<C-u>Denite file_rec<CR>
+  nmap <silent> <C-u><C-l> :<C-u>Denite line<CR>
   nmap <silent> <C-u><C-a> :<C-u>Denite grep<CR>
   nmap <silent> <C-u><C-g> :<C-u>DeniteCursorWord grep<CR>
   nmap <silent> <C-u><C-u> :<C-u>Denite file_mru<CR>
