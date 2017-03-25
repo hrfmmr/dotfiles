@@ -61,13 +61,6 @@ endif
 "---------------------------------------------------------------------------
 " Edit:
 "
-inoremap ( ()<ESC>i
-inoremap <expr> ) ClosePair(')')
-inoremap { {}<ESC>i
-inoremap <expr> } ClosePair('}')
-inoremap [ []<ESC>i
-inoremap <expr> ] ClosePair(']')
-inoremap < <><ESC>i
 " pair close checker.
 " from othree vimrc ( http://github.com/othree/rc/blob/master/osx/.vimrc )
 function! ClosePair(char)
@@ -156,10 +149,7 @@ set smartcase
 set wrapscan
 set incsearch
 set hlsearch
-cnoremap <expr> / getcmdtype() == '/' ? '\/' : '/'
-cnoremap <expr> ? getcmdtype() == '?' ? '\?' : '?'
-
-
+"
 "---------------------------------------------------------------------------
 " Indent:
 "
@@ -191,8 +181,6 @@ augroup END
 "---------------------------------------------------------------------------
 " Ctags:
 "
-" Ctags for each languages
-nnoremap <C-d> :<C-u>tab stj <C-R>=expand('<cword>')<CR><CR>
 augroup CtagsGroup
   autocmd!
   au BufNewFile,BufRead *.py set tags=~/py.tags

@@ -9,7 +9,14 @@ nmap <CR> i<CR><ESC>
 " Dvorak F
 nnoremap t f
 nnoremap T F
-
+" Close pair
+inoremap ( ()<ESC>i
+inoremap <expr> ) ClosePair(')')
+inoremap { {}<ESC>i
+inoremap <expr> } ClosePair('}')
+inoremap [ []<ESC>i
+inoremap <expr> ] ClosePair(']')
+inoremap < <><ESC>i
 " Selection
 nnoremap vv vf
 nnoremap vV vF
@@ -58,9 +65,11 @@ cnoremap <expr> ? getcmdtype() == '?' ? '\?' : '?'
 " Location List
 nnoremap <silent> <leader>lo :lopen<CR>
 nnoremap <silent> <leader>lc :lclose<CR>
+" Jump definition
+nnoremap <C-d> :<C-u>tab stj <C-R>=expand('<cword>')<CR><CR>
 
 " Terminal Emulator
 if has("nvim")
-    noremap <silent> <C-t> :term<CR>
-    tnoremap <C-[> <C-\><C-n>
+  noremap <silent> <C-t> :term<CR>
+  tnoremap <C-[> <C-\><C-n>
 endif
