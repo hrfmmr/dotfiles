@@ -54,4 +54,5 @@ node_modules
 .tweetvim
 .vagrant.d
 .zsh
-venv/
+.venv/
+.env/
