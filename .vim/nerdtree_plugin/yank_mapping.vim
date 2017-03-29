@@ -10,7 +10,7 @@ function! NERDTreeYankCurrentNode()
     if has('mac')
         call system("pbcopy", n.path.str())
     else
-        call setreg('"', n.path.str())
+        call system("xsel -bi", n.path.str())
     endif
     echo "yanked: " . n.path.str()
   endif
