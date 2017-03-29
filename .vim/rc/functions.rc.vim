@@ -29,3 +29,12 @@ function! UnshiftPath(p)
   let $PATH=a:p.':'.$PATH
 endfunction
 command! -nargs=* UnshiftPath call UnshiftPath(<f-args>)
+
+function! ImInActivate()
+  call system('fcitx-remote -c')
+endfunction
+if has('unix')
+  if !has('mac')
+    inoremap <silent> <C-[> <ESC>:call ImInActivate()<CR><ESC>
+  endif
+endif
