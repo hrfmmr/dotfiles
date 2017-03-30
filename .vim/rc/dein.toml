@@ -132,6 +132,15 @@ repo = 'Shougo/neomru.vim'
 repo = 'Shougo/neoyank.vim'
 
 [[plugins]]
+repo = 'junegunn/vim-emoji'
+
+[[plugins]]
+repo = 'pocari/vim-denite-emoji'
+hook_add = '''
+  nmap <silent> <C-u><C-e> :<C-u>Denite emoji<CR>
+'''
+
+[[plugins]]
 repo = 'Shougo/denite.nvim'
 depends = ['neomru.vim']
 on_event = 'BufRead'
