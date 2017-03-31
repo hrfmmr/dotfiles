@@ -237,6 +237,10 @@ repo = 'gregsexton/gitv.git'
 hook_add = '''
   nnoremap <silent> <Leader>gv :Gitv --all<CR>
   nnoremap <silent> <Leader>gV :Gitv!<CR>
+  augroup GitvGroup
+    autocmd!
+    autocmd FileType git :setlocal foldlevel=99
+  augroup END
 '''
 
 
