@@ -78,7 +78,7 @@ hook_add = '''
 
   let g:NERDTreeShowHidden=1
   let g:NERDTreeChDirMode=2
-  let g:NERDTreeIgnore = ['\.pyc$']
+  let g:NERDTreeIgnore = ['\.pyc$', '__pycache__']
   if !isdirectory(expand('~/.config/nvim/nerdtree_plugin'))
     call system('ln -snfv ' . 
     \ expand('~/dotfiles/.vim/nerdtree_plugin') .
