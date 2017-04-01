@@ -113,6 +113,7 @@ hook_add = '''
   nnoremap [fzf]a :Ag<Space>
   nnoremap [fzf]A :Ag!<Space>
   nnoremap <silent> [fzf]g :Ag<Space><C-R><C-W><CR>
+  let g:fzf_buffers_jump = 1
   let g:fzf_history_dir = '~/.cache/fzf'
   augroup FzfTagsGroup
     autocmd!
