@@ -3,6 +3,7 @@ set relativenumber
 set nobackup
 set noswapfile
 set hlsearch
+set blinkcursor
 highlight Search guibg=#378369
 
 " clipboard
