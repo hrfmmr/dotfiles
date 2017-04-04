@@ -132,6 +132,9 @@ repo = 'Shougo/neomru.vim'
 
 [[plugins]]
 repo = 'Shougo/neoyank.vim'
+hook_add = '''
+  let g:neoyank#limit = 1000
+'''
 
 [[plugins]]
 repo = 'junegunn/vim-emoji'
