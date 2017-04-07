@@ -10,7 +10,6 @@ repo = 'Shougo/deoplete.nvim'
 if = 'has("nvim")'
 on_i = 1
 hook_add = '''
-  let g:python3_host_prog = expand('$HOME') . '/.pyenv/shims/python3'
   let g:deoplete#enable_at_startup = 1
 '''
 

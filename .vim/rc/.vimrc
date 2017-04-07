@@ -53,7 +53,9 @@ call s:source_rc('mappings.rc.vim')
 "
 set relativenumber number
 set imdisable
-if !has('nvim')
+if has('nvim')
+  let g:python3_host_prog = expand('$HOME') . '/.pyenv/shims/python3'
+else
   set antialias
 endif
 
