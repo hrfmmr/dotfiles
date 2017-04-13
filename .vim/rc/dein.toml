@@ -145,6 +145,15 @@ hook_add = '''
 '''
 
 [[plugins]]
+repo = 'ozelentok/denite-gtags'
+hook_add = '''
+  nnoremap <silent> <C-g><C-d> :DeniteCursorWord gtags_def<CR>
+  nnoremap <silent> <C-g><C-r> :DeniteCursorWord gtags_ref<CR>
+  nnoremap <silent> <C-g><C-g> :DeniteCursorWord gtags_grep:
+  nnoremap          <C-g>g     :Denite gtags_grep:
+'''
+
+[[plugins]]
 repo = 'Shougo/denite.nvim'
 depends = ['neomru.vim']
 on_event = 'BufRead'
