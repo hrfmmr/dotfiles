@@ -1,0 +1,9 @@
+[[snippets]]
+  description = "Generate new ssk key by specifying output path and give comment"
+  command = "ssh-keygen -t rsa -f ./github_rsa -C github.com"
+  output = ""
+
+[[snippets]]
+  description = "Convert id_rsa to .pem"
+  command = "openssl rsa -in id_rsa -out id_rsa.pem -outform pem"
+  output = ""

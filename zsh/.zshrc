@@ -246,3 +246,15 @@ fd() {
 # * yarn
 #
 if hash yarn 2>/dev/null; then export PATH="$PATH:`yarn global bin`"; fi
+
+#
+# * pet
+#
+function pet-select() {
+  BUFFER=$(pet search --query "$LBUFFER")
+  CURSOR=$#BUFFER
+  zle redisplay
+}
+zle -N pet-select
+stty -ixon
+bindkey '^x^p' pet-select
