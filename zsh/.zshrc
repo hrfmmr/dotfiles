@@ -125,7 +125,6 @@ alias hist='history 1'
 alias zmv='noglob zmv -W'
 alias brew="env PATH=${PATH/$HOME/\.pyenv\/shims:/} brew"
 alias weather='curl -4 wttr.in'
-alias nvim='nvim --cmd "lang en_US"'
 alias v='nvim'
 alias vim='nvim'
 alias va='vagrant'
