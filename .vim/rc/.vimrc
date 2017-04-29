@@ -95,6 +95,7 @@ endif
 " GUI:
 "
 set t_Co=256
+set cursorline
 set visualbell t_vb=
 set cmdheight=4
 set showmatch

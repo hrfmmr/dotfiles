@@ -395,7 +395,6 @@ hook_post_source = '''
 
   fun! s:highlight()
     hi Search                                    guifg=#f8f8f8 guibg=#4f94cd
-    hi CursorLine                                guifg=#E19972
     hi DiffAdd         ctermfg=66    ctermbg=237 guifg=#709080 guibg=#313c36 gui=bold
     hi DiffChange      ctermbg=236                             guibg=#333333
     hi DiffDelete      ctermfg=236   ctermbg=238 guifg=#333333 guibg=#464646
