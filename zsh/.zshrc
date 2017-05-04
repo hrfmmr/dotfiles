@@ -109,12 +109,6 @@ function rprompt-git-current-branch {
 setopt prompt_subst
 RPROMPT='[`rprompt-git-current-branch`]'
 
-# switch branch with `git checkout B`
-alias g='git'
-alias f='fzf'
-alias ag='ag --smart-case --hidden'
-alias -g B='`git branch -a | peco --prompt "GIT BRANCH>" | head -n 1 | sed -e "s/^\*\s*//g"`'
-alias -g LR='`git branch -a | peco --query "remotes/ " --prompt "GIT REMOTE BRANCH>" | head -n 1 | sed "s/remotes\/[^\/]*\/\(\S*\)/\1 \0/"`'
 
 #
 # * aliases
@@ -129,6 +123,11 @@ alias v='nvim'
 alias vim='nvim'
 alias va='vagrant'
 alias updatedb='sudo /usr/libexec/locate.updatedb'
+alias g='git'
+alias -g B='`git branch -a | fzf --prompt "GIT BRANCH>" | head -n 1 | sed -e "s/^\*\s*//g"`'
+alias -g LR='`git branch -a | fzf --query "remotes/ " --prompt "GIT REMOTE BRANCH>" | head -n 1 | sed "s/remotes\/[^\/]*\/\(\S*\)/\1 \0/"`'
+alias f='fzf'
+alias ag='ag --smart-case --hidden'
 
 function mkcd() {
 	mkdir $1;
@@ -147,44 +146,6 @@ if [[ -f $HOME/.zsh/antigen/antigen.zsh ]]; then
     antigen bundle mollifier/anyframe
     antigen apply
 fi
-
-#
-# * peco
-#
-# https://github.com/peco/peco/releases
-#
-# find recent executed command
-function peco-execute-history() {
-    local item
-    item=$(builtin history -n -r 1 | peco --query="$LBUFFER")
-
-    if [[ -z "$item" ]]; then
-        return 1
-    fi
-
-    BUFFER="$item"
-    CURSOR=$#BUFFER
-    # execute command immidiately
-    # zle accept-line
-}
-zle -N peco-execute-history
-bindkey '^x^b' peco-execute-history
-
-# find recent moved directory 
-function peco-cdr() {
-    local item
-    item=$(cdr -l | sed 's/^[^ ]\{1,\} \{1,\}//' | peco)
-
-    if [[ -z "$item" ]]; then
-        return 1
-    fi
-
-    BUFFER="cd -- $item"
-    CURSOR=$#BUFFER
-    zle accept-line
-}
-zle -N peco-cdr
-bindkey '^x^d' peco-cdr
 
 
 #
@@ -228,6 +189,38 @@ fd() {
                   -o -type d -print 2> /dev/null | fzf +m) &&
   cd "$dir"
 }
+# find recent executed command
+function fzf-execute-history() {
+    local item
+    item=$(builtin history -n -r 1 | fzf --query="$LBUFFER")
+
+    if [[ -z "$item" ]]; then
+        return 1
+    fi
+
+    BUFFER="$item"
+    CURSOR=$#BUFFER
+    # execute command immidiately
+    # zle accept-line
+}
+zle -N fzf-execute-history
+bindkey '^x^b' fzf-execute-history
+
+# find recent moved directory 
+function fzf-cdr() {
+    local item
+    item=$(cdr -l | sed 's/^[^ ]\{1,\} \{1,\}//' | fzf)
+
+    if [[ -z "$item" ]]; then
+        return 1
+    fi
+
+    BUFFER="cd -- $item"
+    CURSOR=$#BUFFER
+    zle accept-line
+}
+zle -N fzf-cdr
+bindkey '^x^d' fzf-cdr
 
 #
 # * yarn
