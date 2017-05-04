@@ -189,6 +189,7 @@ fd() {
                   -o -type d -print 2> /dev/null | fzf +m) &&
   cd "$dir"
 }
+
 # find recent executed command
 function fzf-execute-history() {
     local item
@@ -221,6 +222,21 @@ function fzf-cdr() {
 }
 zle -N fzf-cdr
 bindkey '^x^d' fzf-cdr
+
+# find ghq directory
+function ghq-fzf() {
+  local selected_dir=$(ghq list | fzf --query="$LBUFFER")
+
+  if [ -n "$selected_dir" ]; then
+    BUFFER="cd $(ghq root)/${selected_dir}"
+    zle accept-line
+  fi
+
+  zle reset-prompt
+}
+
+zle -N ghq-fzf
+bindkey "^x^h" ghq-fzf
 
 #
 # * yarn
