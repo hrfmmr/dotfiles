@@ -127,7 +127,7 @@ alias g='git'
 alias -g B='`git branch -a | fzf --prompt "GIT BRANCH>" | head -n 1 | sed -e "s/^\*\s*//g"`'
 alias -g LR='`git branch -a | fzf --query "remotes/ " --prompt "GIT REMOTE BRANCH>" | head -n 1 | sed "s/remotes\/[^\/]*\/\(\S*\)/\1 \0/"`'
 alias f='fzf'
-alias ag='ag --smart-case --hidden'
+alias pt='pt --smart-case --hidden'
 
 function mkcd() {
 	mkdir $1;
@@ -171,7 +171,7 @@ if which docker-machine > /dev/null; then eval "$(docker-machine env default)"; 
 # * fzf
 #
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
-export FZF_DEFAULT_COMMAND='ag --smart-case --hidden -g ""'
+export FZF_DEFAULT_COMMAND='pt --smart-case --hidden -g ""'
 export FZF_DEFAULT_OPTS="--reverse --inline-info"
 # fe [FUZZY PATTERN] - Open the selected file with the default editor
 #   - Bypass fuzzy finder if there's only one match (--select-1)
