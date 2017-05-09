@@ -201,8 +201,7 @@ function fzf-execute-history() {
 
     BUFFER="$item"
     CURSOR=$#BUFFER
-    # execute command immidiately
-    # zle accept-line
+    zle reset-prompt
 }
 zle -N fzf-execute-history
 bindkey '^x^b' fzf-execute-history
