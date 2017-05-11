@@ -338,6 +338,10 @@ repo = 'kballard/vim-swift'
 [[plugins]]
 repo = 'Glench/Vim-Jinja2-Syntax'
 
+# iptables
+[[plugins]]
+repo = 'vim-scripts/iptables'
+
 
 # Editor Utils
 
