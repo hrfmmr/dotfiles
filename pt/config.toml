@@ -1,1 +1,1 @@
-ignore = [".git", ".env", ".venv"]
+ignore = [".git", ".env", ".venv", "node_modules"]
