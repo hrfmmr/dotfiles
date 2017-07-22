@@ -307,6 +307,7 @@ repo = 'w0rp/ale'
 hook_add = '''
   let g:ale_statusline_format = ['E%d', 'W%d', '']
   let g:ale_echo_msg_format = '%linter%: %s'
+  let g:ale_python_flake8_executable = expand('$HOME') . '/.pyenv/shims/flake8'
   nmap <silent> [a <Plug>(ale_previous_wrap)
   nmap <silent> ]a <Plug>(ale_next_wrap)
 '''
