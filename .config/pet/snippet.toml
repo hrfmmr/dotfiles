@@ -7,3 +7,8 @@
   description = "Convert id_rsa to .pem"
   command = "openssl rsa -in id_rsa -out id_rsa.pem -outform pem"
   output = ""
+
+[[snippets]]
+  description = "Remove all merged branch"
+  command = "git checkout master && git branch --merged | grep -v '*' | xargs -I % git branch -d %"
+  output = ""
