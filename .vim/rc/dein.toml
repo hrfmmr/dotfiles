@@ -10,9 +10,6 @@ repo = 'Shougo/deoplete.nvim'
 if = 'has("nvim")'
 hook_add = '''
   let g:deoplete#enable_at_startup = 1
-  inoremap <expr><tab> pumvisible() ? "\<C-n>" :
-        \ neosnippet#expandable_or_jumpable() ?
-        \    "\<Plug>(neosnippet_expand_or_jump)" : "\<tab>"
 '''
 
 # python
@@ -31,25 +28,6 @@ hook_add = '''
 
   let g:deoplete#sources#swift#daemon_autostart = 1
 '''
-
-
-# Snippet
-
-
-[[plugins]]
-repo = 'Shougo/neosnippet'
-hook_add = '''
-  imap <C-k> <Plug>(neosnippet_expand_or_jump)
-  smap <C-k> <Plug>(neosnippet_expand_or_jump)
-  xmap <C-k> <Plug>(neosnippet_expand_target)
-  if has('conceal')
-    set conceallevel=2 concealcursor=niv
-  endif
-'''
-
-
-[[plugins]]
-repo = 'pe-ter-/neosnippet-snippets'
 
 
 # Run Script
@@ -106,45 +84,6 @@ hook_add = '''
     \ expand('~/.config/nvim/nerdtree_plugin')
     \)
   endif
-'''
-
-[[plugins]]
-repo = 'pe-ter-/fzf.vim'
-rev = 'ag-default-options'
-if = 'executable("fzf")'
-on_cmd = ['FZF','fzf#run']
-hook_add = '''
-  set rtp+=~/.fzf
-  if !isdirectory(expand('~/.cache/fzf'))
-    call mkdir(expand('~/.cache/fzf'), 'p')
-  endif
-  nnoremap [fzf] <Nop>
-  nmap <Leader>z [fzf]
-  nnoremap <silent> [fzf]w :Windows<CR>
-  nnoremap <silent> [fzf]o :Files<CR>
-  nnoremap <silent> [fzf]b :Buffers<CR>
-  nnoremap <silent> [fzf]l :Lines<CR>
-  nnoremap <silent> [fzf]c :BLines<CR>
-  nnoremap <silent> [fzf]m :Marks<CR>
-  nnoremap <silent> [fzf]h :History<CR>
-  nnoremap <silent> [fzf]e :History:<CR>
-  nnoremap <silent> [fzf]/ :History/<CR>
-  nnoremap <silent> [fzf]f :Filetypes<CR>
-  nnoremap <silent> [fzf]t :Tags<CR>
-  nnoremap [fzf]a :Ag<Space>
-  nnoremap [fzf]A :Ag!<Space>
-  nnoremap <silent> [fzf]g :Ag<Space><C-R><C-W><CR>
-  let g:fzf_buffers_jump = 1
-  let g:fzf_history_dir = '~/.cache/fzf'
-  augroup FzfTagsGroup
-    autocmd!
-    au BufNewFile,BufRead *.py let g:fzf_tags_command = "ctags -R --languages=python --python-kinds=-iv --exclude=.tox --exclude=.toxenv -f `pwd`/tags `pwd`"
-    au VimEnter * command! -bang -nargs=* Ag
-      \ call fzf#vim#ag(<q-args>,
-      \                 <bang>0 ? fzf#vim#with_preview('up:60%')
-      \                         : fzf#vim#with_preview('right:50%:hidden', '?'),
-      \                 <bang>0)
-  augroup END
 '''
 
 [[plugins]]
@@ -340,10 +279,6 @@ hook_add = '''
     au BufRead,BufNewFile *.es6 set filetype=javascript.jsx
   augroup END
 '''
-
-# less
-[[plugins]]
-repo = 'groenewege/vim-less'
 
 # nginx
 [[plugins]]
