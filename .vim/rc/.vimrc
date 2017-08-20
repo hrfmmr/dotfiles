@@ -53,6 +53,7 @@ call s:source_rc('mappings.rc.vim')
 "
 set relativenumber number
 set imdisable
+set lazyredraw
 if has('nvim')
   let g:python3_host_prog = expand('$HOME') . '/.pyenv/shims/python3'
 else
@@ -217,4 +218,6 @@ if filereadable(expand("~/.vim/rc/plugins.vim"))
 endif
 
 syntax on
+set synmaxcol=256
+syntax sync minlines=256 maxlines=500
 filetype plugin indent on
