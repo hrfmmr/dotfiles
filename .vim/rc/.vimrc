@@ -35,6 +35,11 @@ augroup MyAutoCmd
   autocmd!
 augroup END
 
+"---------------------------------------------------------------------------
+" Functions:
+"
+call s:source_rc('functions.rc.vim')
+
 
 "---------------------------------------------------------------------------
 " Encoding:
@@ -153,6 +158,12 @@ set smartcase
 set wrapscan
 set incsearch
 set hlsearch
+augroup QuickFixGroup
+    autocmd!
+    au QuickFixCmdPost vimgrep call OpenModifiableQF()
+augroup END
+
+
 "
 "---------------------------------------------------------------------------
 " Indent:
@@ -202,12 +213,6 @@ augroup highlightZenkakuSpace
   autocmd VimEnter,ColorScheme * highlight ZenkakuSpace term=underline ctermbg=Red guibg=Red
   autocmd VimEnter,WinEnter * match ZenkakuSpace /　/
 augroup ENDase
-
-
-"---------------------------------------------------------------------------
-" Functions:
-"
-call s:source_rc('functions.rc.vim')
 
 
 "---------------------------------------------------------------------------

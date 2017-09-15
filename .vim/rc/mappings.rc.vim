@@ -72,7 +72,7 @@ nnoremap <silent> [q :cprevious<CR>
 nnoremap <silent> ]q :cnext<CR>
 nnoremap <silent> [Q :<C-u>cfirst<CR>
 nnoremap <silent> ]Q :<C-u>clast<CR>
-nnoremap <silent> <leader>qo :copen<CR>
+nnoremap <silent> <leader>qo :call OpenModifiableQF()<CR>
 nnoremap <silent> <leader>qc :cclose<CR>
 
 " Terminal Emulator

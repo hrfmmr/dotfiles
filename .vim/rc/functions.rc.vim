@@ -40,11 +40,17 @@ if has('unix')
 endif
 
 function! s:Jq(...)
-    if 0 == a:0
-        let l:arg = "."
-    else
-        let l:arg = a:1
-    endif
-    execute "%! jq \"" . l:arg . "\""
+  if 0 == a:0
+    let l:arg = "."
+  else
+      let l:arg = a:1
+  endif
+  execute "%! jq \"" . l:arg . "\""
 endfunction
 command! -nargs=? Jq call s:Jq(<f-args>)
+
+function! OpenModifiableQF()
+  cw
+  set modifiable
+  set nowrap
+endfunction
