@@ -159,8 +159,8 @@ set wrapscan
 set incsearch
 set hlsearch
 augroup QuickFixGroup
-    autocmd!
-    au QuickFixCmdPost vimgrep call OpenModifiableQF()
+  autocmd!
+  au QuickFixCmdPost vimgrep call OpenModifiableQF()
 augroup END
 
 

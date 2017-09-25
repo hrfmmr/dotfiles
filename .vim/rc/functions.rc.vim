@@ -43,7 +43,7 @@ function! s:Jq(...)
   if 0 == a:0
     let l:arg = "."
   else
-      let l:arg = a:1
+    let l:arg = a:1
   endif
   execute "%! jq \"" . l:arg . "\""
 endfunction
@@ -54,3 +54,9 @@ function! OpenModifiableQF()
   set modifiable
   set nowrap
 endfunction
+
+function! s:VimGrep(q, ...)
+  let file_pattern = get(a:, 1, '%')
+  execute 'vimgrep /\v' . a:q . '/ ' . file_pattern
+endfunction
+command! -nargs=+ V call s:VimGrep(<f-args>)
