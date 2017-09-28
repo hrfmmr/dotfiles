@@ -1,5 +1,5 @@
 [user]
-	name = p_t
+	name = Hirofumi Miura
 	email = ladiciushm@gmail.com
 [color]
 	ui = true
@@ -19,11 +19,7 @@
 	std = stash drop
 	lg1 = log --graph --abbrev-commit --decorate --date=relative --format=format:'%C(red)%h%C(reset) - %C(green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(yellow)%d%C(reset)' --all
 	lg = !"git lg1"
-[init]
-	templatedir = /home/p_t/.git_template
 [push]
 	default = current
 [core]
 	editor = nvim
-[rebase]
-	autosquash = true
