@@ -128,6 +128,7 @@ alias -g B='`git branch -a | fzf --prompt "GIT BRANCH>" | head -n 1 | sed -e "s/
 alias -g LR='`git branch -a | fzf --query "remotes/ " --prompt "GIT REMOTE BRANCH>" | head -n 1 | sed "s/remotes\/[^\/]*\/\(\S*\)/\1 \0/"`'
 alias f='fzf'
 alias pt='pt --smart-case --hidden'
+alias be='bundle exec'
 
 function mkcd() {
 	mkdir $1;
