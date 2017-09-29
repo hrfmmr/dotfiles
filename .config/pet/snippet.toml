@@ -12,3 +12,8 @@
   description = "Remove all merged branch"
   command = "git checkout master && git branch --merged | grep -v '*' | xargs -I % git branch -d %"
   output = ""
+
+[[snippets]]
+  description = "Fetch archived repo from github"
+  command = "curl -L https://api.github.com/repos/{{ user }}/{{ repo }}/tarball/{{ branch }} > {{ repo }}.tar.gz"
+  output = ""
