@@ -1,0 +1,9 @@
+memodir = "${HOME}/Dropbox/memo"
+editor = "nvim"
+column = 20
+selectcmd = "fzf"
+grepcmd = "pt ${PATTERN} ${FILES}"
+assetsdir = "."
+pluginsdir = "${HOME}/.config/memo/plugins"
+templatedirfile = ""
+templatebodyfile = ""
