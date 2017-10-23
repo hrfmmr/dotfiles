@@ -52,8 +52,6 @@ noremap <silent> <Space>e :e!<CR>
 " Tab Handling
 nnoremap <silent> <leader>te :<C-u>tabedit<CR>
 nnoremap <silent> <leader>tc :<C-u>tabclose<CR>
-nnoremap <C-[> :tabprevious<CR>
-nnoremap <C-]> :tabnext<CR>
 nnoremap <silent> <leader>tf :tabfirst<CR>
 nnoremap <silent> <leader>tl :tablast<CR>
 nnoremap <silent> <leader>ts :tab<space>split<CR>
