@@ -6,9 +6,6 @@ map s <Nop>
 " Insert new line
 nmap <CR> i<CR><ESC>
 
-" Dvorak F
-nnoremap t f
-nnoremap T F
 " Close pair
 inoremap ( ()<ESC>i
 inoremap <expr> ) ClosePair(')')
@@ -57,9 +54,6 @@ nnoremap <silent> <leader>tl :tablast<CR>
 nnoremap <silent> <leader>ts :tab<space>split<CR>
 " Search visual selected
 vnoremap // y/<C-R>"<CR>
-" Search prefixing
-cnoremap <expr> / getcmdtype() == '/' ? '\/' : '/'
-cnoremap <expr> ? getcmdtype() == '?' ? '\?' : '?'
 " Location List
 nnoremap <silent> <leader>lo :lopen<CR>
 nnoremap <silent> <leader>lc :lclose<CR>
