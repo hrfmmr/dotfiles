@@ -129,6 +129,8 @@ alias -g LR='`git branch -a | fzf --query "remotes/ " --prompt "GIT REMOTE BRANC
 alias f='fzf'
 alias pt='pt --smart-case --hidden'
 alias be='bundle exec'
+alias d='docker'
+alias d-c='docker-compose'
 
 function mkcd() {
 	mkdir $1;
