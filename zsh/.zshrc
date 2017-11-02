@@ -132,6 +132,30 @@ alias be='bundle exec'
 alias d='docker'
 alias d-c='docker-compose'
 
+function git-checkout() {
+    g checkout B;
+}
+zle -N git-checkout
+bindkey '^g^o' git-checkout
+
+function git-pull() {
+    g pull origin B;
+}
+zle -N git-pull
+bindkey '^g^p' git-pull
+
+function git-rebase() {
+    g rebase B;
+}
+zle -N git-rebase
+bindkey '^g^r' git-rebase
+
+function git-rebase-interactive() {
+    g rebase -i B;
+}
+zle -N git-rebase-interactive
+bindkey '^g^i' git-rebase-interactive
+
 function mkcd() {
 	mkdir $1;
 	cd $1;
