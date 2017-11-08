@@ -10,6 +10,12 @@ export XDG_CONFIG_HOME=$HOME/.config
 #
 export GOPATH=$HOME/go
 
+#
+# * postgresql
+#
+export PGDATA=/usr/local/var/postgres
+export PGHOST=localhost
+
 path=(    
     $HOME/bin(N-/)
     $HOME/.pyenv/bin(N-/)
