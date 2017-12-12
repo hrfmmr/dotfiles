@@ -264,6 +264,21 @@ function ghq-fzf() {
 zle -N ghq-fzf
 bindkey "^x^h" ghq-fzf
 
+# find git worktree directory
+function worktree-fzf() {
+  local selected_dir=$(git worktree list | awk '{print $1}' | fzf --query="$LBUFFER")
+
+  if [ -n "$selected_dir" ]; then
+    BUFFER="cd ${selected_dir}"
+    zle accept-line
+  fi
+
+  zle reset-prompt
+}
+
+zle -N worktree-fzf
+bindkey "^g^w" worktree-fzf
+
 #
 # * yarn
 #
