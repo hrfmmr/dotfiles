@@ -287,7 +287,7 @@ hook_add = '''
 
 # nginx
 [[plugins]]
-repo = "evanmiller/nginx-vim-syntax"
+repo = "chr4/nginx.vim"
 
 # toml
 [[plugins]]
