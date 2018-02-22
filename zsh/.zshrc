@@ -59,6 +59,8 @@ SAVEHIST=10000000
 # * Search
 #
 # search command history incrementally
+bindkey '^r' \
+    history-incremental-pattern-search-backward
 bindkey '^s' \
     history-incremental-pattern-search-forward
 # search command history incrementally (in typing)
