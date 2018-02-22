@@ -145,8 +145,7 @@ hook_post_source = '''
   call denite#custom#option('_', 'highlight_mode_insert', 'Visual')
   call denite#custom#option('_', 'highlight_mode_normal', 'TermCursor')
   call denite#custom#option('_', 'highlight_matched_range', 'None')
-  call denite#custom#option('_', 'highlight_matched_cahr', 'None')
-  highlight default link deniteMatchedChar Constant
+  call denite#custom#option('_', 'highlight_matched_char', 'Constant')
 '''
 
 
