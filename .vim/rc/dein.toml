@@ -311,6 +311,10 @@ repo = 'vim-scripts/iptables'
 [[plugins]]
 repo = 'ekalinin/Dockerfile.vim'
 
+# Kotlin
+[[plugins]]
+repo = 'udalov/kotlin-vim'
+
 # Editor Utils
 
 [[plugins]]
