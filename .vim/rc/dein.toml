@@ -343,6 +343,18 @@ hook_add = '''
   map R <Plug>(operator-replace)
 '''
 
+# markdown
+
+[[plugins]]
+repo = 'godlygeek/tabular'
+
+[[plugins]]
+repo = 'plasticboy/vim-markdown'
+depends = ['tabular']
+hook_add = '''
+  let g:vim_markdown_conceal = 0
+'''
+
 # python class outline
 [[plugins]]
 repo = "majutsushi/tagbar"
