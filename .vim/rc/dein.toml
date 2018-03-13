@@ -315,6 +315,17 @@ repo = 'ekalinin/Dockerfile.vim'
 [[plugins]]
 repo = 'udalov/kotlin-vim'
 
+# PlantUML
+
+[[plugins]]
+repo = 'aklt/plantuml-syntax'
+hook_add = '''
+  augroup PlantUMLGroup
+    autocmd!
+    au FileType plantuml command! OpenUml :!open -a "Google Chrome" %
+  augroup END
+'''
+
 # Editor Utils
 
 [[plugins]]
