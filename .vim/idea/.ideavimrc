@@ -1,0 +1,67 @@
+" base
+set relativenumber number
+set nobackup
+set noswapfile
+set hlsearch
+highlight Search guibg=#378369
+
+" clipboard
+set clipboard=unnamed
+
+" Search
+set ignorecase
+set smartcase
+set wrapscan
+set incsearch
+set hlsearch
+
+" Indent
+set expandtab
+set smarttab
+set autoindent
+set smartindent
+
+" Map Leader Key
+let g:mapleader=","
+
+" Enter in normal
+nnoremap <CR> i<CR><ESC>
+
+" Selection
+nnoremap vv vf
+nnoremap vV vF
+" Switch tab
+nnoremap gc gt
+nnoremap gr gT
+" Emacs key bind for moving cursole while INSERT
+inoremap <c-n> <down>
+inoremap <c-p> <up>
+inoremap <c-b> <left>
+inoremap <c-f> <right>
+inoremap <c-a> <Esc>_i
+inoremap <c-e> <Esc>$a
+" Split window
+nnoremap <silent> <Space>V :new<CR>
+nnoremap <silent> <Space>H :vne<CR>
+" Switch window
+nnoremap <c-j> <c-w>j
+nnoremap <c-k> <c-w>k
+nnoremap <c-l> <c-w>l
+nnoremap <c-h> <c-w>h
+" paging
+noremap <Space>j <c-f>
+noremap <Space>k <c-b>
+" File write/quit/update
+noremap <silent> <Space>w :w<CR>
+noremap <silent> <Space>q :q<CR>
+noremap <silent> <Space>e :e!<CR>
+" Tab Handling
+nnoremap <silent> <leader>te :<C-u>tabedit<CR>
+nnoremap <silent> <leader>tc :<C-u>tabclose<CR>
+nnoremap <C-[> :tabprevious<CR>
+nnoremap <C-]> :tabnext<CR>
+nnoremap <silent> <leader>tf :tabfirst<CR>
+nnoremap <silent> <leader>tl :tablast<CR>
+nnoremap <silent> <leader>ts :tab<space>split<CR>
+" Search visual selected
+vnoremap // y/<C-R>"<CR>
