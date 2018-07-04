@@ -33,13 +33,18 @@ select-word-style default
 zstyle ':zle:*' word-chars " /=;@:{},|"
 zstyle ':zle:*' word-style unspecified
 
-# enable cdr
+# hooks
 autoload -Uz add-zsh-hook
 autoload -Uz chpwd_recent_dirs cdr 
 add-zsh-hook chpwd chpwd_recent_dirs 
+add-zsh-hook precmd reflect_current_dir
 zstyle ':chpwd:*' recent-dirs-max 500
 zstyle ':chpwd:*' recent-dirs-default true
 zstyle ':chpwd:*' recent-dirs-pushd true
+
+function reflect_current_dir() {
+    echo -ne "\033]0;$(pwd | rev | awk -F \/ '{print $1}'| rev)\007"
+}
 
 #
 # * History
