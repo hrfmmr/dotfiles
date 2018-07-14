@@ -29,6 +29,35 @@ hook_add = '''
   let g:deoplete#sources#swift#daemon_autostart = 1
 '''
 
+# go
+[[plugins]]
+repo = 'fatih/vim-go'
+on_ft = 'go'
+hook_add = '''
+  augroup GolangGroup
+    autocmd!
+
+    let g:go_fmt_command = "goimports"
+    let g:go_auto_type_info = 1
+    let g:go_auto_sameids = 1
+
+    function! s:build_go_files()
+      let l:file = expand('%')
+      if l:file =~# '^\f\+_test\.go$'
+        call go#test#Test(0, 1)
+      elseif l:file =~# '^\f\+\.go$'
+        call go#cmd#Build(0)
+      endif
+    endfunction
+
+    autocmd FileType go nmap <Leader>i <Plug>(go-info)
+    autocmd FileType go nnoremap <Leader>b :<C-u>call <SID>build_go_files()<CR>
+    autocmd FileType go nmap <Leader>x <Plug>(go-run)
+    autocmd FileType go nmap <Leader>T <Plug>(go-test)
+    autocmd FileType go nmap <Leader>C <Plug>(go-coverage-toggle)
+  augroup END
+'''
+
 
 # Run Script
 
