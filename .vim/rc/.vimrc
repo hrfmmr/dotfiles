@@ -177,6 +177,7 @@ set whichwrap=b,s,h,l,<,>,[,]
 set ts=4 sts=4 sw=4
 augroup IndentGroup
   autocmd!
+  au BufNewFile,BufRead *.go setlocal noexpandtab ts=4 sts=4 sw=4
   au BufNewFile,BufRead *.py setlocal ts=4 sts=4 sw=4
   au BufNewFile,BufRead *.{sh} setlocal ts=2 sts=2 sw=2
   au BufNewFile,BufRead *.{json,xml,html,toml,yaml,yml} setlocal ts=2 sts=2 sw=2

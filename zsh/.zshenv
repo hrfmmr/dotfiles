@@ -26,6 +26,7 @@ path=(
     $HOME/bin(N-/)
     $HOME/.pyenv/bin(N-/)
     $HOME/.rbenv/bin(N-/)
+    $HOME/.goenv/shims(N-/)
     $HOME/.nodebrew/current/bin(N-)
     $HOME/bin/FDK/Tools/osx(N-/)
     $GOPATH/bin(N-/)

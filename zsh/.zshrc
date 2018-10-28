@@ -197,6 +197,10 @@ if which pyenv-virtualenv-init > /dev/null; then eval "$(pyenv virtualenv-init -
 #
 if which rbenv > /dev/null; then eval "$(rbenv init -)"; fi
 
+#
+# * goenv
+#
+if which goenv > /dev/null; then eval "$(goenv init -)"; fi
 
 #
 # * docker

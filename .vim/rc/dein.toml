@@ -40,6 +40,14 @@ hook_add = '''
     let g:go_fmt_command = "goimports"
     let g:go_auto_type_info = 1
     let g:go_auto_sameids = 1
+    let g:go_highlight_build_constraints = 1
+    let g:go_highlight_extra_types = 1
+    let g:go_highlight_fields = 1
+    let g:go_highlight_functions = 1
+    let g:go_highlight_methods = 1
+    let g:go_highlight_operators = 1
+    let g:go_highlight_structs = 1
+    let g:go_highlight_types = 1
 
     function! s:build_go_files()
       let l:file = expand('%')
@@ -57,6 +65,16 @@ hook_add = '''
     autocmd FileType go nmap <Leader>C <Plug>(go-coverage-toggle)
   augroup END
 '''
+
+[[plugins]]
+repo = 'mdempsky/gocode'
+rtp = 'nvim'
+on_ft = 'go'
+
+[[plugins]]
+repo = 'zchee/deoplete-go'
+build = 'make'
+on_ft = 'go'
 
 
 # Run Script
@@ -281,6 +299,8 @@ hook_add = '''
 [[plugins]]
 repo = 'w0rp/ale'
 hook_add = '''
+  let g:ale_sign_error = '⤫'
+  let g:ale_sign_warning = '⚠'
   let g:ale_statusline_format = ['E%d', 'W%d', '']
   let g:ale_echo_msg_format = '%linter%: %s'
   let g:ale_python_flake8_executable = expand('$HOME') . '/.pyenv/shims/flake8'
@@ -400,6 +420,34 @@ hook_add = '''
 repo = "majutsushi/tagbar"
 hook_add = '''
   nmap <Leader>c :TagbarToggle<CR>
+
+  let g:tagbar_type_go = {
+    \ 'ctagstype' : 'go',
+    \ 'kinds'     : [
+      \ 'p:package',
+      \ 'i:imports:1',
+      \ 'c:constants',
+      \ 'v:variables',
+      \ 't:types',
+      \ 'n:interfaces',
+      \ 'w:fields',
+      \ 'e:embedded',
+      \ 'm:methods',
+      \ 'r:constructor',
+      \ 'f:functions'
+    \ ],
+    \ 'sro' : '.',
+    \ 'kind2scope' : {
+      \ 't' : 'ctype',
+      \ 'n' : 'ntype'
+    \ },
+    \ 'scope2kind' : {
+      \ 'ctype' : 't',
+      \ 'ntype' : 'n'
+    \ },
+    \ 'ctagsbin'  : 'gotags',
+    \ 'ctagsargs' : '-sort -silent'
+  \ }
 '''
 
 # indent line
