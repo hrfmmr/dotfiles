@@ -19,7 +19,12 @@
 	std = stash drop
 	lg1 = log --graph --abbrev-commit --decorate --date=relative --format=format:'%C(red)%h%C(reset) - %C(green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(yellow)%d%C(reset)' --all
 	lg = !"git lg1"
+    issue = "!ghi show $(echo $(git symbolic-ref --short HEAD) |awk -F "/" '{print $NF}')"
 [push]
 	default = current
 [core]
 	editor = nvim
+[github]
+	user = hrfmmr
+[ghi]
+	token = !security find-internet-password -a hrfmmr -s github.com -l 'ghi token' -w
