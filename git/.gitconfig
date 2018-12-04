@@ -17,9 +17,11 @@
 	sta = stash apply
 	stp = stash pop
 	std = stash drop
-	lg1 = log --graph --abbrev-commit --decorate --date=relative --format=format:'%C(red)%h%C(reset) - %C(green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(yellow)%d%C(reset)' --all
-	lg = !"git lg1"
-    issue = "!ghi show $(echo $(git symbolic-ref --short HEAD) |awk -F "/" '{print $NF}')"
+	lg = log --graph --abbrev-commit --decorate --date=relative --format=format:'%C(red)%h%C(reset) - %C(green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(yellow)%d%C(reset)' --all
+	li = !hub issue --format='%sC %i %t labels:%l | %as  %Nc%n'
+	lp = !hub pr list --format='%sC %i %t labels:%l | author:@%au  %Nc%n'
+	issue = "!ghi show $(echo $(git symbolic-ref --short HEAD) | awk -F "/" '{print $NF}')"
+	pr = !hub browse -- compare/$(git symbolic-ref --short HEAD)'?'expand=1'&'body=%0A%23$(echo $(git symbolic-ref --short HEAD) | awk -F '[/_-]' '{print $NF}')
 [push]
 	default = current
 [core]
