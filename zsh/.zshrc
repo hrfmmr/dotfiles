@@ -158,13 +158,6 @@ function git-rebase() {
 zle -N git-rebase
 bindkey '^g^r' git-rebase
 
-function git-rebase-interactive() {
-    g rebase -i B;
-    zle reset-prompt
-}
-zle -N git-rebase-interactive
-bindkey '^g^i' git-rebase-interactive
-
 function mkcd() {
 	mkdir $1;
 	cd $1;
@@ -288,9 +281,38 @@ function worktree-fzf() {
 
   zle reset-prompt
 }
-
 zle -N worktree-fzf
 bindkey "^g^w" worktree-fzf
+
+# browse github issue
+function browse-ghissue-fzf() {
+  local selected_issue=$(hub issue --format='%sC %i %t labels:%l milestone:%Mt | %as  %Nc%n' | fzf --query="$LBUFFER")
+
+  if [ -n "$selected_issue" ]; then
+    issue=$(awk '{print $1}' <<< "$selected_issue" | sed -E 's/^#([0-9]+)/\1/')
+    BUFFER="hub browse -- issues/${issue}"
+    zle accept-line
+  fi
+
+  zle reset-prompt
+}
+zle -N browse-ghissue-fzf
+bindkey "^g^i" browse-ghissue-fzf
+
+# browse github pull request
+function browse-ghpr-fzf() {
+  local selected_pr=$(hub pr list --format='%sC %i %t labels:%l milestone:%Mt | author:@%au  %Nc%n' | fzf --query="$LBUFFER")
+
+  if [ -n "$selected_pr" ]; then
+    pr=$(awk '{print $1}' <<< "$selected_pr" | sed -E 's/^#([0-9]+)/\1/')
+    BUFFER="hub browse -- pull/${pr}"
+    zle accept-line
+  fi
+
+  zle reset-prompt
+}
+zle -N browse-ghpr-fzf
+bindkey "^g^l" browse-ghpr-fzf
 
 #
 # * yarn
