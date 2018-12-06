@@ -284,6 +284,21 @@ function worktree-fzf() {
 zle -N worktree-fzf
 bindkey "^g^w" worktree-fzf
 
+# checkout new branch related to an github issue
+function checkout-ghissue-fzf() {
+  local selected_issue=$(hub issue --format='%sC %i %t labels:%l milestone:%Mt | %as  %Nc%n' | fzf --query="$LBUFFER")
+
+  if [ -n "$selected_issue" ]; then
+    issue=$(awk '{print $1}' <<< "$selected_issue" | sed -E 's/^#([0-9]+)/\1/')
+    BUFFER="git checkout -b feature/${issue}"
+    zle accept-line
+  fi
+
+  zle reset-prompt
+}
+zle -N checkout-ghissue-fzf
+bindkey "^g^b" checkout-ghissue-fzf
+
 # browse github issue
 function browse-ghissue-fzf() {
   local selected_issue=$(hub issue --format='%sC %i %t labels:%l milestone:%Mt | %as  %Nc%n' | fzf --query="$LBUFFER")
