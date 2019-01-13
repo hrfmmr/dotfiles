@@ -24,8 +24,8 @@ export JAVA_HOME=`/usr/libexec/java_home -v "1.8" -F`
 
 path=(    
     $HOME/bin(N-/)
-    $HOME/.pyenv/bin(N-/)
-    $HOME/.rbenv/bin(N-/)
+    $HOME/.pyenv/shims(N-/)
+    $HOME/.rbenv/shims(N-/)
     $HOME/.goenv/shims(N-/)
     $HOME/.nodebrew/current/bin(N-)
     $HOME/bin/FDK/Tools/osx(N-/)
