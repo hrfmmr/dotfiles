@@ -196,11 +196,6 @@ if which rbenv > /dev/null; then eval "$(rbenv init -)"; fi
 if which goenv > /dev/null; then eval "$(goenv init -)"; fi
 
 #
-# * docker
-#
-if which docker-machine > /dev/null; then eval "$(docker-machine env default)"; fi
-
-#
 # * fzf
 #
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
@@ -345,3 +340,41 @@ function pet-select() {
 zle -N pet-select
 stty -ixon
 bindkey '^x^p' pet-select
+
+#
+# zplug
+#
+source ~/.zplug/init.zsh
+
+# ui
+zplug "chrissicool/zsh-256color"
+zplug "zsh-users/zsh-syntax-highlighting", defer:2
+
+# history
+zplug "zsh-users/zsh-history-substring-search"
+if zplug check "zsh-users/zsh-history-substring-search"; then
+    bindkey '^P' history-substring-search-up
+    bindkey '^N' history-substring-search-down
+fi
+
+# completion
+zplug "zsh-users/zsh-autosuggestions"
+zplug "zsh-users/zsh-completions"
+
+# notifier
+zplug "marzocchi/zsh-notify"
+zstyle ':notify:*' error-title "😢 Command failed... (in #{time_elapsed} seconds)"
+zstyle ':notify:*' success-title "✔ Command finished! (in #{time_elapsed} seconds)"
+zstyle ':notify:*' command-complete-timeout 10
+zstyle ':notify:*' activate-terminal yes
+
+# Install plugins if there are plugins that have not been installed
+if ! zplug check --verbose; then
+    printf "Install? [y/N]: "
+    if read -q; then
+        echo; zplug install
+    fi
+fi
+
+# Then, source plugins and add commands to $PATH
+zplug load
