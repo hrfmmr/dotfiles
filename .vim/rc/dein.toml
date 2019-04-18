@@ -350,6 +350,10 @@ hook_add = '''
   augroup END
 '''
 
+# tmux
+[[plugins]]
+repo = 'tmux-plugins/vim-tmux'
+
 # Editor Utils
 
 [[plugins]]
