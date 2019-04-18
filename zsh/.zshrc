@@ -349,6 +349,8 @@ source ~/.zplug/init.zsh
 # ui
 zplug "chrissicool/zsh-256color"
 zplug "zsh-users/zsh-syntax-highlighting", defer:2
+zplug "mafredri/zsh-async", from:github
+zplug "sindresorhus/pure", use:pure.zsh, from:github, as:theme
 
 # history
 zplug "zsh-users/zsh-history-substring-search"
