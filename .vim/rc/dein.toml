@@ -4,6 +4,20 @@ repo = 'Shougo/dein.vim'
 
 # Code Completion
 
+[[plugins]]
+repo = 'autozimu/LanguageClient-neovim'
+rev = 'next'
+build = 'bash install.sh'
+hook_add = '''
+  set hidden
+  let g:LanguageClient_autoStart = 1
+  let g:LanguageClient_serverCommands = {
+    \ 'python': ['~/.pyenv/shims/pyls'],
+\ }
+  nnoremap <silent> <C-g><C-d> :call LanguageClient#textDocument_definition()<CR>
+  nnoremap <silent> <C-g><C-r> :Denite references<CR>
+  nnoremap <silent> <C-g><C-h> :call LanguageClient#textDocument_hover()<CR>
+'''
 
 [[plugins]]
 repo = 'Shougo/deoplete.nvim'
@@ -17,11 +31,6 @@ repo = 'Shougo/echodoc.vim'
 hook_post_source = '''
   call echodoc#enable()
 '''
-
-# python
-[[plugins]]
-repo = 'zchee/deoplete-jedi'
-on_ft = 'python'
 
 # swift
 [[plugins]]
@@ -158,15 +167,6 @@ hook_add = '''
 '''
 
 [[plugins]]
-repo = 'ozelentok/denite-gtags'
-hook_add = '''
-  nnoremap <silent> <C-g><C-d> :DeniteCursorWord gtags_def<CR>
-  nnoremap <silent> <C-g><C-r> :DeniteCursorWord gtags_ref<CR>
-  nnoremap <silent> <C-g><C-g> :DeniteCursorWord gtags_grep:
-  nnoremap          <C-g>g     :Denite gtags_grep:
-'''
-
-[[plugins]]
 repo = 'Shougo/denite.nvim'
 depends = ['neomru.vim']
 on_event = 'BufRead'
@@ -281,37 +281,6 @@ hook_add = '''
     autocmd!
     autocmd FileType git :setlocal foldlevel=99
   augroup END
-'''
-
-
-# Ctags
-
-
-[[plugins]]
-repo = 'soramugi/auto-ctags.vim'
-hook_add = '''
-  augroup CtagsGroup
-    autocmd!
-    au BufNewFile,BufRead *.py,*.rb let g:auto_ctags = 0
-    au BufNewFile,BufRead *.py let g:auto_ctags_tags_args = "--languages=python -f `pwd`/tags `pwd`"
-    au BufNewFile,BufRead *.rb let g:auto_ctags_tags_args = "--languages=ruby -f ~/rb.tags `pwd`"
-  augroup END
-'''
-
-
-# Linter
-
-
-[[plugins]]
-repo = 'w0rp/ale'
-hook_add = '''
-  let g:ale_sign_error = '⤫'
-  let g:ale_sign_warning = '⚠'
-  let g:ale_statusline_format = ['E%d', 'W%d', '']
-  let g:ale_echo_msg_format = '%linter%: %s'
-  let g:ale_python_flake8_executable = expand('$HOME') . '/.pyenv/shims/flake8'
-  nmap <silent> [a <Plug>(ale_previous_wrap)
-  nmap <silent> ]a <Plug>(ale_next_wrap)
 '''
 
 
