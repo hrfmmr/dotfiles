@@ -167,6 +167,10 @@ function ptr() {
     pt -0 -l "$1" | xargs -0 perl -pi.bak -e "s/$1/$2/g";
 }
 
+function restore_bak() {
+    find . -type f -exec rename -fv 's/\.bak$//' {} \;
+}
+
 #
 # * Plugins
 #
