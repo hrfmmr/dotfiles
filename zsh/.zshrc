@@ -163,6 +163,10 @@ function mkcd() {
 	cd $1;
 }
 
+function ptr() {
+    pt -0 -l "$1" | xargs -0 perl -pi.bak -e "s/$1/$2/g";
+}
+
 #
 # * Plugins
 #
