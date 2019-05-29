@@ -209,6 +209,8 @@ if which goenv > /dev/null; then eval "$(goenv init -)"; fi
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 export FZF_DEFAULT_COMMAND='pt --smart-case --hidden -g ""'
 export FZF_DEFAULT_OPTS="--reverse --inline-info"
+[ -n "$NVIM_LISTEN_ADDRESS" ] && FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --no-height"
+
 # fe [FUZZY PATTERN] - Open the selected file with the default editor
 #   - Bypass fuzzy finder if there's only one match (--select-1)
 #   - Exit if there's no match (--exit-0)
