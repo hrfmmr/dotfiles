@@ -13,10 +13,13 @@ hook_add = '''
   let g:LanguageClient_autoStart = 1
   let g:LanguageClient_serverCommands = {
     \ 'python': ['~/.pyenv/shims/pyls'],
+    \ 'go': ['gopls'],
 \ }
   nnoremap <silent> <C-g><C-d> :call LanguageClient#textDocument_definition()<CR>
   nnoremap <silent> <C-g><C-r> :Denite references<CR>
   nnoremap <silent> <C-g><C-h> :call LanguageClient#textDocument_hover()<CR>
+  " Run gofmt and goimports on save
+  autocmd BufWritePre *.go :call LanguageClient#textDocument_formatting_sync()
 '''
 
 [[plugins]]
@@ -80,11 +83,6 @@ hook_add = '''
     autocmd FileType go nmap <Leader>C <Plug>(go-coverage-toggle)
   augroup END
 '''
-
-[[plugins]]
-repo = 'mdempsky/gocode'
-rtp = 'nvim'
-on_ft = 'go'
 
 [[plugins]]
 repo = 'zchee/deoplete-go'
