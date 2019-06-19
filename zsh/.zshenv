@@ -8,7 +8,7 @@ export XDG_CONFIG_HOME=$HOME/.config
 #
 # * go
 #
-export GOPATH=$HOME/go
+export GOPATH=$HOME
 
 #
 # * postgresql
