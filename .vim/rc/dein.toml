@@ -35,18 +35,6 @@ hook_post_source = '''
   call echodoc#enable()
 '''
 
-# swift
-[[plugins]]
-repo = 'landaire/deoplete-swift'
-on_ft = 'swift'
-hook_add = '''
-  if executable('brew') && !executable('sourcekitten')
-    execute '!brew install sourcekitten'
-  endif
-
-  let g:deoplete#sources#swift#daemon_autostart = 1
-'''
-
 # go
 [[plugins]]
 repo = 'fatih/vim-go'
@@ -83,11 +71,6 @@ hook_add = '''
     autocmd FileType go nmap <Leader>C <Plug>(go-coverage-toggle)
   augroup END
 '''
-
-[[plugins]]
-repo = 'zchee/deoplete-go'
-build = 'make'
-on_ft = 'go'
 
 
 # Run Script
