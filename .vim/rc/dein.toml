@@ -419,8 +419,14 @@ repo = 'godlygeek/tabular'
 [[plugins]]
 repo = 'plasticboy/vim-markdown'
 depends = ['tabular']
+on_event = 'VimEnter'
 hook_add = '''
   let g:vim_markdown_conceal = 0
+  let g:tex_conceal = ""
+  let g:vim_markdown_math = 1
+'''
+hook_post_source = '''
+  set conceallevel=0
 '''
 
 # python class outline
