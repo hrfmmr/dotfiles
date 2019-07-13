@@ -1,0 +1,9 @@
+{
+  "python.formatting.provider": "black",
+  "python.formatting.blackPath": "${workspaceFolder}/.venv/bin/black",
+  "python.jediEnabled": false,
+  "python.linting.pylintEnabled": false,
+  "python.linting.mypyEnabled": true,
+  "python.linting.mypyPath": "${workspaceFolder}/.venv/bin/mypy",,
+  "python.pythonPath": "${workspaceFolder}/.venv/bin/python"
+}
