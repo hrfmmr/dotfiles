@@ -207,7 +207,8 @@ if which goenv > /dev/null; then eval "$(goenv init -)"; fi
 # * fzf
 #
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
-export FZF_DEFAULT_COMMAND='pt --smart-case --hidden -g ""'
+export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow --exclude ".git" ""'
+export FZF_ALT_C_COMMAND='fd --type d --hidden --follow --exclude ".git" ""'
 export FZF_DEFAULT_OPTS="--reverse --inline-info"
 [ -n "$NVIM_LISTEN_ADDRESS" ] && FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --no-height"
 
