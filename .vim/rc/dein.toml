@@ -5,9 +5,29 @@ repo = 'Shougo/dein.vim'
 # Code Completion
 
 [[plugins]]
-repo = 'neoclide/coc.nvim'
-build = 'coc#util#install()'
-hook_add = 'source ~/.vim/rc/coc.rc.vim'
+repo = 'autozimu/LanguageClient-neovim'
+rev = 'next'
+build = 'bash install.sh'
+hook_add = '''
+  set hidden
+  let g:LanguageClient_autoStart = 1
+  let g:LanguageClient_serverCommands = {
+    \ 'python': ['pyls'],
+    \ 'go': ['gopls'],
+\ }
+  nnoremap <silent> <C-g><C-d> :call LanguageClient#textDocument_definition()<CR>
+  nnoremap <silent> <C-g><C-r> :Denite references<CR>
+  nnoremap <silent> <C-g><C-h> :call LanguageClient#textDocument_hover()<CR>
+  " Run gofmt and goimports on save
+  autocmd BufWritePre *.go :call LanguageClient#textDocument_formatting_sync()
+'''
+
+[[plugins]]
+repo = 'Shougo/deoplete.nvim'
+if = 'has("nvim")'
+hook_add = '''
+  let g:deoplete#enable_at_startup = 1
+'''
 
 [[plugins]]
 repo = 'Shougo/echodoc.vim'
@@ -50,6 +70,16 @@ hook_add = '''
     autocmd FileType go nmap <Leader>T <Plug>(go-test)
     autocmd FileType go nmap <Leader>C <Plug>(go-coverage-toggle)
   augroup END
+'''
+
+
+# Code formatting
+
+[[plugins]]
+repo = 'python/black'
+on_ft = 'python'
+hook_add = '''
+  autocmd BufWritePre *.py execute ':Black'
 '''
 
 
@@ -157,6 +187,7 @@ hook_post_source = ''' "{{{
     \ 'highlight_filter_background': 'DeniteFilter',
     \ 'highlight_matched_char': 'Underlined',
     \ 'prompt': '$ ',
+    \ 'split': 'floating',
     \ 'start_filter': v:true,
     \ })
 
