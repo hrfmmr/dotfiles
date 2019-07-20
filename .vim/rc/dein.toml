@@ -154,7 +154,7 @@ repo = 'junegunn/vim-emoji'
 [[plugins]]
 repo = 'pocari/vim-denite-emoji'
 hook_add = '''
-  nmap <silent> <C-u><C-e> :<C-u>Denite emoji<CR>
+  nmap <silent> <C-u>e :<C-u>Denite emoji<CR>
 '''
 
 [[plugins]]
@@ -173,7 +173,7 @@ hook_add = ''' "{{{
   nnoremap <silent> <C-u>/     :<C-u>Denite line<CR>
   nnoremap <silent> <C-u><C-/> :<C-u>DeniteCursorWord line<CR>
   nnoremap <silent> <C-u>y     :<C-u>Denite neoyank<CR>
-  nnoremap <silent> <C-u>r     :<C-u>Denite -resume<CR>
+  nnoremap <silent> <C-u>r     :<C-u>Denite -resume -no-start-filter<CR>
 "}}} '''
 hook_post_source = ''' "{{{
   " default options
@@ -279,9 +279,9 @@ hook_add = '''
   nnoremap <silent> [fugitive]s :Gstatus<CR>
   nnoremap <silent> [fugitive]w :Gwrite<CR>
   nnoremap <silent> [fugitive]c :Gcommit<CR>
-  nnoremap <silent> [fugitive]d :Gdiff<CR>
-  nnoremap <silent> [fugitive]r :Git diff --staged<CR>
-  nnoremap <silent> [fugitive]R :Git diff <CR>
+  nnoremap <silent> [fugitive]d :Gdiffsplit<CR>
+  nnoremap <silent> [fugitive]r :Git! diff --staged<CR>
+  nnoremap <silent> [fugitive]R :Git! diff <CR>
 '''
 
 
