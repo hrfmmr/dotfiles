@@ -213,7 +213,7 @@ augroup highlightZenkakuSpace
   autocmd!
   autocmd VimEnter,ColorScheme * highlight ZenkakuSpace term=underline ctermbg=Red guibg=Red
   autocmd VimEnter,WinEnter * match ZenkakuSpace /　/
-augroup ENDase
+augroup END
 
 
 "---------------------------------------------------------------------------
