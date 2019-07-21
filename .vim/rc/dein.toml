@@ -189,6 +189,10 @@ hook_post_source = ''' "{{{
     \ 'prompt': '$ ',
     \ 'split': 'floating',
     \ 'start_filter': v:true,
+    \ 'winwidth': float2nr(&columns * s:denite_win_width_percent),
+    \ 'wincol': float2nr((&columns - (&columns * s:denite_win_width_percent)) / 2),
+    \ 'winheight': float2nr(&lines * s:denite_win_height_percent),
+    \ 'winrow': float2nr((&lines - (&lines * s:denite_win_height_percent)) / 2),
     \ })
 
   " file/rec settings
