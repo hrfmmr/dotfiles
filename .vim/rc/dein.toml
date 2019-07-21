@@ -485,6 +485,11 @@ hook_post_source = '''
     hi DiffText        ctermfg=217   ctermbg=237 guifg=#ecbcbc guibg=#41363c gui=bold
   endfun
 
+  fun! s:set_transparent_bg()
+    hi! Normal ctermbg=NONE guibg=NONE
+    hi! NonText ctermbg=NONE guibg=NONE
+  endfun
+
   fun! s:set_termguicolors()
     let g:terminal_color_0 = "\#232c33"
     let g:terminal_color_1 = "\#99736e"
@@ -506,6 +511,7 @@ hook_post_source = '''
 
   colorscheme base16-tomorrow-night
   call s:set_highlight()
+  call s:set_transparent_bg()
   if has('nvim')
     call s:set_termguicolors()
   endif
