@@ -211,6 +211,9 @@ hook_post_source = ''' "{{{
   " denite buffer mappings
   autocmd FileType denite call s:denite_my_settings()
   function! s:denite_my_settings() abort
+    if exists('&winblend')
+      setlocal winblend=30
+    endif
     nnoremap <silent><buffer><expr> a       denite#do_map('open_filter_buffer')
     nnoremap <silent><buffer><expr> i       denite#do_map('open_filter_buffer')
     nnoremap <silent><buffer><expr> <Tab>   denite#do_map('choose_action')
