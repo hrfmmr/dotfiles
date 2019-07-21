@@ -177,9 +177,6 @@ hook_add = ''' "{{{
 "}}} '''
 hook_post_source = ''' "{{{
   " default options
-  let s:denite_win_width_percent = 0.85
-  let s:denite_win_height_percent = 0.7
-
   call denite#custom#option('_', {
     \ 'cached_filter': v:true,
     \ 'cursor_shape': v:true,
@@ -189,11 +186,27 @@ hook_post_source = ''' "{{{
     \ 'prompt': '$ ',
     \ 'split': 'floating',
     \ 'start_filter': v:true,
-    \ 'winwidth': float2nr(&columns * s:denite_win_width_percent),
-    \ 'wincol': float2nr((&columns - (&columns * s:denite_win_width_percent)) / 2),
-    \ 'winheight': float2nr(&lines * s:denite_win_height_percent),
-    \ 'winrow': float2nr((&lines - (&lines * s:denite_win_height_percent)) / 2),
     \ })
+
+  function! s:denite_detect_size() abort
+    let s:denite_win_width_percent = 0.85
+    let s:denite_win_height_percent = 0.7
+    let s:denite_winwidth = float2nr(&columns * s:denite_win_width_percent)
+    let s:denite_wincol = float2nr((&columns - (&columns * s:denite_win_width_percent)) / 2)
+    let s:denite_winheight = float2nr(&lines * s:denite_win_height_percent)
+    let s:denite_winrow = float2nr((&lines - (&lines * s:denite_win_height_percent)) / 2)
+    call denite#custom#option('_', {
+      \ 'wincol': s:denite_wincol,
+      \ 'winheight': s:denite_winheight,
+      \ 'winrow': s:denite_winrow,
+      \ 'winwidth': s:denite_winwidth,
+      \ })
+  endfunction
+  augroup denite-detect-size
+    autocmd!
+    autocmd VimResized * call <SID>denite_detect_size()
+  augroup END
+  call s:denite_detect_size()
 
   " file/rec settings
   call denite#custom#var('file/rec', 'command',
