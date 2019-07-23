@@ -158,22 +158,27 @@ hook_add = '''
 '''
 
 [[plugins]]
+repo = 'delphinus/vim-denite-memo'
+
+[[plugins]]
 repo = 'Shougo/denite.nvim'
 on_cmd   = ['Denite', 'DeniteBufferDir', 'DeniteCursorWord']
 on_func  = ['denite#']
 hook_add = ''' "{{{
-  nnoremap <silent> <C-u>f     :<C-u>Denite file/rec<CR>
-  nnoremap <silent> <C-u>c     :<C-u>DeniteBufferDir file/rec<CR>
-  nnoremap <silent> <C-u>b     :<C-u>Denite buffer<CR>
-  nnoremap <silent> <C-u>d     :<C-u>Denite directory_rec<CR>
-  nnoremap <silent> <C-u>t     :<C-u>Denite filetype<CR>
-  nnoremap <silent> <C-u>g     :<C-u>Denite grep<CR>
-  nnoremap <silent> <C-u>G     :<C-u>DeniteBufferDir grep<CR>
-  nnoremap <silent> <C-u><C-g> :<C-u>DeniteCursorWord grep<CR>
-  nnoremap <silent> <C-u>/     :<C-u>Denite line<CR>
-  nnoremap <silent> <C-u><C-/> :<C-u>DeniteCursorWord line<CR>
-  nnoremap <silent> <C-u>y     :<C-u>Denite neoyank<CR>
-  nnoremap <silent> <C-u>r     :<C-u>Denite -resume -no-start-filter<CR>
+  nnoremap <silent> <C-u>f      :<C-u>Denite file/rec<CR>
+  nnoremap <silent> <C-u>c      :<C-u>DeniteBufferDir file/rec<CR>
+  nnoremap <silent> <C-u>b      :<C-u>Denite buffer<CR>
+  nnoremap <silent> <C-u>d      :<C-u>Denite directory_rec<CR>
+  nnoremap <silent> <C-u>t      :<C-u>Denite filetype<CR>
+  nnoremap <silent> <C-u>g      :<C-u>Denite grep<CR>
+  nnoremap <silent> <C-u>G      :<C-u>DeniteBufferDir grep<CR>
+  nnoremap <silent> <C-u><C-g>  :<C-u>DeniteCursorWord grep<CR>
+  nnoremap <silent> <C-u>/      :<C-u>Denite line<CR>
+  nnoremap <silent> <C-u><C-/>  :<C-u>DeniteCursorWord line<CR>
+  nnoremap <silent> <C-u>y      :<C-u>Denite neoyank<CR>
+  nnoremap <silent> <C-u>r      :<C-u>Denite -resume -no-start-filter<CR>
+  nnoremap <silent> <C-u>mn     :<C-u>Denite memo memo:new<CR>
+  nnoremap <silent> <C-u>m/     :<C-u>Denite memo/grep::!<CR>
 "}}} '''
 hook_post_source = ''' "{{{
   " default options
