@@ -1,4 +1,4 @@
-memodir = "${HOME}/Dropbox/memo"
+memodir = "~/Dropbox/memo"
 editor = "nvim"
 column = 20
 selectcmd = "fzf"
