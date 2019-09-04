@@ -488,6 +488,8 @@ repo = 'Yggdroot/indentLine'
 hook_add = '''
   let g:indentLine_enabled = 1
   let g:indentLine_color_term = 239
+  autocmd Filetype json let g:indentLine_setConceal = 0
+  autocmd Filetype markdown let g:indentLine_setConceal = 0
 '''
 
 
