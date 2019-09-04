@@ -165,6 +165,7 @@ repo = 'Shougo/denite.nvim'
 on_cmd   = ['Denite', 'DeniteBufferDir', 'DeniteCursorWord']
 on_func  = ['denite#']
 hook_add = ''' "{{{
+  nnoremap <silent> <C-u>o      :<C-u>Denite file_mru<CR>
   nnoremap <silent> <C-u>f      :<C-u>Denite file/rec<CR>
   nnoremap <silent> <C-u>c      :<C-u>DeniteBufferDir file/rec<CR>
   nnoremap <silent> <C-u>b      :<C-u>Denite buffer<CR>
