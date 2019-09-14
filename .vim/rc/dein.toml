@@ -36,8 +36,12 @@ hook_add = '''
 [[plugins]]
 repo = 'Shougo/deoplete.nvim'
 if = 'has("nvim")'
+on_event = 'InsertCharPre'
 hook_add = '''
   let g:deoplete#enable_at_startup = 1
+  inoremap <expr><tab> pumvisible() ? "\<C-n>" :
+        \ neosnippet#expandable_or_jumpable() ?
+        \    "\<Plug>(neosnippet_expand_or_jump)" : "\<tab>"
 '''
 
 [[plugins]]
@@ -86,6 +90,35 @@ hook_add = '''
     autocmd FileType go nmap <Leader>C <Plug>(go-coverage-toggle)
   augroup END
 '''
+
+
+# Code snippets
+
+
+[[plugins]]
+repo = 'roxma/nvim-yarp'
+
+[[plugins]]
+repo = 'roxma/vim-hug-neovim-rpc'
+
+[[plugins]]
+repo = 'Shougo/neosnippet.vim'
+depends = ['nvim-yarp', 'vim-hug-neovim-rpc']
+on_event = 'InsertCharPre'
+hook_add = '''
+  let g:neosnippet#snippets_directory = expand('~/.vim/snippets/')
+
+  imap <C-k> <Plug>(neosnippet_expand_or_jump)
+  smap <C-k> <Plug>(neosnippet_expand_or_jump)
+  xmap <C-k> <Plug>(neosnippet_expand_target)
+  if has('conceal')
+    set conceallevel=2 concealcursor=niv
+  endif
+'''
+
+[[plugins]]
+repo = 'Shougo/neosnippet-snippets'
+depends = ['neosnippet']
 
 
 # Code formatting
