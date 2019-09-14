@@ -10,8 +10,19 @@ rev = 'next'
 build = 'bash install.sh'
 hook_add = '''
   set hidden
+  " ccls
+  " also see https://github.com/autozimu/LanguageClient-neovim/wiki/ccls
+  let s:ccls_settings = {
+           \ 'highlight': { 'lsRanges' : v:true },
+           \ }
+
+  let s:ccls_command = ['ccls', '-init=' . json_encode(s:ccls_settings)]
+
   let g:LanguageClient_autoStart = 1
   let g:LanguageClient_serverCommands = {
+    \ 'c': s:ccls_command,
+    \ 'cpp': s:ccls_command,
+    \ 'objc': s:ccls_command,
     \ 'python': ['pyls'],
     \ 'go': ['gopls'],
 \ }
