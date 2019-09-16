@@ -171,7 +171,7 @@ repo = 'scrooloose/nerdtree'
 hook_add = '''
   nnoremap [nerdtree] <Nop>
   nmap <Leader>e [nerdtree]
-  nnoremap <silent> [nerdtree]c :NERDTree %:h<CR>
+  nnoremap <silent> [nerdtree]c :NERDTreeFind<CR>
   nnoremap <silent> [nerdtree]n :NERDTreeToggle<CR>
   nnoremap <silent> [nerdtree]r :NERDTree .<CR>
 
