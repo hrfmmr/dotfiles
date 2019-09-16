@@ -210,6 +210,7 @@ repo = 'delphinus/vim-denite-memo'
 
 [[plugins]]
 repo = 'Shougo/denite.nvim'
+rev = '3.0'
 on_cmd   = ['Denite', 'DeniteBufferDir', 'DeniteCursorWord']
 on_func  = ['denite#']
 hook_add = ''' "{{{
