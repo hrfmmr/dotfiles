@@ -49,6 +49,12 @@ function! s:Jq(...)
 endfunction
 command! -nargs=? Jq call s:Jq(<f-args>)
 
+function! OpenModifiableLL()
+  lopen
+  set modifiable
+  set nowrap
+endfunction
+
 function! OpenModifiableQF()
   cw
   set modifiable
