@@ -547,6 +547,9 @@ hook_add = '''
 
 
 [[plugins]]
+repo = 'vim-airline/vim-airline'
+
+[[plugins]]
 repo = 'chriskempson/base16-vim'
 on_event = 'VimEnter'
 hook_post_source = '''
