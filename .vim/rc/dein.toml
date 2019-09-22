@@ -288,6 +288,7 @@ hook_post_source = ''' "{{{
     nnoremap <silent><buffer><expr> p       denite#do_map('do_action', 'preview')
     nnoremap <silent><buffer><expr> t       denite#do_map('do_action', 'tabopen')
     nnoremap <silent><buffer><expr> \|      denite#do_map('do_action', 'vsplit')
+    nnoremap <silent><buffer><expr> s       denite#do_map('do_action', 'vsplit')
     nnoremap <silent><buffer><expr> -       denite#do_map('do_action', 'split')
     nnoremap <silent><buffer><expr> <CR>    denite#do_map('do_action')
     nnoremap <silent><buffer><expr> <BS>    denite#do_map('move_up_path')
