@@ -185,9 +185,6 @@ repo = 'junegunn/vim-emoji'
 
 [[plugins]]
 repo = 'pocari/vim-denite-emoji'
-hook_add = '''
-  nmap <silent> <C-u>e :<C-u>Denite emoji<CR>
-'''
 
 [[plugins]]
 repo = 'delphinus/vim-denite-memo'
@@ -211,6 +208,7 @@ hook_add = ''' "{{{
   nnoremap <silent> <C-u><C-/>  :<C-u>DeniteCursorWord line<CR>
   nnoremap <silent> <C-u>y      :<C-u>Denite neoyank<CR>
   nnoremap <silent> <C-u>r      :<C-u>Denite -resume -no-start-filter<CR>
+  inoremap <C-e>                <Esc>:<C-u>Denite emoji<CR>
   nnoremap <silent> <C-u>mn     :<C-u>Denite memo memo:new<CR>
   nnoremap <silent> <C-u>m/     :<C-u>Denite memo/grep::!<CR>
 "}}} '''
