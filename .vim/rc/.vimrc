@@ -84,7 +84,7 @@ if has('nvim')
     if has('mac')
       set clipboard=unnamed
     else
-      set clipboard=unnamedplus
+      set clipboard=unnamed,unnamedplus
     endif
   endif
 else
@@ -101,7 +101,6 @@ endif
 " GUI:
 "
 set t_Co=256
-set cursorline
 set visualbell t_vb=
 set cmdheight=4
 set showmatch
