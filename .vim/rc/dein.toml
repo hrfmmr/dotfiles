@@ -107,6 +107,17 @@ depends = ['ultisnips']
 
 # Code formatting
 
+
+[[plugins]]
+repo = 'rhysd/vim-clang-format'
+hook_add = '''
+  let g:clang_format#style_options = {
+    \ "AlignConsecutiveAssignments" : "true",
+    \ "AlignConsecutiveDeclarations" : "true",
+    \ }
+  autocmd FileType proto ClangFormatAutoEnable
+'''
+
 [[plugins]]
 repo = 'python/black'
 on_ft = 'python'
