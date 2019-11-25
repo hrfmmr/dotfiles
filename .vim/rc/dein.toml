@@ -122,6 +122,7 @@ hook_add = '''
 repo = 'python/black'
 on_ft = 'python'
 hook_add = '''
+  let g:black_linelength = 79
   autocmd BufWritePre *.py execute ':Black'
 '''
 
