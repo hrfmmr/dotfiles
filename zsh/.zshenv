@@ -22,6 +22,12 @@ export PGHOST=localhost
 export ANDROID_HOME=~/Library/Android/sdk
 export JAVA_HOME=`/usr/libexec/java_home -v "1.8" -F`
 
+#
+# * Flutter
+#
+export FLUTTER_SDK=~/src/github.com/flutter/flutter
+export DART_SDK=$FLUTTER_SDK/bin/cache/dart-sdk
+
 path=(    
     $HOME/bin(N-/)
     $HOME/.pyenv/shims(N-/)
@@ -30,6 +36,8 @@ path=(
     $HOME/.nodebrew/current/bin(N-)
     $HOME/bin/FDK/Tools/osx(N-/)
     $GOPATH/bin(N-/)
+    $FLUTTER_SDK/bin(N-/)
+    $DART_SDK/bin(N-/)
     $ANDROID_HOME/platform-tools(N-/)
     $ANDROID_HOME/ndk-bundle(N-/)
     $JAVA_HOME/bin(N-/)
