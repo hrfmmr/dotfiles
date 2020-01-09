@@ -25,6 +25,7 @@ hook_add = '''
     \ 'objc': s:ccls_command,
     \ 'python': ['pyls'],
     \ 'go': ['gopls'],
+    \ 'dart': ['dart', expand('$DART_SDK') . '/bin/snapshots/analysis_server.dart.snapshot', '--lsp'],
 \ }
   nnoremap <silent> <C-g><C-d> :call LanguageClient#textDocument_definition()<CR>
   nnoremap <silent> <C-g><C-r> :Denite references<CR>
@@ -157,6 +158,9 @@ hook_add = '''
   \ 'exec': '%c %o %s',
   \}
 '''
+
+[[plugins]]
+repo = 'thosakwe/vim-flutter'
 
 
 # File Explorer
@@ -445,6 +449,10 @@ hook_add = '''
 # tmux
 [[plugins]]
 repo = 'tmux-plugins/vim-tmux'
+
+# dart
+[[plugins]]
+repo = 'dart-lang/dart-vim-plugin'
 
 # Editor Utils
 
