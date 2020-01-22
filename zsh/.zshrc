@@ -118,6 +118,8 @@ RPROMPT='[`rprompt-git-current-branch`]'
 #
 # * aliases
 #
+alias e='exa'
+alias l='exa -algh'
 alias ll='ls -alFG'
 alias mkdir='mkdir -p'
 alias hist='history 1'
