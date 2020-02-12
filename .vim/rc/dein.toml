@@ -90,6 +90,15 @@ hook_add = '''
 '''
 
 
+# Testing
+[[plugins]]
+repo = 'janko/vim-test'
+hook_add = '''
+  nmap <silent> t<C-n> :TestNearest<CR>
+  nmap <silent> t<C-f> :TestFile<CR>
+'''
+
+
 # Code snippets
 
 
