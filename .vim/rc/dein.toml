@@ -545,6 +545,13 @@ hook_add = '''
   autocmd Filetype markdown let g:indentLine_setConceal = 0
 '''
 
+# preview
+[[plugins]]
+repo = "previm/previm"
+hook_add = '''
+  let g:previm_open_cmd = 'google-chrome'
+'''
+
 
 # Colorscheme
 
