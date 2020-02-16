@@ -400,6 +400,23 @@ function mpv-quit() {
     pkill -SIGUSR1 -f mpv
 }
 
+#
+# flutter
+#
+
+# Launch flutter emulator
+function flutter-emulator-launch() {
+  local selected_emulator=$(flutter emulators | grep • | fzf --query="$LBUFFER")
+
+  if [ -n "$selected_emulator" ]; then
+    BUFFER="flutter emulators --launch ${selected_emulator}"
+    zle accept-line
+  fi
+
+  zle reset-prompt
+}
+zle -N flutter-emulator-launch
+bindkey "^f^l" flutter-emulator-launch
 
 #
 # zplug
