@@ -24,6 +24,7 @@ hook_add = '''
     \ 'cpp': s:ccls_command,
     \ 'objc': s:ccls_command,
     \ 'python': ['pyls'],
+    \ 'ruby': ['solargraph', 'stdio'],
     \ 'go': ['gopls'],
     \ 'dart': ['dart', expand('$DART_SDK') . '/bin/snapshots/analysis_server.dart.snapshot', '--lsp'],
 \ }
@@ -83,6 +84,7 @@ hook_add = '''
     autocmd FileType go nmap <Leader>i <Plug>(go-info)
     autocmd FileType go nnoremap <Leader>b :<C-u>call <SID>build_go_files()<CR>
     autocmd FileType go nmap <Leader>x <Plug>(go-run)
+    autocmd FileType go nmap <Leader>A <Plug>(go-alternate-edit)
     autocmd FileType go nmap <Leader>t <Plug>(go-test)
     autocmd FileType go nmap <Leader>T :GoTestFunc<CR>
     autocmd FileType go nmap <Leader>C <Plug>(go-coverage-toggle)
@@ -203,6 +205,8 @@ repo = 'Shougo/neomru.vim'
 repo = 'Shougo/neoyank.vim'
 hook_add = '''
   let g:neoyank#limit = 1000
+  "fix for yankring and neovim
+  let g:yankring_clipboard_monitor=0
 '''
 
 [[plugins]]
@@ -216,7 +220,6 @@ repo = 'delphinus/vim-denite-memo'
 
 [[plugins]]
 repo = 'Shougo/denite.nvim'
-rev = '3.0'
 on_cmd   = ['Denite', 'DeniteBufferDir', 'DeniteCursorWord']
 on_func  = ['denite#']
 hook_add = ''' "{{{
@@ -451,7 +454,7 @@ repo = 'aklt/plantuml-syntax'
 hook_add = '''
   augroup PlantUMLGroup
     autocmd!
-    au FileType plantuml command! OpenUml :!open -a "Google Chrome" %
+    au FileType plantuml command! OpenUml :!google-chrome %
   augroup END
 '''
 
@@ -462,6 +465,9 @@ repo = 'tmux-plugins/vim-tmux'
 # dart
 [[plugins]]
 repo = 'dart-lang/dart-vim-plugin'
+hook_add = '''
+  autocmd BufWritePre *.dart execute ':DartFmt'
+'''
 
 # Editor Utils
 
@@ -505,11 +511,7 @@ hook_add = '''
   let g:tex_conceal = ""
   let g:vim_markdown_math = 1
 '''
-hook_post_source = '''
-  set conceallevel=0
-'''
 
-# python class outline
 [[plugins]]
 repo = "majutsushi/tagbar"
 hook_add = '''
@@ -548,7 +550,7 @@ hook_add = '''
 [[plugins]]
 repo = 'Yggdroot/indentLine'
 hook_add = '''
-  let g:indentLine_enabled = 1
+  let g:indentLine_enabled = 0
   let g:indentLine_color_term = 239
   autocmd Filetype json let g:indentLine_setConceal = 0
   autocmd Filetype markdown let g:indentLine_setConceal = 0
