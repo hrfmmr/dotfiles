@@ -17,7 +17,11 @@
 	sta = stash apply
 	stp = stash pop
 	std = stash drop
-	lg = log --graph --abbrev-commit --decorate --date=relative --format=format:'%C(red)%h%C(reset) - %C(green)(%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(yellow)%d%C(reset)' --all
+    lg = log \
+        --pretty='format:%C(magenta)%h %C(green)%cd %C(reset)%s %C(red)%d %C(cyan)[%an]' \
+        --date=short \
+        --all \
+        --graph
 	li = !hub issue --format='%sC %i %t labels:%l milestone:%Mt | %as  %Nc%n'
 	lp = !hub pr list --format='%sC %i %t labels:%l milestone:%Mt | author:@%au  %Nc%n'
 	issue = "!ghi show $(echo $(git symbolic-ref --short HEAD) | awk -F "/" '{print $NF}')"
