@@ -352,6 +352,15 @@ hook_add = '''
   nnoremap <silent> <leader>ww :call WindowSwap#EasyWindowSwap()<CR>
 '''
 
+[[plugins]]
+repo = 'fuenor/im_control.vim'
+hook_add = '''
+  " 「日本語入力固定モード」の動作モード(fcitx)
+  let IM_CtrlMode = 6
+  " 「日本語入力固定モード」切替キー
+  inoremap <silent> <C-j> <C-r>=IMState('FixMode')<CR>
+'''
+
 
 # git Utils
 
