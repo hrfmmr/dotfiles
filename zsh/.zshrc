@@ -13,7 +13,7 @@ setopt PUSHD_IGNORE_DUPS # ignore duplicate directory in AUTO_PUSHD
 #
 # * Basic Settings
 #
-KEYTIMEOUT=1
+KEYTIMEOUT=40
 
 #rendering user/host in PROMPT
 PROMPT="[%n@%m]%~ $ "
