@@ -29,6 +29,7 @@ hook_add = '''
     \ 'dart': ['dart', expand('$DART_SDK') . '/bin/snapshots/analysis_server.dart.snapshot', '--lsp'],
 \ }
   nnoremap <silent> <C-g><C-d> :call LanguageClient#textDocument_definition()<CR>
+  nnoremap <silent> <C-g><C-i> :call LanguageClient#textDocument_implementation()<CR>
   nnoremap <silent> <C-g><C-r> :Denite references<CR>
   nnoremap <silent> <C-g><C-h> :call LanguageClient#textDocument_hover()<CR>
   " Run gofmt and goimports on save
