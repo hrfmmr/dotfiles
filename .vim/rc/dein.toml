@@ -27,7 +27,16 @@ hook_add = '''
     \ 'ruby': ['solargraph', 'stdio'],
     \ 'go': ['gopls'],
     \ 'dart': ['dart', expand('$DART_SDK') . '/bin/snapshots/analysis_server.dart.snapshot', '--lsp'],
-\ }
+    \ 'javascript': ['javascript-typescript-stdio'],
+    \ 'typescript': ['javascript-typescript-stdio'],
+    \ 'javascript.jsx': ['javascript-typescript-stdio'],
+    \ 'typescript.jsx': ['javascript-typescript-stdio'],
+  \ }
+  let g:LanguageClient_rootMarkers = {
+      " other root markers....
+      \ 'javascript': ['jsconfig.json'],
+      \ 'typescript': ['tsconfig.json'],
+  \ }
   nnoremap <silent> <C-g><C-d> :call LanguageClient#textDocument_definition()<CR>
   nnoremap <silent> <C-g><C-i> :call LanguageClient#textDocument_implementation()<CR>
   nnoremap <silent> <C-g><C-r> :Denite references<CR>
@@ -425,6 +434,9 @@ hook_add = '''
     au BufRead,BufNewFile *.es6 set filetype=javascript.jsx
   augroup END
 '''
+
+[[plugins]]
+repo = 'leafgarland/typescript-vim'
 
 # nginx
 [[plugins]]
