@@ -383,6 +383,7 @@ hook_add = '''
   nnoremap [fugitive] <Nop>
   nmap     <Leader>g   [fugitive]
   nnoremap <silent> [fugitive]b :Gblame<CR>
+  nnoremap <silent> [fugitive]B :Gbrowse<CR>
   nnoremap <silent> [fugitive]s :Gstatus<CR>
   nnoremap <silent> [fugitive]w :Gwrite<CR>
   nnoremap <silent> [fugitive]c :Gcommit<CR>
@@ -391,6 +392,9 @@ hook_add = '''
   nnoremap <silent> [fugitive]R :Git! diff <CR>
 '''
 
+[[plugins]]
+repo = 'tpope/vim-rhubarb'
+depends = ['vim-fugitive']
 
 [[plugins]]
 repo = 'tpope/vim-dispatch'
