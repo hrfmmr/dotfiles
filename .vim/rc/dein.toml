@@ -40,6 +40,7 @@ hook_add = '''
   \ }
   nnoremap <silent> <C-g><C-d> :call LanguageClient#textDocument_definition()<CR>
   nnoremap <silent> <C-g><C-i> :call LanguageClient#textDocument_implementation()<CR>
+  nnoremap <silent> <C-g>r     :call LanguageClient#textDocument_rename()<CR>
   nnoremap <silent> <C-g><C-r> :Denite references<CR>
   nnoremap <silent> <C-g><C-s> :Denite documentSymbol<CR>
   nnoremap <silent> <C-g><C-w> :Denite workspaceSymbol<CR>
