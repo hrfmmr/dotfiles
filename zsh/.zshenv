@@ -14,6 +14,8 @@ export XDG_CONFIG_HOME=$HOME/.config
 # * go
 #
 export GOPATH=$HOME
+export GO111MODULE=on
+export GOENV_DISABLE_GOPATH=1
 
 #
 # * postgresql
@@ -35,8 +37,11 @@ export DART_SDK=$FLUTTER_SDK/bin/cache/dart-sdk
 
 path=(    
     $HOME/bin(N-/)
+    $HOME/.pyenv/bin(N-/)
     $HOME/.pyenv/shims(N-/)
+    $HOME/.rbenv/bin(N-/)
     $HOME/.rbenv/shims(N-/)
+    $HOME/.goenv/bin(N-/)
     $HOME/.goenv/shims(N-/)
     $HOME/.nodebrew/current/bin(N-)
     $HOME/bin/FDK/Tools/osx(N-/)
