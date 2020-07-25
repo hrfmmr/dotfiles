@@ -7,32 +7,12 @@ map s <Nop>
 nmap <CR> i<CR><ESC>
 
 " Close pair
-" https://vim.fandom.com/wiki/Making_Parenthesis_And_Brackets_Handling_Easier
 inoremap ( ()<Esc>i
 inoremap [ []<Esc>i
-inoremap { {<CR>}<Esc>O
-autocmd Syntax html,vim inoremap < <lt>><Esc>i| inoremap > <c-r>=ClosePair('>')<CR>
-inoremap ) <c-r>=ClosePair(')')<CR>
-inoremap ] <c-r>=ClosePair(']')<CR>
-inoremap } <c-r>=CloseBracket()<CR>
-inoremap " <c-r>=QuoteDelim('"')<CR>
-inoremap ' <c-r>=QuoteDelim("'")<CR>
-
-function ClosePair(char)
- if getline('.')[col('.') - 1] == a:char
- return "\<Right>"
- else
- return a:char
- endif
-endf
-
-function CloseBracket()
- if match(getline(line('.') + 1), '\s*}') < 0
- return "\<CR>}"
- else
- return "\<Esc>j0f}a"
- endif
-endf
+inoremap { {}<Esc>i
+inoremap " ""<Esc>i
+inoremap ' ''<Esc>i
+inoremap 「 「」<Esc>i
 
 function QuoteDelim(char)
  let line = getline('.')
