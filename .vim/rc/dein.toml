@@ -361,6 +361,13 @@ repo = 'vim-scripts/Align'
 [[plugins]]
 repo = 'vim-scripts/YankRing.vim'
 
+[[plugins]]
+repo = 'junegunn/vim-easy-align'
+hook_add = '''
+  xmap ga <Plug>(EasyAlign)
+  nmap ga <Plug>(EasyAlign)
+'''
+
 
 # Window Utils
 
