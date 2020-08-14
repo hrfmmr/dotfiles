@@ -157,6 +157,9 @@ hook_add = '''
   autocmd BufWritePre *.py execute ':Black'
 '''
 
+[[plugins]]
+repo = 'nbouscal/vim-stylish-haskell'
+
 
 # Run Script
 
