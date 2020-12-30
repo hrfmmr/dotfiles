@@ -371,6 +371,9 @@ hook_add = '''
   nmap ga <Plug>(EasyAlign)
 '''
 
+[[plugins]]
+repo = 'jiangmiao/auto-pairs'
+
 
 # Window Utils
 
