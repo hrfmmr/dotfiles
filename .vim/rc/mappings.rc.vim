@@ -6,29 +6,8 @@ map s <Nop>
 " Insert new line
 nmap <CR> i<CR><ESC>
 
-" Close pair
-inoremap ( ()<Esc>i
-inoremap [ []<Esc>i
-inoremap { {}<Esc>i
-inoremap " ""<Esc>i
-inoremap ' ''<Esc>i
-inoremap 「 「」<Esc>i
 
-function QuoteDelim(char)
- let line = getline('.')
- let col = col('.')
- if line[col - 2] == "\\"
- "Inserting a quoted quotation mark into the string
- return a:char
- elseif line[col - 1] == a:char
- "Escaping out of the string
- return "\<Right>"
- else
- "Starting a string
- return a:char.a:char."\<Esc>i"
- endif
-endf
-" Selection
+"Selection
 nnoremap vv vf
 nnoremap vV vF
 " Switch tab
