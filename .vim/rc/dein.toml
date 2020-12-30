@@ -48,8 +48,11 @@ hook_add = '''
   nnoremap <silent> <C-g><C-s> :Denite documentSymbol<CR>
   nnoremap <silent> <C-g><C-w> :Denite workspaceSymbol<CR>
   nnoremap <silent> <C-g><C-h> :call LanguageClient#textDocument_hover()<CR>
+  nnoremap <silent> <C-g><C-f> :call LanguageClient#textDocument_formatting()<CR>
   " Run gofmt and goimports on save
-  autocmd BufWritePre *.go :call LanguageClient#textDocument_formatting_sync()
+  autocmd BufWritePre *.c,*.cpp,*.go :call LanguageClient#textDocument_formatting_sync()
+
+  let g:LanguageClient_loggingFile =  expand('~/.local/share/nvim/LanguageClient.log') 
 '''
 
 [[plugins]]
