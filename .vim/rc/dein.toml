@@ -20,8 +20,8 @@ hook_add = '''
 
   let g:LanguageClient_autoStart = 1
   let g:LanguageClient_serverCommands = {
-    \ 'c': s:ccls_command,
-    \ 'cpp': s:ccls_command,
+    \ 'c': ['clangd'],
+    \ 'cpp': ['clangd'],
     \ 'objc': s:ccls_command,
     \ 'python': ['pyls'],
     \ 'ruby': ['solargraph', 'stdio'],
