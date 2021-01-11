@@ -1,6 +1,8 @@
 " Map Leader Key
 let g:mapleader=","
 
+imap <c-c> <ESC>
+
 map s <Nop>
 
 " Insert new line
