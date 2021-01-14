@@ -350,15 +350,14 @@ bindkey '^x^p' pet-select
 #
 function mpv-music() {
     local PLAYLISTDIR=~/Dropbox/memo/youtube
+    local playlist=$(ls $PLAYLISTDIR/*.m3u | fzf-tmux -d --reverse --no-sort +m --prompt="Playlist > ")
     if [ $# = 0 ]; then
 		mpv \
             --quiet \
             --no-video \
             --ytdl-format="worstvideo+bestaudio" \
             --shuffle \
-            --playlist=$(ls $PLAYLISTDIR/*.m3u | fzf-tmux -d --reverse --no-sort +m --prompt="Playlist > ") \
-            &
-		sleep 10
+            --playlist="$playlist" \
 		cd -
     elif [ $# = 1 ]; then
 		mpv \
@@ -366,8 +365,6 @@ function mpv-music() {
             --ytdl-format="worstvideo+bestaudio" \
             --quiet \
             $1 \
-            &
-		sleep 10
 		cd -
     else
 		echo 'usage: mpv-music [youtube-url]'
@@ -376,24 +373,18 @@ function mpv-music() {
 
 function mpv-video() {
     local PLAYLISTDIR=~/Dropbox/memo/youtube
+    local playlist=$(ls $PLAYLISTDIR/*.m3u | fzf-tmux -d --reverse --no-sort +m --prompt="Playlist > ")
 	if [ $# = 0 ]; then
 		mpv \
             --quiet \
-            --fullscreen \
             --ytdl-format="[height<=480]+bestaudio" \
             --shuffle \
-            --playlist=$(ls $PLAYLISTDIR/*.m3u | fzf-tmux -d --reverse --no-sort +m --prompt="Playlist > ") \
-            &
-		sleep 10
-		cd -
+            --playlist="$playlist"
     elif [ $# = 1 ]; then
 		mpv \
             --quiet \
-            --fullscreen \
             --ytdl-format="[height<=480]+bestaudio" \
             $1 \
-            &
-		sleep 10
 		cd -
     else
 		echo 'usage: mpv-video [youtube-url]'
