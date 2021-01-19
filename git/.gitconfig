@@ -1,6 +1,6 @@
 [user]
 	name = hrfmmr
-	email = ladiciushm@gmail.com
+	email = i@hrfmmr.com
 [color]
 	ui = true
 [credential]
@@ -36,3 +36,5 @@
 	token = !security find-internet-password -a hrfmmr -s github.com -l 'ghi token' -w
 [ghq]
 	root = ~/src
+[url "ssh://git@github.com/"]
+  insteadOf = https://github.com/
