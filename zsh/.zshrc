@@ -396,6 +396,14 @@ function mpv-quit() {
 }
 
 #
+# ffmpeg
+#
+function video2gif() {
+    local gif=$(echo "$1" | sed -e 's/\.[^.]*$/.gif/')
+    ffmpeg -i $1 -vf scale=320:-1 -r 10 "$gif"
+}
+
+#
 # flutter
 #
 
@@ -412,6 +420,19 @@ function flutter-emulator-launch() {
 }
 zle -N flutter-emulator-launch
 bindkey "^f^l" flutter-emulator-launch
+
+#
+# mitmproxy
+#
+function launch-mitmproxy() {
+    sudo networksetup -setwebproxy Wi-Fi localhost 8080
+    sudo networksetup -setsecurewebproxy Wi-Fi localhost 8080
+    sudo networksetup -setwebproxystate Wi-Fi on
+    sudo networksetup -setsecurewebproxystate Wi-Fi on
+    mitmproxy
+    sudo networksetup -setwebproxystate Wi-Fi off
+    sudo networksetup -setsecurewebproxystate Wi-Fi off
+}
 
 #
 # zplug
