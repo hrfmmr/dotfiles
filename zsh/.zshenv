@@ -1,6 +1,11 @@
 typeset -U path cdpath fpath manpath
 
 #
+# homebrew
+#
+export HOMEBREW_NO_AUTO_UPDATE=1
+
+#
 # Locale
 #
 export LC_CTYPE=en_US.UTF-8
