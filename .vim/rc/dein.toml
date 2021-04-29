@@ -141,6 +141,12 @@ depends = ['ultisnips']
 
 # Code formatting
 
+[[plugins]]
+repo = 'mattn/vim-sqlfmt'
+hook_add = '''
+  let g:sqlfmt_program = "sqlformat --comma_first true -r -k upper -o %s -"
+  autocmd FileType sql nmap <Leader>F <Plug>(sqlfmt)
+'''
 
 [[plugins]]
 repo = 'rhysd/vim-clang-format'
