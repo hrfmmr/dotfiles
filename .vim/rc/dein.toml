@@ -208,6 +208,22 @@ hook_add = '''
 [[plugins]]
 repo = 'thosakwe/vim-flutter'
 
+[[plugins]]
+repo = 'NLKNguyen/pipe.vim'
+
+[[plugins]]
+repo = 'NLKNguyen/pipe-mysql.vim'
+hook_add = '''
+let g:pipemysql_login_info = [
+ \ {
+ \    'description': 'local',
+ \    'mysql_hostname': '127.0.0.1',
+ \    'mysql_username': 'test',
+ \    'mysql_password': 'test',
+ \    'mysql_database': 'test'
+ \ },
+\ ]
+'''
 
 # File Explorer
 
