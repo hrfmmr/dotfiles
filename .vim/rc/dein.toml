@@ -270,6 +270,24 @@ repo = 'pocari/vim-denite-emoji'
 repo = 'delphinus/vim-denite-memo'
 
 [[plugins]]
+repo = 'mattn/vim-gist'
+hook_add = '''
+  let g:gist_get_multiplefile = 1
+  let g:gist_post_private = 1
+  let g:gist_show_privates = 1
+'''
+depends = ['webapi-vim']
+
+[[plugins]]
+repo = 'mattn/webapi-vim'
+
+[[plugins]]
+repo = 'mattn/unite-gist'
+
+[[plugins]]
+repo = 'Shougo/unite.vim'
+
+[[plugins]]
 repo = 'Shougo/denite.nvim'
 on_cmd   = ['Denite', 'DeniteBufferDir', 'DeniteCursorWord']
 on_func  = ['denite#']
@@ -290,6 +308,7 @@ hook_add = ''' "{{{
   nnoremap <silent> <C-u>e      :<C-u>Denite emoji<CR>
   nnoremap <silent> <C-u>mn     :<C-u>Denite memo memo:new<CR>
   nnoremap <silent> <C-u>m/     :<C-u>Denite memo/grep::!<CR>
+  nnoremap <silent> <C-u>s      :<C-u>Denite unite:gist<CR>
 "}}} '''
 hook_post_source = ''' "{{{
   " default options
