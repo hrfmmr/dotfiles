@@ -1,0 +1,21 @@
+{
+  "pyls": {
+    "configurationSources": [
+      "flake8"
+    ],
+    "plugins": {
+      "pylint": {
+        "enabled": false
+      },
+      "flake8": {
+        "enabled": true
+      },
+      "pycodestyle": {
+        "enabled": false
+      },
+      "pydocstyle": {
+        "enabled": false
+      }
+    }
+  }
+}
