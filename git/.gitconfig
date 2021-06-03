@@ -26,6 +26,8 @@
 	lp = !hub pr list --format='%sC %i %t labels:%l milestone:%Mt | author:@%au  %Nc%n'
 	issue = "!ghi show $(echo $(git symbolic-ref --short HEAD) | awk -F "/" '{print $NF}')"
 	pr = !hub browse -- compare/$(git symbolic-ref --short HEAD)'?'expand=1'&'body=%0A%23$(echo $(git symbolic-ref --short HEAD) | awk -F '[/_-]' '{print $NF}')
+[pull]
+	rebase = false
 [push]
 	default = current
 [core]
