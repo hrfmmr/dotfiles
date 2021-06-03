@@ -604,6 +604,7 @@ depends = ['tabular']
 on_event = 'VimEnter'
 hook_add = '''
   let g:vim_markdown_conceal = 0
+  let g:vim_markdown_conceal_code_blocks = 0
   let g:tex_conceal = ""
   let g:vim_markdown_math = 1
   autocmd FileType markdown nmap <Leader>T :TableFormat<CR>
@@ -665,6 +666,7 @@ repo = 'Yggdroot/indentLine'
 hook_add = '''
   let g:indentLine_enabled = 0
   let g:indentLine_color_term = 239
+  let g:vim_json_syntax_conceal = 0
   autocmd Filetype json let g:indentLine_setConceal = 0
   autocmd Filetype markdown let g:indentLine_setConceal = 0
 '''
