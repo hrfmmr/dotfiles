@@ -180,6 +180,7 @@ augroup IndentGroup
   au BufNewFile,BufRead *.py setlocal ts=4 sts=4 sw=4
   au BufNewFile,BufRead *.{c,cpp,sh} setlocal ts=2 sts=2 sw=2
   au BufNewFile,BufRead *.{json,xml,html,toml,yaml,yml} setlocal ts=2 sts=2 sw=2
+  au BufNewFile,BufRead *.{sql} setlocal ts=2 sts=2 sw=2
   au BufNewFile,BufRead *.{css,scss} setlocal ts=2 sts=2 sw=2
   au BufNewFile,BufRead *.{js,coffee,cjsx,jsx,es6,ts,dart} setlocal ts=2 sts=2 sw=2
   au BufNewFile,BufRead *.{rb,podspec},Vagrantfile,Podfile,Appfile,Fastfile,Matchfile,Gymfile,Snapfile,Scanfile setlocal ts=2 sts=2 sw=2
