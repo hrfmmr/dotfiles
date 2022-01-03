@@ -43,6 +43,8 @@ export DART_SDK=$FLUTTER_SDK/bin/cache/dart-sdk
 path=(    
     $HOME/bin(N-/)
     $HOME/.local/bin(N-/)
+    $HOME/.cargo/env(N-/)
+    $HOME/.cargo/bin(N-/)
     $HOME/.pyenv/bin(N-/)
     $HOME/.pyenv/shims(N-/)
     $HOME/.rbenv/bin(N-/)
