@@ -1,0 +1,88 @@
+# go
+[[plugins]]
+repo = 'fatih/vim-go'
+on_ft = 'go'
+hook_add = '''
+  augroup GolangGroup
+    autocmd!
+
+    let g:go_fmt_command = "goimports"
+    let g:go_def_mapping_enabled = 0
+    let g:go_doc_keywordprg_enabled = 0
+    let g:go_auto_type_info = 1
+    let g:go_auto_sameids = 1
+    let g:go_highlight_build_constraints = 1
+    let g:go_highlight_extra_types = 1
+    let g:go_highlight_fields = 1
+    let g:go_highlight_functions = 1
+    let g:go_highlight_methods = 1
+    let g:go_highlight_operators = 1
+    let g:go_highlight_structs = 1
+    let g:go_highlight_types = 1
+    let g:go_list_type = "quickfix"
+
+    function! s:build_go_files()
+      let l:file = expand('%')
+      if l:file =~# '^\f\+_test\.go$'
+        call go#test#Test(0, 1)
+      elseif l:file =~# '^\f\+\.go$'
+        call go#cmd#Build(0)
+      endif
+    endfunction
+
+    autocmd FileType go nmap <Leader>i <Plug>(go-info)
+    autocmd FileType go nnoremap <Leader>b :<C-u>call <SID>build_go_files()<CR>
+    autocmd FileType go nmap <Leader>x <Plug>(go-run)
+    autocmd FileType go nmap <Leader>A <Plug>(go-alternate-edit)
+    autocmd FileType go nmap <Leader>t <Plug>(go-test)
+    autocmd FileType go nmap <Leader>T :GoTestFunc<CR>
+    autocmd FileType go nmap <Leader>C <Plug>(go-coverage-toggle)
+  augroup END
+'''
+
+# html
+[[plugins]]
+repo = 'valloric/MatchTagAlways'
+on_ft = 'html'
+
+# js(x)
+[[plugins]]
+repo = 'pangloss/vim-javascript'
+hook_add = '''
+  let g:javascript_plugin_flow = 1
+'''
+
+[[plugins]]
+repo = 'mxw/vim-jsx'
+hook_add = '''
+  augroup ES6ScriptGroup
+    autocmd!
+    au BufRead,BufNewFile *.es6 set filetype=javascript.jsx
+  augroup END
+'''
+
+[[plugins]]
+repo = 'leafgarland/typescript-vim'
+
+[[plugins]]
+repo = 'peitalin/vim-jsx-typescript'
+hook_add = '''
+  autocmd BufNewFile,BufRead *.tsx,*.jsx set filetype=typescript.tsx
+'''
+
+# markdown
+
+[[plugins]]
+repo = 'godlygeek/tabular'
+
+[[plugins]]
+repo = 'plasticboy/vim-markdown'
+depends = ['tabular']
+on_event = 'VimEnter'
+hook_add = '''
+  let g:vim_markdown_conceal = 0
+  let g:vim_markdown_conceal_code_blocks = 0
+  let g:tex_conceal = ""
+  let g:vim_markdown_math = 1
+  autocmd FileType markdown nmap <Leader>T :TableFormat<CR>
+'''

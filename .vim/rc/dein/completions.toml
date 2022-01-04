@@ -1,0 +1,13 @@
+[[plugins]]
+repo = 'Shougo/deoplete.nvim'
+if = 'has("nvim")'
+on_event = 'InsertCharPre'
+hook_add = '''
+  let g:deoplete#enable_at_startup = 1
+'''
+
+[[plugins]]
+repo = 'Shougo/echodoc.vim'
+hook_post_source = '''
+  call echodoc#enable()
+'''

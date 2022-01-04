@@ -1,0 +1,157 @@
+[[plugins]]
+repo = 'vim-airline/vim-airline'
+
+[[plugins]]
+repo = "majutsushi/tagbar"
+hook_add = '''
+  nmap <Leader>c :TagbarToggle<CR>
+
+  let g:tagbar_type_go = {
+    \ 'ctagstype' : 'go',
+    \ 'kinds'     : [
+      \ 'p:package',
+      \ 'i:imports:1',
+      \ 'c:constants',
+      \ 'v:variables',
+      \ 't:types',
+      \ 'n:interfaces',
+      \ 'w:fields',
+      \ 'e:embedded',
+      \ 'm:methods',
+      \ 'r:constructor',
+      \ 'f:functions'
+    \ ],
+    \ 'sro' : '.',
+    \ 'kind2scope' : {
+      \ 't' : 'ctype',
+      \ 'n' : 'ntype'
+    \ },
+    \ 'scope2kind' : {
+      \ 'ctype' : 't',
+      \ 'ntype' : 'n'
+    \ },
+    \ 'ctagsbin'  : 'gotags',
+    \ 'ctagsargs' : '-sort -silent'
+  \ }
+
+  " Add support for markdown files in tagbar.
+  let g:tagbar_type_markdown = {
+      \ 'ctagstype': 'markdown',
+      \ 'ctagsbin' : '~/src/github.com/jszakmeister/markdown2ctags/markdown2ctags.py',
+      \ 'ctagsargs' : '-f - --sort=yes --sro=»',
+      \ 'kinds' : [
+          \ 's:sections',
+          \ 'i:images'
+      \ ],
+      \ 'sro' : '»',
+      \ 'kind2scope' : {
+          \ 's' : 'section',
+      \ },
+      \ 'sort': 0,
+  \ }
+'''
+
+[[plugins]]
+repo = 'easymotion/vim-easymotion'
+hook_add = '''
+    let g:EasyMotion_do_mapping = 0
+    let g:EasyMotion_keys = ';a,oqepughtcrnwv'
+    let g:EasyMotion_smartcase = 1
+    nmap s <Plug>(easymotion-s2)
+    xmap s <Plug>(easymotion-s2)
+    nmap <Leader>s <Plug>(easymotion-sn)
+    xmap <Leader>s <Plug>(easymotion-sn)
+    map <Leader>j <Plug>(easymotion-j)
+    map <Leader>k <Plug>(easymotion-k)
+    let g:EasyMotion_enter_jump_first = 1
+    let g:EasyMotion_space_jump_first = 1
+    let g:EasyMotion_startofline = 0
+'''
+
+[[plugins]]
+repo = 'kana/vim-operator-user.git'
+
+[[plugins]]
+repo = 'kana/vim-operator-replace.git'
+hook_add = '''
+  map R <Plug>(operator-replace)
+'''
+
+[[plugins]]
+repo = 'scrooloose/nerdcommenter'
+hook_add = '''
+  let g:NERDCreateDefaultMappings = 0
+  let g:NERDSpaceDelims = 1
+  nmap <Space>/ <Plug>NERDCommenterToggle
+  vmap <Space>/ <Plug>NERDCommenterToggle
+  vmap <Space>s <Plug>NERDCommenterSexy
+'''
+
+[[plugins]]
+repo = 'tpope/vim-surround'
+
+[[plugins]]
+repo = 'tpope/vim-repeat'
+
+[[plugins]]
+repo = 'tpope/vim-abolish'
+
+[[plugins]]
+repo = 'vim-scripts/Align'
+
+[[plugins]]
+repo = 'vim-scripts/YankRing.vim'
+
+[[plugins]]
+repo = 'junegunn/vim-easy-align'
+hook_add = '''
+  xmap ga <Plug>(EasyAlign)
+  nmap ga <Plug>(EasyAlign)
+'''
+
+[[plugins]]
+repo = 'jiangmiao/auto-pairs'
+
+[[plugins]]
+repo = 'simeji/winresizer'
+
+[[plugins]]
+repo = 'wesQ3/vim-windowswap'
+hook_add = '''
+  let g:windowswap_map_keys = 0 
+  nnoremap <silent> <leader>ww :call WindowSwap#EasyWindowSwap()<CR>
+'''
+
+[[plugins]]
+repo = 'fuenor/im_control.vim'
+hook_add = '''
+  " 「日本語入力固定モード」の動作モード(fcitx)
+  let IM_CtrlMode = 6
+  " 「日本語入力固定モード」切替キー
+  inoremap <silent> <C-j> <C-r>=IMState('FixMode')<CR>
+'''
+
+# indent
+
+[[plugins]]
+repo = 'Yggdroot/indentLine'
+hook_add = '''
+  let g:indentLine_enabled = 0
+  let g:indentLine_color_term = 239
+  let g:vim_json_syntax_conceal = 0
+  autocmd Filetype json let g:indentLine_setConceal = 0
+  autocmd Filetype markdown let g:indentLine_setConceal = 0
+'''
+
+# preview
+
+[[plugins]]
+repo = "previm/previm"
+hook_add = '''
+  if has('mac')
+    let g:previm_open_cmd = 'open -a "Google Chrome"'
+  else
+    let g:previm_open_cmd = 'google-chrome'
+  endif
+  nmap <Leader>P :PrevimOpen<CR>
+'''

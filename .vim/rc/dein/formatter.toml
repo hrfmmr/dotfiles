@@ -1,0 +1,27 @@
+[[plugins]]
+repo = 'mattn/vim-sqlfmt'
+hook_add = '''
+  let g:sqlfmt_program = "sqlformat --comma_first true -r -k upper -o %s -"
+  autocmd FileType sql nmap <Leader>F <Plug>(sqlfmt)
+'''
+
+[[plugins]]
+repo = 'rhysd/vim-clang-format'
+hook_add = '''
+  let g:clang_format#style_options = {
+    \ "AlignConsecutiveAssignments" : "true",
+    \ "AlignConsecutiveDeclarations" : "true",
+    \ }
+  autocmd FileType proto ClangFormatAutoEnable
+'''
+
+[[plugins]]
+repo = 'psf/black'
+on_ft = 'python'
+hook_add = '''
+  let g:black_linelength = 79
+  autocmd BufWritePre *.py execute ':Black'
+'''
+
+[[plugins]]
+repo = 'nbouscal/vim-stylish-haskell'

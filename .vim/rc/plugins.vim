@@ -18,13 +18,23 @@ if !isdirectory(s:dein_repo_dir)
     execute '!git clone https://github.com/Shougo/dein.vim' s:dein_repo_dir
 endif
 execute 'set rtp^=' . s:dein_repo_dir
-execute 'set rtp^=' . s:dein_dir . '/repos/github.com/Shougo/denite.nvim'
 
 if dein#load_state(s:dein_dir)
     call dein#begin(s:dein_dir)
 
-    let s:toml = '~/.vim/rc/dein.toml'
-    call dein#load_toml(s:toml, {'lazy': 0})
+    call dein#load_toml('~/.vim/rc/dein/dein.toml', {'lazy': 0})
+    call dein#load_toml('~/.vim/rc/dein/colors.toml', {'lazy': 0})
+    call dein#load_toml('~/.vim/rc/dein/completions.toml', {'lazy': 0})
+    call dein#load_toml('~/.vim/rc/dein/editing.toml', {'lazy': 0})
+    call dein#load_toml('~/.vim/rc/dein/explorer.toml', {'lazy': 0})
+    call dein#load_toml('~/.vim/rc/dein/formatter.toml', {'lazy': 0})
+    call dein#load_toml('~/.vim/rc/dein/git.toml', {'lazy': 0})
+    call dein#load_toml('~/.vim/rc/dein/lang.toml', {'lazy': 0})
+    call dein#load_toml('~/.vim/rc/dein/lsp.toml', {'lazy': 0})
+    call dein#load_toml('~/.vim/rc/dein/runner.toml', {'lazy': 0})
+    call dein#load_toml('~/.vim/rc/dein/snippets.toml', {'lazy': 0})
+    call dein#load_toml('~/.vim/rc/dein/syntax.toml', {'lazy': 0})
+    call dein#load_toml('~/.vim/rc/dein/testing.toml', {'lazy': 0})
 
     call dein#end()
     call dein#save_state()

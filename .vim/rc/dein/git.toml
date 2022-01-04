@@ -1,0 +1,56 @@
+# git
+[[plugins]]
+repo = 'tpope/vim-fugitive.git'
+hook_add = '''
+  nnoremap [fugitive] <Nop>
+  nmap     <Leader>g   [fugitive]
+  nnoremap <silent> [fugitive]b :Gblame<CR>
+  nnoremap <silent> [fugitive]B :Gbrowse<CR>
+  nnoremap <silent> [fugitive]s :Gstatus<CR>
+  nnoremap <silent> [fugitive]w :Gwrite<CR>
+  nnoremap <silent> [fugitive]c :Gcommit<CR>
+  nnoremap <silent> [fugitive]d :Gdiffsplit<CR>
+  nnoremap <silent> [fugitive]r :Git! diff --staged<CR>
+  nnoremap <silent> [fugitive]R :Git! diff <CR>
+'''
+
+[[plugins]]
+repo = 'tpope/vim-rhubarb'
+depends = ['vim-fugitive']
+
+[[plugins]]
+repo = 'tpope/vim-dispatch'
+
+[[plugins]]
+repo = 'airblade/vim-gitgutter'
+
+[[plugins]]
+repo = 'gregsexton/gitv.git'
+hook_add = '''
+  nnoremap <silent> <Leader>gv :Gitv --all<CR>
+  nnoremap <silent> <Leader>gV :Gitv!<CR>
+  nnoremap <Leader>gG :Gitv -G 
+  augroup GitvGroup
+    autocmd!
+    autocmd FileType git :setlocal foldlevel=99
+  augroup END
+'''
+
+# gist
+[[plugins]]
+repo = 'mattn/vim-gist'
+hook_add = '''
+  let g:gist_get_multiplefile = 1
+  let g:gist_post_private = 1
+  let g:gist_show_privates = 1
+'''
+depends = ['webapi-vim']
+
+[[plugins]]
+repo = 'mattn/webapi-vim'
+
+[[plugins]]
+repo = 'mattn/unite-gist'
+
+[[plugins]]
+repo = 'Shougo/unite.vim'

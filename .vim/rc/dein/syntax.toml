@@ -1,0 +1,57 @@
+# nginx
+[[plugins]]
+repo = "chr4/nginx.vim"
+
+# toml
+[[plugins]]
+repo = 'cespare/vim-toml'
+
+# swift
+[[plugins]]
+repo = 'keith/swift.vim'
+
+[[plugins]]
+repo = 'kballard/vim-swift'
+
+# jinja2
+[[plugins]]
+repo = 'Glench/Vim-Jinja2-Syntax'
+
+# iptables
+[[plugins]]
+repo = 'vim-scripts/iptables'
+
+# Dockerfile
+[[plugins]]
+repo = 'ekalinin/Dockerfile.vim'
+
+# Kotlin
+[[plugins]]
+repo = 'udalov/kotlin-vim'
+
+# PlantUML
+
+[[plugins]]
+repo = 'aklt/plantuml-syntax'
+hook_add = '''
+  augroup PlantUMLGroup
+    autocmd!
+    au FileType plantuml command! OpenUml :!google-chrome %
+  augroup END
+'''
+
+# tmux
+[[plugins]]
+repo = 'tmux-plugins/vim-tmux'
+
+# dart
+[[plugins]]
+repo = 'dart-lang/dart-vim-plugin'
+hook_add = '''
+  autocmd BufWritePre *.dart execute ':DartFmt'
+'''
+
+# haskell
+[[plugins]]
+repo = 'neovimhaskell/haskell-vim'
+on_ft = 'haskell'

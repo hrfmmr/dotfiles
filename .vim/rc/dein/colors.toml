@@ -1,0 +1,43 @@
+[[plugins]]
+repo = 'chriskempson/base16-vim'
+on_event = 'VimEnter'
+hook_post_source = '''
+  fun! s:set_highlight()
+    hi Search          ctermfg=6     ctermbg=10  guifg=#8abeb7 guibg=#373b41
+    hi DiffAdd         ctermfg=66    ctermbg=237 guifg=#709080 guibg=#313c36 gui=bold
+    hi DiffChange      ctermbg=236                             guibg=#333333
+    hi DiffDelete      ctermfg=236   ctermbg=238 guifg=#333333 guibg=#464646
+    hi DiffText        ctermfg=217   ctermbg=237 guifg=#ecbcbc guibg=#41363c gui=bold
+  endfun
+
+  fun! s:set_transparent_bg()
+    hi! Normal ctermbg=NONE guibg=NONE
+    hi! NonText ctermbg=NONE guibg=NONE
+  endfun
+
+  fun! s:set_termguicolors()
+    let g:terminal_color_0 = "\#232c33"
+    let g:terminal_color_1 = "\#99736e"
+    let g:terminal_color_2 = "\#78a090"
+    let g:terminal_color_3 = "\#bfb7a1"
+    let g:terminal_color_4 = "\#7c9fa6"
+    let g:terminal_color_5 = "\#BF9C86"
+    let g:terminal_color_6 = "\#99BFBA"
+    let g:terminal_color_7 = "\#f0f0f0"
+    let g:terminal_color_8 = "\#70838c"
+    let g:terminal_color_9 = "\#99736e"
+    let g:terminal_color_10 = "\#78a090"
+    let g:terminal_color_11 = "\#bfb7a1"
+    let g:terminal_color_12 = "\#7c9fa6"
+    let g:terminal_color_13 = "\#BF9C86"
+    let g:terminal_color_14 = "\#99BFBA"
+    let g:terminal_color_15 = "\#f0f0f0"
+  endfun
+
+  colorscheme base16-tomorrow-night
+  call s:set_highlight()
+  call s:set_transparent_bg()
+  if has('nvim')
+    call s:set_termguicolors()
+  endif
+'''

@@ -1,0 +1,41 @@
+[[plugins]]
+repo = 'autozimu/LanguageClient-neovim'
+rev = 'next'
+build = 'bash install.sh'
+hook_add = '''
+  set hidden
+
+  let g:LanguageClient_autoStart = 1
+  let g:LanguageClient_serverCommands = {
+    \ 'c': ['clangd'],
+    \ 'cpp': ['clangd'],
+    \ 'python': ['pyls'],
+    \ 'ruby': ['/Users/miura/.rbenv/versions/2.6.5/bin/solargraph', 'stdio'],
+    \ 'go': ['gopls'],
+    \ 'dart': ['dart', expand('$DART_SDK') . '/bin/snapshots/analysis_server.dart.snapshot', '--lsp'],
+    \ 'javascript': ['javascript-typescript-stdio'],
+    \ 'typescript': ['javascript-typescript-stdio'],
+    \ 'javascript.jsx': ['javascript-typescript-stdio'],
+    \ 'typescript.jsx': ['javascript-typescript-stdio'],
+    \ 'typescript.tsx': ['javascript-typescript-stdio'],
+    \ 'haskell': ['hie-wrapper', '--lsp'],
+  \ }
+  let g:LanguageClient_rootMarkers = {
+      \ 'go': ['go.mod'],
+      \ 'javascript': ['jsconfig.json'],
+      \ 'typescript': ['tsconfig.json'],
+      \ 'haskell': ['*.cabal', 'stack.yaml'],
+  \ }
+  nnoremap <silent> <C-g><C-d> :call LanguageClient#textDocument_definition()<CR>
+  nnoremap <silent> <C-g><C-i> :call LanguageClient#textDocument_implementation()<CR>
+  nnoremap <silent> <C-g>r     :call LanguageClient#textDocument_rename()<CR>
+  nnoremap <silent> <C-g><C-r> :Denite references<CR>
+  nnoremap <silent> <C-g><C-s> :Denite documentSymbol<CR>
+  nnoremap <silent> <C-g><C-w> :Denite workspaceSymbol<CR>
+  nnoremap <silent> <C-g><C-h> :call LanguageClient#textDocument_hover()<CR>
+  nnoremap <silent> <C-g><C-f> :call LanguageClient#textDocument_formatting()<CR>
+  " Run gofmt and goimports on save
+  autocmd BufWritePre *.c,*.cpp,*.go :call LanguageClient#textDocument_formatting_sync()
+
+  let g:LanguageClient_loggingFile =  expand('~/.local/share/nvim/LanguageClient.log') 
+'''
