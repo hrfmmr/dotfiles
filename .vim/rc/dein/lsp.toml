@@ -1,41 +1,81 @@
 [[plugins]]
-repo = 'autozimu/LanguageClient-neovim'
-rev = 'next'
-build = 'bash install.sh'
+repo = 'prabirshrestha/vim-lsp'
 hook_add = '''
-  set hidden
+  " python
+  if (executable('pylsp'))
+      augroup LspPython
+          autocmd!
+          autocmd User lsp_setup call lsp#register_server({
+        \ 'name': 'pylsp',
+        \ 'cmd': {server_info->['pylsp']},
+        \ 'allowlist': ['python']
+        \ })
+      augroup END
+  endif
 
-  let g:LanguageClient_autoStart = 1
-  let g:LanguageClient_serverCommands = {
-    \ 'c': ['clangd'],
-    \ 'cpp': ['clangd'],
-    \ 'python': ['pyls'],
-    \ 'ruby': ['/Users/miura/.rbenv/versions/2.6.5/bin/solargraph', 'stdio'],
-    \ 'go': ['gopls'],
-    \ 'dart': ['dart', expand('$DART_SDK') . '/bin/snapshots/analysis_server.dart.snapshot', '--lsp'],
-    \ 'javascript': ['javascript-typescript-stdio'],
-    \ 'typescript': ['javascript-typescript-stdio'],
-    \ 'javascript.jsx': ['javascript-typescript-stdio'],
-    \ 'typescript.jsx': ['javascript-typescript-stdio'],
-    \ 'typescript.tsx': ['javascript-typescript-stdio'],
-    \ 'haskell': ['hie-wrapper', '--lsp'],
-  \ }
-  let g:LanguageClient_rootMarkers = {
-      \ 'go': ['go.mod'],
-      \ 'javascript': ['jsconfig.json'],
-      \ 'typescript': ['tsconfig.json'],
-      \ 'haskell': ['*.cabal', 'stack.yaml'],
-  \ }
-  nnoremap <silent> <C-g><C-d> :call LanguageClient#textDocument_definition()<CR>
-  nnoremap <silent> <C-g><C-i> :call LanguageClient#textDocument_implementation()<CR>
-  nnoremap <silent> <C-g>r     :call LanguageClient#textDocument_rename()<CR>
-  nnoremap <silent> <C-g><C-r> :Denite references<CR>
-  nnoremap <silent> <C-g><C-s> :Denite documentSymbol<CR>
-  nnoremap <silent> <C-g><C-w> :Denite workspaceSymbol<CR>
-  nnoremap <silent> <C-g><C-h> :call LanguageClient#textDocument_hover()<CR>
-  nnoremap <silent> <C-g><C-f> :call LanguageClient#textDocument_formatting()<CR>
-  " Run gofmt and goimports on save
-  autocmd BufWritePre *.c,*.cpp,*.go :call LanguageClient#textDocument_formatting_sync()
+  function! s:on_lsp_buffer_enabled() abort
+      setlocal omnifunc=lsp#complete
+      setlocal signcolumn=yes
+      if exists('+tagfunc') | setlocal tagfunc=lsp#tagfunc | endif
+      nmap <buffer> <C-g><C-d> <plug>(lsp-definition)
+      nmap <buffer> <C-g><C-s> <plug>(lsp-document-symbol-search)
+      nmap <buffer> <C-g><C-w> <plug>(lsp-workspace-symbol-search)
+      nmap <buffer> <C-g><C-r> <plug>(lsp-references)
+      nmap <buffer> <C-g><C-i> <plug>(lsp-implementation)
+      nmap <buffer> <C-g><C-t> <plug>(lsp-type-definition)
+      nmap <buffer> <C-g>r <plug>(lsp-rename)
+      nmap <buffer> [g <plug>(lsp-previous-diagnostic)
+      nmap <buffer> ]g <plug>(lsp-next-diagnostic)
+      nmap <buffer> K <plug>(lsp-hover)
 
-  let g:LanguageClient_loggingFile =  expand('~/.local/share/nvim/LanguageClient.log') 
+      let g:lsp_format_sync_timeout = 1000
+      autocmd! BufWritePre *.rs,*.go call execute('LspDocumentFormatSync')
+      autocmd! BufWritePre *.rb,*.rake call execute('LspDocumentFormatSync --server=solargraph')
+  endfunction
+
+  augroup lsp_install
+      au!
+      " call s:on_lsp_buffer_enabled only for languages that has the server registered.
+      autocmd User lsp_buffer_enabled call s:on_lsp_buffer_enabled()
+  augroup END
 '''
+
+[[plugins]]
+repo = 'mattn/vim-lsp-settings'
+hook_add = '''
+  let g:lsp_diagnostics_echo_cursor = 1
+
+  " Enable flake8 and mypy
+  let g:lsp_settings = {
+  \  'pylsp-all': {
+  \    'workspace_config': {
+  \      'pylsp': {
+  \        'configurationSources': ['flake8'],
+  \        'plugins': {
+  \          'flake8': {
+  \            'enabled': 1
+  \          },
+  \          'mccabe': {
+  \            'enabled': 0
+  \          },
+  \          'pycodestyle': {
+  \            'enabled': 0
+  \          },
+  \          'pyflakes': {
+  \            'enabled': 0
+  \          },
+  \          'pylsp_mypy': {
+  \            'enabled': 1
+  \          }
+  \        }
+  \      }
+  \    }
+  \  }
+  \}
+'''
+
+[[plugins]]
+repo = 'bonprosoft/pysen.vim'
+
+[[plugins]]
+repo = 'lighttiger2505/deoplete-vim-lsp'
