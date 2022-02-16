@@ -102,7 +102,7 @@ endif
 "
 set t_Co=256
 set visualbell t_vb=
-set cmdheight=4
+set cmdheight=2
 set showmatch
 set wildmode=list,full
 set guioptions-=T
