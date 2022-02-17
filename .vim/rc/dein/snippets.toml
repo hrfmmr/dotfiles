@@ -4,6 +4,7 @@ hook_add = '''
   let g:UltiSnipsJumpForwardTrigger="<tab>"
   let g:UltiSnipsJumpBackwardTrigger="<s-tab>"
   let g:UltiSnipsEditSplit="vertical"
+  nnoremap <silent> <C-s><C-n> :UltiSnipsEdit<CR>
 '''
 
 [[plugins]]
