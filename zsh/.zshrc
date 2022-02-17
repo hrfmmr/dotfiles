@@ -142,6 +142,7 @@ alias rg='rg --smart-case --hidden'
 alias be='bundle exec'
 alias d='docker'
 alias d-c='docker-compose'
+alias lzd='lazydocker'
 
 function git-checkout() {
     g checkout B;
