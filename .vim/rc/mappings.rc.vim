@@ -66,4 +66,5 @@ nnoremap <silent> <leader>qc :cclose<CR>
 if has("nvim")
   noremap <silent> <C-t> :term<CR>
   tnoremap <C-[> <C-\><C-n>
+  tnoremap <C-q> <ESC>
 endif
