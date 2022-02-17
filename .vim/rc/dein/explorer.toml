@@ -151,4 +151,6 @@ hook_add = '''
   nnoremap <silent> <C-u><C-l> :Lines<CR>
   nnoremap <silent> <C-u><C-r> :BLines<CR>
   nnoremap <silent> <C-u><C-s> :GFiles?<CR>
+  nnoremap <silent> <C-u><C-t> :Filetypes<CR>
+  nnoremap <silent> <C-u><C-n> :Snippets<CR>
 '''
