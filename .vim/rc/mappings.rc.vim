@@ -25,6 +25,13 @@ inoremap <c-b> <left>
 inoremap <c-f> <right>
 inoremap <c-a> <Esc>_i
 inoremap <c-e> <Esc>$a
+
+augroup DebuggingInsertGroup
+  autocmd!
+  au FileType ruby inoremap <C-v> require "pry";binding.pry
+  au FileType python inoremap <C-v> import os; import inspect; from IPython import embed; print(f"🐍 \033[95mat {os.path.basename(__file__)}:{inspect.stack()[1][3]}#{inspect.stack()[0][3]}\033[0m"); embed()
+augroup END
+
 " Split window
 nnoremap <silent> <Space>V :new<CR>
 nnoremap <silent> <Space>H :vne<CR>
