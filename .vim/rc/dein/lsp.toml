@@ -30,7 +30,7 @@ hook_add = '''
       nmap <buffer> K <plug>(lsp-hover)
 
       let g:lsp_format_sync_timeout = 1000
-      autocmd! BufWritePre *.rs,*.go call execute('LspDocumentFormatSync')
+      autocmd! BufWritePre *.rs,*.go,*.py call execute('LspDocumentFormatSync')
       autocmd! BufWritePre *.rb,*.rake call execute('LspDocumentFormatSync --server=solargraph')
   endfunction
 

@@ -16,12 +16,4 @@ hook_add = '''
 '''
 
 [[plugins]]
-repo = 'psf/black'
-on_ft = 'python'
-hook_add = '''
-  let g:black_linelength = 79
-  autocmd BufWritePre *.py execute ':Black'
-'''
-
-[[plugins]]
 repo = 'nbouscal/vim-stylish-haskell'
