@@ -22,3 +22,17 @@ ${1:}
 @enduml
 \`\`\`
 endsnippet
+
+snippet mermaid_gantt "Gantt with mermaid"
+
+\`\`\`mermaid
+gantt
+    axisFormat %m/%d
+    excludes weekends
+
+    section ${1: prj_title}
+    a: active, a, ${2: yyyy-mm-dd}, 3d
+    b: active, b, after a, 1w
+\`\`\`
+
+endsnippet
