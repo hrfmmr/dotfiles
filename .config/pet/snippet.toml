@@ -22,3 +22,40 @@
   description = "Copy machine's ip address to clipboard"
   command = "ifconfig | grep -oE \"\\b((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\b\" | grep -o \"^192.*\" | head -n1 | tr -d '\\n' | pbcopy"
   output = ""
+
+# GCP
+[[snippets]]
+  description = "[GCP] Listing Google Cloud Storage(GCS) buckets"
+  command = "gsutil ls -p $PROJECT_ID"
+  output = ""
+
+[[snippets]]
+  description = "[GCP] Listing Google Cloud Storage(GCS) bucket objects recursively"
+  command = "gsutil ls -p $PROJECT_ID -R 'gs://$BUCKET/**'"
+  output = ""
+
+[[snippets]]
+  description = "[GCP] Remove all of the Google Cloud Storage(GCS) bucket objects"
+  command = "gsutil rm 'gs://$BUCKET/*'"
+  output = ""
+
+[[snippets]]
+  description = "[GCP] List Data Transfer Service configuraitons"
+  command = "bq ls --format=prettyjson --transfer_config --transfer_location=us"
+  output = ""
+
+[[snippets]]
+  description = "[GCP] Get log of Data Transfer Service's job"
+  command = '''
+  bq ls --format=prettyjson --transfer_config --transfer_location=us |
+  jq -r 'map(.displayName + "::" + .name)[]' |
+  fzf |
+  sed -e "s/.*::\(.*\)$/\1/" |
+  xargs -I {} bq ls --format=prettyjson --transfer_run --max_results=20 {} |
+  jq -r 'map(.startTime + " " + .name)[]' |
+  fzf --sync |
+  sed -e "s/.* \(.*\)$/\1/" |
+  xargs -I {} bq show --format=prettyjson --transfer_run {} |
+  pbcopy
+  '''
+  output = ""
