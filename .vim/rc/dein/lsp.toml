@@ -85,4 +85,5 @@ repo = 'lighttiger2505/deoplete-vim-lsp'
 repo = 'liuchengxu/vista.vim'
 hook_add = '''
   let g:vista_default_executive = 'vim_lsp'
+  nmap <buffer> <C-s><C-v> :Vista!!<CR>
 '''
