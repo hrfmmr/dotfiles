@@ -55,3 +55,10 @@ hook_add = '''
 [[plugins]]
 repo = 'neovimhaskell/haskell-vim'
 on_ft = 'haskell'
+
+# Terraform
+[[plugins]]
+repo = 'hashivim/vim-terraform'
+hook_add = '''
+  autocmd! BufWritePre *.tf execute ':TerraformFmt'
+'''

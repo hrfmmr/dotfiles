@@ -3,14 +3,23 @@ repo = 'prabirshrestha/vim-lsp'
 hook_add = '''
   " python
   if (executable('pylsp'))
-      augroup LspPython
-          autocmd!
-          autocmd User lsp_setup call lsp#register_server({
+    augroup LspPython
+      autocmd!
+      autocmd User lsp_setup call lsp#register_server({
         \ 'name': 'pylsp',
         \ 'cmd': {server_info->['pylsp']},
         \ 'allowlist': ['python']
         \ })
-      augroup END
+    augroup END
+  endif
+
+  " Terraform
+  if executable('terraform-ls')
+    au User lsp_setup call lsp#register_server({
+      \ 'name': 'terraform-ls',
+      \ 'cmd': {server_info->['terraform-ls', 'serve']},
+      \ 'allowlist': ['terraform'],
+      \ })
   endif
 
   function! s:on_lsp_buffer_enabled() abort
@@ -23,6 +32,7 @@ hook_add = '''
       nmap <buffer> <C-g><C-r> <plug>(lsp-references)
       nmap <buffer> <C-g><C-i> <plug>(lsp-implementation)
       nmap <buffer> <C-g><C-t> <plug>(lsp-type-definition)
+      nmap <buffer> <C-g><C-f> <plug>(lsp-document-format)
       nmap <buffer> <C-g>r <plug>(lsp-rename)
       nmap <buffer> [g <plug>(lsp-previous-diagnostic)
       nmap <buffer> ]g <plug>(lsp-next-diagnostic)
@@ -39,6 +49,10 @@ hook_add = '''
       " call s:on_lsp_buffer_enabled only for languages that has the server registered.
       autocmd User lsp_buffer_enabled call s:on_lsp_buffer_enabled()
   augroup END
+
+  " Debugging
+  " let g:lsp_log_verbose = 1
+  " let g:lsp_log_file = expand('~/vim-lsp.log')
 '''
 
 [[plugins]]
@@ -85,5 +99,5 @@ repo = 'lighttiger2505/deoplete-vim-lsp'
 repo = 'liuchengxu/vista.vim'
 hook_add = '''
   let g:vista_default_executive = 'vim_lsp'
-  nmap <buffer> <C-s><C-v> :Vista!!<CR>
+  nnoremap <silent> <C-s><C-v> :Vista!!<CR>
 '''
