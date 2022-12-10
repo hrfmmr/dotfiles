@@ -57,5 +57,79 @@
   sed -e "s/.* \(.*\)$/\1/" |
   xargs -I {} bq show --format=prettyjson --transfer_run {} |
   pbcopy
-  '''
+'''
+  output = ""
+
+[[snippets]]
+  description = "[AWS] List 🐳 ECS clusters"
+  command = "aws ecs list-clusters"
+  output = ""
+
+# https://github.com/fujiwara/tracer
+[[snippets]]
+  description = "[AWS] Pick a 🐳 ECS cluster by tracer cli"
+  command = "cluster=$(tracer | tail -2 | fzf)"
+  output = ""
+
+[[snippets]]
+  description = "[AWS] Describe 🐳 ECS Task status by tracer cli"
+  command = '''
+ecs_cluster=$(tracer | tail -2 | fzf) && \
+ecs_task=$(tracer "$ecs_cluster" | tail -2 | fzf | awk '{ print $1 }') && \
+tracer $ecs_cluster $ecs_task
+'''
+  output = ""
+
+[[snippets]]
+  # Specify Task's status as --desired-status=(RUNNING|PENDING|STOPPED)
+  description = "[AWS] List 🐳 ECS Tasks for target cluster"
+  command = '''
+aws ecs list-clusters |
+jq '.clusterArns[]' |
+fzf |
+tr -d '\"' |
+sed -e 's/.*\/\(.*\)$/\1/' |
+xargs -I {} \
+  aws ecs list-tasks \
+    --cluster {} \
+    --desired-status STOPPED
+'''
+  output = ""
+
+[[snippets]]
+  description = "[AWS] Describe 🐳 ECS Task for target cluster"
+  command = '''
+aws ecs describe-tasks \
+  --cluster <CLUSTER_NAME> \
+  --tasks <TASK_ARN>
+'''
+  output = ""
+
+[[snippets]]
+  description = "[AWS] List EC2 public DNS names"
+  command = '''
+aws ec2 describe-instances | \
+jq '.Reservations[].Instances[]' | \
+jq -r '[(.Tags[]? | select(.Key == "Name")).Value, .PublicDnsName] | join("|")' | \
+column -t -s "|"
+'''
+  output = ""
+
+[[snippets]]
+  description = "[AWS] List ELB DNS names"
+  command = '''
+aws elbv2 describe-load-balancers | \
+jq '.LoadBalancers[]' | \
+jq -r '[.LoadBalancerName, .Scheme, .DNSName] | join("|")' | \
+column -t -s "|"
+'''
+  output = ""
+
+[[snippets]]
+  description = "[AWS] 🐳 ECS Exec"
+  command = '''
+ecs_cluster=$(tracer | tail -2 | fzf) && \
+ecs_task=$(tracer "$ecs_cluster" | tail -2 | fzf | awk '{ print $1 }') && \
+aws ecs execute-command --cluster $ecs_cluster --task $ecs_task --container <CONTAINER_NAME> --interactive --command <COMMAND>
+'''
   output = ""
