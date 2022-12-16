@@ -136,7 +136,7 @@ aws ecs execute-command --cluster $ecs_cluster --task $ecs_task --container <CON
 
 # Depends on [TylerBrock/saw: Fast, multi-purpose tool for AWS CloudWatch Logs](https://github.com/TylerBrock/saw)
 [[snippets]]
-  description = "[AWS] CloudWatch Logs last 2hours logs for the target log group"
+  description = "[AWS] Dump CloudWatch Logs for the target log group[saw]"
   command = '''
 cw_log_group=$(saw groups | fzf) && \
 saw get $cw_log_group --start -2h | \
@@ -145,9 +145,27 @@ bat
   output = ""
 
 [[snippets]]
-  description = "[AWS] CloudWatch Logs watch target log group"
+  description = "[AWS] tail and follow CloudWatch Logs target log group[saw]"
   command = '''
 cw_log_group=$(saw groups | fzf) && \
 saw watch $cw_log_group
+'''
+  output = ""
+
+# [lucagrulla/cw: The best way to tail AWS CloudWatch Logs from your terminal](https://github.com/lucagrulla/cw)
+[[snippets]]
+  description = "[AWS] tail and follow CloudWatch Logs target log group[cw]"
+  command = '''
+cw_log_group=$(cw ls groups | fzf) && \
+cw tail -f $cw_log_group -b2h
+'''
+  output = ""
+
+[[snippets]]
+  description = "[AWS] tail and follow CloudWatch Logs target log group/stream[cw]"
+  command = '''
+cw_log_group=$(cw ls groups | fzf) && \
+cw_log_stream=$(cw ls streams $cw_log_group | fzf) && \
+cw tail -f "$cw_log_group:$cw_log_stream" -b2h
 '''
   output = ""
