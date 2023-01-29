@@ -1,6 +1,15 @@
 [[plugins]]
 repo = 'prabirshrestha/vim-lsp'
 hook_add = '''
+  " swift
+  if executable('sourcekit-lsp')
+    au User lsp_setup call lsp#register_server({
+      \ 'name': 'sourcekit-lsp',
+      \ 'cmd': {server_info->['sourcekit-lsp']},
+      \ 'allowlist': ['swift'],
+      \ })
+  endif
+
   " python
   if (executable('pylsp'))
     augroup LspPython
