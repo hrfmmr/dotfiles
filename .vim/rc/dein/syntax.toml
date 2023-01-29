@@ -62,3 +62,7 @@ repo = 'hashivim/vim-terraform'
 hook_add = '''
   autocmd! BufWritePre *.tf execute ':TerraformFmt'
 '''
+
+# Jsonnet
+[[plugins]]
+repo = 'google/vim-jsonnet'
