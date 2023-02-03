@@ -28,6 +28,9 @@ require("lazy").setup({
 				term_colors = true,
 			})
 			vim.cmd([[colorscheme catppuccin]])
+			vim.cmd(
+				"highlight LineNr term=bold cterm=NONE ctermfg=DarkGrey ctermbg=NONE gui=NONE guifg=DarkGrey guibg=NONE"
+			)
 		end,
 	},
 	-- }}}
@@ -318,6 +321,148 @@ require("lazy").setup({
 	},
 	-- jsonnet
 	{ "google/vim-jsonnet" },
+	-- }}}
+
+	-- LSP {{{
+	{
+		"prabirshrestha/vim-lsp",
+		config = function()
+			vim.cmd([[
+              " swift
+              if executable('sourcekit-lsp')
+                au User lsp_setup call lsp#register_server({
+                  \ 'name': 'sourcekit-lsp',
+                  \ 'cmd': {server_info->['sourcekit-lsp']},
+                  \ 'allowlist': ['swift'],
+                  \ })
+              endif
+
+              " python
+              if (executable('pylsp'))
+                augroup LspPython
+                  autocmd!
+                  autocmd User lsp_setup call lsp#register_server({
+                    \ 'name': 'pylsp',
+                    \ 'cmd': {server_info->['pylsp']},
+                    \ 'allowlist': ['python']
+                    \ })
+                augroup END
+              endif
+
+              " Terraform
+              if executable('terraform-ls')
+                au User lsp_setup call lsp#register_server({
+                  \ 'name': 'terraform-ls',
+                  \ 'cmd': {server_info->['terraform-ls', 'serve']},
+                  \ 'allowlist': ['terraform'],
+                  \ })
+              endif
+
+              function! s:on_lsp_buffer_enabled() abort
+                  setlocal omnifunc=lsp#complete
+                  setlocal signcolumn=yes
+                  if exists('+tagfunc') | setlocal tagfunc=lsp#tagfunc | endif
+                  nmap <buffer> <C-g><C-d> <plug>(lsp-definition)
+                  nmap <buffer> <C-g><C-s> <plug>(lsp-document-symbol-search)
+                  nmap <buffer> <C-g><C-w> <plug>(lsp-workspace-symbol-search)
+                  nmap <buffer> <C-g><C-r> <plug>(lsp-references)
+                  nmap <buffer> <C-g><C-i> <plug>(lsp-implementation)
+                  nmap <buffer> <C-g><C-t> <plug>(lsp-type-definition)
+                  nmap <buffer> <C-g><C-f> <plug>(lsp-document-format)
+                  nmap <buffer> <C-g>r <plug>(lsp-rename)
+                  nmap <buffer> [g <plug>(lsp-previous-diagnostic)
+                  nmap <buffer> ]g <plug>(lsp-next-diagnostic)
+                  nmap <buffer> <C-g>d :LspDocumentDiagnostics<CR>
+                  nmap <buffer> K <plug>(lsp-hover)
+
+                  let g:lsp_format_sync_timeout = 1000
+                  autocmd! BufWritePre *.rs,*.go,*.py call execute('LspDocumentFormatSync')
+                  autocmd! BufWritePre *.rb,*.rake call execute('LspDocumentFormatSync --server=solargraph')
+              endfunction
+
+              augroup lsp_install
+                  au!
+                  " call s:on_lsp_buffer_enabled only for languages that has the server registered.
+                  autocmd User lsp_buffer_enabled call s:on_lsp_buffer_enabled()
+              augroup END
+
+              " Debugging
+              " let g:lsp_log_verbose = 1
+              " let g:lsp_log_file = expand('~/vim-lsp.log')
+            ]])
+		end,
+	},
+	{
+		"mattn/vim-lsp-settings",
+		config = function()
+			vim.cmd([[
+              let g:lsp_diagnostics_echo_cursor = 1
+
+              " Enable flake8 and mypy
+              let g:lsp_settings = {
+              \  'pylsp-all': {
+              \    'workspace_config': {
+              \      'pylsp': {
+              \        'configurationSources': ['flake8'],
+              \        'plugins': {
+              \          'flake8': {
+              \            'enabled': 1
+              \          },
+              \          'mccabe': {
+              \            'enabled': 0
+              \          },
+              \          'pycodestyle': {
+              \            'enabled': 0
+              \          },
+              \          'pyflakes': {
+              \            'enabled': 0
+              \          },
+              \          'pylsp_mypy': {
+              \            'enabled': 1
+              \          }
+              \        }
+              \      }
+              \    }
+              \  }
+              \}
+            ]])
+		end,
+	},
+	-- }}}
+
+	-- Runner {{{
+	{
+		"Shougo/vimproc.vim",
+		build = "make",
+	},
+	{
+		"thinca/vim-quickrun",
+		dependencies = {
+			"Shougo/vimproc.vim",
+		},
+		config = function()
+			vim.cmd([[
+              nmap <silent> <Leader>ru :QuickRun<CR>
+              let g:quickrun_config = {}
+              "let g:quickrun_config._ = {
+              "\   'runner' : 'vimproc',
+              "\   'runner/vimproc/updatetime' : 40,
+              "\}
+              let g:quickrun_config.python = {
+              \ 'command': expand('~/.pyenv/shims/python'),
+              \}
+              let g:quickrun_config.swift = {
+              \ 'command': 'xcrun',
+              \ 'cmdopt': 'swift',
+              \ 'exec': '%c %o %s',
+              \}
+              let g:quickrun_config.haskell = {
+              \ 'command': 'stack',
+              \ 'cmdopt': 'runghc',
+              \}
+            ]])
+		end,
+	},
 	-- }}}
 
 	-- Testing {{{
