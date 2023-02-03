@@ -76,9 +76,11 @@ require("lazy").setup({
 	-- }}}
 
 	-- Editing {{{
-	{ "kana/vim-operator-user" },
 	{
 		"kana/vim-operator-replace",
+		dependencies = {
+			"kana/vim-operator-user",
+		},
 		config = function()
 			vim.cmd("map R <Plug>(operator-replace)")
 		end,
@@ -104,6 +106,53 @@ require("lazy").setup({
 			vim.cmd([[
               let g:windowswap_map_keys = 0 
               nnoremap <silent> <leader>ww :call WindowSwap#EasyWindowSwap()<CR>
+            ]])
+		end,
+	},
+	-- }}}
+
+	-- Explorer {{{
+	{
+		"scrooloose/nerdtree",
+		config = function()
+			vim.cmd([[
+              nnoremap [nerdtree] <Nop>
+              nmap <Leader>e [nerdtree]
+              nnoremap <silent> [nerdtree]c :NERDTreeFind<CR>
+              nnoremap <silent> [nerdtree]n :NERDTreeToggle<CR>
+              nnoremap <silent> [nerdtree]r :NERDTree .<CR>
+            ]])
+		end,
+	},
+	{
+		"junegunn/fzf.vim",
+		dependencies = {
+			"junegunn/fzf",
+		},
+		config = function()
+			vim.cmd([[
+              set rtp+=~/.fzf
+
+              function! RipgrepFzf(query, fullscreen)
+                let command_fmt = 'rg --ignore-file ~/.ignore --hidden --column --line-number --no-heading --color=always --smart-case -- %s || true'
+                let initial_command = printf(command_fmt, shellescape(a:query))
+                let reload_command = printf(command_fmt, '{q}')
+                let spec = {'options': ['--phony', '--query', a:query, '--bind', 'change:reload:'.reload_command]}
+                call fzf#vim#grep(initial_command, 1, fzf#vim#with_preview(spec), a:fullscreen)
+              endfunction
+
+              command! -nargs=* -bang RG 
+                \ call RipgrepFzf(<q-args>, <bang>0)
+
+              nnoremap <silent> <C-u><C-u> :Files<CR>
+              nnoremap <silent> <C-u><C-b> :Buffers<CR>
+              nnoremap <silent> <C-u><C-g> :RG <C-R><C-W><CR>
+              nnoremap <silent> <C-u><C-h> :History<CR>
+              nnoremap <silent> <C-u><C-l> :Lines<CR>
+              nnoremap <silent> <C-u><C-r> :BLines<CR>
+              nnoremap <silent> <C-u><C-s> :GFiles?<CR>
+              nnoremap <silent> <C-u><C-t> :Filetypes<CR>
+              nnoremap <silent> <C-u><C-n> :Snippets<CR>
             ]])
 		end,
 	},
