@@ -200,4 +200,137 @@ require("lazy").setup({
 		end,
 	},
 	-- }}}
+
+	-- Language & Syntax {{{
+	{
+		-- go
+		"fatih/vim-go",
+		ft = "go",
+		config = function()
+			vim.cmd([[
+              augroup GolangGroup
+                autocmd!
+
+                let g:go_fmt_command = "goimports"
+                let g:go_def_mapping_enabled = 0
+                let g:go_doc_keywordprg_enabled = 0
+                let g:go_auto_type_info = 1
+                let g:go_auto_sameids = 1
+                let g:go_highlight_build_constraints = 1
+                let g:go_highlight_extra_types = 1
+                let g:go_highlight_fields = 1
+                let g:go_highlight_functions = 1
+                let g:go_highlight_methods = 1
+                let g:go_highlight_operators = 1
+                let g:go_highlight_structs = 1
+                let g:go_highlight_types = 1
+                let g:go_list_type = "quickfix"
+
+                function! s:build_go_files()
+                  let l:file = expand('%')
+                  if l:file =~# '^\f\+_test\.go$'
+                    call go#test#Test(0, 1)
+                  elseif l:file =~# '^\f\+\.go$'
+                    call go#cmd#Build(0)
+                  endif
+                endfunction
+
+                autocmd FileType go nmap <Leader>i <Plug>(go-info)
+                autocmd FileType go nnoremap <Leader>b :<C-u>call <SID>build_go_files()<CR>
+                autocmd FileType go nmap <Leader>x <Plug>(go-run)
+                autocmd FileType go nmap <Leader>A <Plug>(go-alternate-edit)
+                autocmd FileType go nmap <Leader>t <Plug>(go-test)
+                autocmd FileType go nmap <Leader>T :GoTestFunc<CR>
+                autocmd FileType go nmap <Leader>C <Plug>(go-coverage-toggle)
+              augroup END
+            ]])
+		end,
+	},
+	-- html
+	{
+		"valloric/MatchTagAlways",
+		ft = "html",
+	},
+	-- js
+	{
+		"pangloss/vim-javascript",
+		config = function()
+			vim.cmd([[
+              let g:javascript_plugin_flow = 1
+            ]])
+		end,
+	},
+	{ "leafgarland/typescript-vim" },
+	{
+		"peitalin/vim-jsx-typescript",
+		config = function()
+			vim.cmd([[
+              autocmd BufNewFile,BufRead *.tsx,*.jsx set filetype=typescript.tsx
+            ]])
+		end,
+	},
+	-- markdown
+	{
+		"plasticboy/vim-markdown",
+		dependencies = {
+			"godlygeek/tabular",
+		},
+		config = function()
+			vim.cmd([[
+              let g:vim_markdown_conceal = 0
+              let g:vim_markdown_conceal_code_blocks = 0
+              let g:tex_conceal = ""
+              let g:vim_markdown_math = 1
+              autocmd FileType markdown nmap <Leader>T :TableFormat<CR>
+            ]])
+		end,
+	},
+	-- swift
+	{ "keith/swift.vim" },
+	-- toml
+	{ "cespare/vim-toml" },
+	-- nginx
+	{ "chr4/nginx.vim" },
+	-- Dockerfile
+	{ "ekalinin/Dockerfile.vim" },
+	-- plantuml
+	{
+		"aklt/plantuml-syntax",
+		config = function()
+			vim.cmd([[
+              augroup PlantUMLGroup
+                autocmd!
+                au FileType plantuml command! OpenUml :!google-chrome %
+              augroup END
+            ]])
+		end,
+	},
+	-- tmux
+	{ "tmux-plugins/vim-tmux" },
+	-- terraform
+	{
+		"hashivim/vim-terraform",
+		config = function()
+			vim.cmd([[
+              autocmd! BufWritePre *.tf execute ':TerraformFmt'
+            ]])
+		end,
+	},
+	-- jsonnet
+	{ "google/vim-jsonnet" },
+	-- }}}
+
+	-- Testing {{{
+	{
+		"janko/vim-test",
+		config = function()
+			vim.cmd([[
+              nmap <silent> t<C-n> :TestNearest<CR>
+              nmap <silent> t<C-f> :TestFile<CR>
+              autocmd FileType go nmap <silent> t<C-n> :TestNearest -v -count=1<CR>
+              autocmd FileType go nmap <silent> t<C-f> :TestFile -v -count=1<CR>
+            ]])
+		end,
+	},
+	-- }}}
 })
