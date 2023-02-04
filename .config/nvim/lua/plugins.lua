@@ -126,6 +126,130 @@ require("lazy").setup({
 	},
 	-- }}}
 
+	-- Fuzzy Finder {{{
+	{
+		"nvim-telescope/telescope.nvim",
+		dependencies = {
+			"nvim-lua/plenary.nvim",
+			"nvim-telescope/telescope-fzf-native.nvim",
+			"nvim-telescope/telescope-frecency.nvim",
+			"nvim-telescope/telescope-ghq.nvim",
+			"nvim-telescope/telescope-github.nvim",
+		},
+		config = function()
+			-- setup {{{
+			local telescope = require("telescope")
+			telescope.setup({
+				defaults = {
+					sorting_strategy = "ascending",
+				},
+				extensions = {
+					fzf = {
+						fuzzy = true,
+						override_generic_sorter = true,
+						override_file_sorter = true,
+						case_mode = "smart_case",
+					},
+				},
+			})
+			-- This is needed to setup telescope-fzf-native. It overrides the sorters
+			-- in this.
+			telescope.load_extension("fzf")
+			telescope.load_extension("frecency")
+			telescope.load_extension("ghq")
+			telescope.load_extension("gh")
+			-- }}}
+
+			-- keymaps for builtin {{{
+			local builtin = require("telescope.builtin")
+			local get_file_dir = function()
+				-- get expand('%:h') if buffer has filename, otherwise use $CWD
+				local sibling = vim.fn.expand("%:h")
+				if sibling ~= nil and sibling ~= "" then
+					return sibling
+				end
+				return vim.fn.getcwd()
+			end
+
+			-- files
+			vim.keymap.set("n", "<C-u><C-u>", builtin.find_files, {})
+			vim.keymap.set("n", "<M-u><M-u>", function()
+				builtin.find_files({ cwd = get_file_dir() })
+			end, {})
+			-- buffers
+			vim.keymap.set("n", "<C-u><C-b>", builtin.buffers, {})
+			-- grep
+			vim.keymap.set("n", "<C-u><C-g>", builtin.grep_string, {})
+			vim.keymap.set("n", "<M-u><M-g>", function()
+				builtin.grep_string({ cwd = get_file_dir() })
+			end, {})
+			vim.keymap.set("n", "<C-u>g", builtin.live_grep, {})
+			vim.keymap.set("n", "<M-u>g", function()
+				builtin.live_grep({ cwd = get_file_dir() })
+			end, {})
+			-- buffer lines
+			vim.keymap.set("n", "<C-u><C-l>", function()
+				builtin.current_buffer_fuzzy_find({ skip_empty_lines = true })
+			end, {})
+			-- file types
+			vim.keymap.set("n", "<C-u><C-t>", builtin.filetypes, {})
+			-- lsp diagnostics
+			vim.keymap.set("n", "<C-u><C-e>", builtin.diagnostics, {})
+			-- resume
+			vim.keymap.set("n", "<C-u><C-r>", builtin.resume, {})
+			-- command history
+			vim.keymap.set("n", "<C-u>:", builtin.command_history, {})
+			-- git
+			vim.keymap.set("n", "<C-u>gc", builtin.git_commits, {})
+			vim.keymap.set("n", "<C-u>gg", builtin.git_bcommits, {})
+			vim.keymap.set("n", "<C-u>gr", builtin.git_branches, {})
+			-- }}}
+
+			-- keymaps for extensions {{{
+			local function extensions(t)
+				local name, prop, opt = t[1], t[2], t[3] or {}
+				return function()
+					return telescope.extensions[name][prop](opt)
+				end
+			end
+
+			-- frecency
+			vim.keymap.set("n", "<C-u><C-h>", extensions({ "frecency", "frecency" }))
+			-- ghq
+			vim.keymap.set(
+				"n",
+				"<C-u>hq",
+				extensions({
+					"ghq",
+					"list",
+					{
+						attach_mappings = function(_)
+							local actions_set = require("telescope.actions.set")
+							actions_set.select:replace(function(_, _)
+								local from_entry = require("telescope.from_entry")
+								local actions_state = require("telescope.actions.state")
+								local entry = actions_state.get_selected_entry()
+								local dir = from_entry.path(entry)
+								builtin.git_files({ cwd = dir, show_untracked = true })
+							end)
+							return true
+						end,
+					},
+				})
+			)
+			-- }}}
+		end,
+	},
+	{
+		"nvim-telescope/telescope-fzf-native.nvim",
+		build = "make",
+	},
+	{
+		"nvim-telescope/telescope-frecency.nvim",
+		dependencies = { "kkharji/sqlite.lua" },
+	},
+	-- }}}
+
 	-- Explorer {{{
 	{
 		"scrooloose/nerdtree",
@@ -136,38 +260,6 @@ require("lazy").setup({
               nnoremap <silent> [nerdtree]c :NERDTreeFind<CR>
               nnoremap <silent> [nerdtree]n :NERDTreeToggle<CR>
               nnoremap <silent> [nerdtree]r :NERDTree .<CR>
-            ]])
-		end,
-	},
-	{
-		"junegunn/fzf.vim",
-		dependencies = {
-			"junegunn/fzf",
-		},
-		config = function()
-			vim.cmd([[
-              set rtp+=~/.fzf
-
-              function! RipgrepFzf(query, fullscreen)
-                let command_fmt = 'rg --ignore-file ~/.ignore --hidden --column --line-number --no-heading --color=always --smart-case -- %s || true'
-                let initial_command = printf(command_fmt, shellescape(a:query))
-                let reload_command = printf(command_fmt, '{q}')
-                let spec = {'options': ['--phony', '--query', a:query, '--bind', 'change:reload:'.reload_command]}
-                call fzf#vim#grep(initial_command, 1, fzf#vim#with_preview(spec), a:fullscreen)
-              endfunction
-
-              command! -nargs=* -bang RG 
-                \ call RipgrepFzf(<q-args>, <bang>0)
-
-              nnoremap <silent> <C-u><C-u> :Files<CR>
-              nnoremap <silent> <C-u><C-b> :Buffers<CR>
-              nnoremap <silent> <C-u><C-g> :RG <C-R><C-W><CR>
-              nnoremap <silent> <C-u><C-h> :History<CR>
-              nnoremap <silent> <C-u><C-l> :Lines<CR>
-              nnoremap <silent> <C-u><C-r> :BLines<CR>
-              nnoremap <silent> <C-u><C-s> :GFiles?<CR>
-              nnoremap <silent> <C-u><C-t> :Filetypes<CR>
-              nnoremap <silent> <C-u><C-n> :Snippets<CR>
             ]])
 		end,
 	},
