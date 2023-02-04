@@ -139,7 +139,9 @@ require("lazy").setup({
 			"nvim-telescope/telescope-symbols.nvim",
 		},
 		config = function()
-			require("telescope").setup({
+			-- setup {{{
+			local telescope = require("telescope")
+			telescope.setup({
 				defaults = {
 					sorting_strategy = "ascending",
 				},
@@ -152,13 +154,14 @@ require("lazy").setup({
 					},
 				},
 			})
-			local function builtin(t)
-				local name, opt = t[1], t[2] or {}
-				return function()
-					return require("telescope.builtin")[name](opt or {})
-				end
-			end
+			-- This is needed to setup telescope-fzf-native. It overrides the sorters
+			-- in this.
+			telescope.load_extension("fzf")
+			telescope.load_extension("ghq")
+			-- }}}
 
+			-- keymaps for builtin {{{
+			local builtin = require("telescope.builtin")
 			local get_file_dir = function()
 				-- get expand('%:h') if buffer has filename, otherwise use $CWD
 				local sibling = vim.fn.expand("%:h")
@@ -167,23 +170,67 @@ require("lazy").setup({
 				end
 				return vim.fn.getcwd()
 			end
+
 			-- files
-			vim.keymap.set("n", "<C-u><C-u>", builtin({ "find_files" }), {})
-			vim.keymap.set("n", "<M-u><M-u>", builtin({ "find_files", { cwd = get_file_dir() } }), {})
-			vim.keymap.set("n", "<C-u><C-h>", builtin({ "oldfiles" }), {})
+			vim.keymap.set("n", "<C-u><C-u>", builtin.find_files, {})
+			vim.keymap.set("n", "<M-u><M-u>", function()
+				builtin.find_files({ cwd = get_file_dir() })
+			end, {})
+			vim.keymap.set("n", "<C-u><C-h>", builtin.oldfiles, {})
 			-- buffers
-			vim.keymap.set("n", "<C-u><C-b>", builtin({ "buffers" }), {})
+			vim.keymap.set("n", "<C-u><C-b>", builtin.buffers, {})
 			-- grep
-			vim.keymap.set("n", "<C-u><C-g>", builtin({ "grep_string" }), {})
-			vim.keymap.set("n", "<M-u><M-g>", builtin({ "grep_string", { cwd = get_file_dir() } }), {})
-			vim.keymap.set("n", "<C-u>g", builtin({ "live_grep" }), {})
-			vim.keymap.set("n", "<M-u>g", builtin({ "live_grep", { cwd = get_file_dir() } }), {})
+			vim.keymap.set("n", "<C-u><C-g>", builtin.grep_string, {})
+			vim.keymap.set("n", "<M-u><M-g>", function()
+				builtin.grep_string({ cwd = get_file_dir() })
+			end, {})
+			vim.keymap.set("n", "<C-u>g", builtin.live_grep, {})
+			vim.keymap.set("n", "<M-u>g", function()
+				builtin.live_grep({ cwd = get_file_dir() })
+			end, {})
 			-- buffer lines
-			vim.keymap.set("n", "<C-u><C-l>", builtin({ "current_buffer_fuzzy_find", { skip_empty_lines = true } }), {})
+			vim.keymap.set("n", "<C-u><C-l>", function()
+				builtin.current_buffer_fuzzy_find({ skip_empty_lines = true })
+			end, {})
 			-- file types
-			vim.keymap.set("n", "<C-u><C-t>", builtin({ "filetypes" }), {})
+			vim.keymap.set("n", "<C-u><C-t>", builtin.filetypes, {})
 			-- lsp diagnostics
-			vim.keymap.set("n", "<C-u><C-e>", builtin({ "diagnostics" }), {})
+			vim.keymap.set("n", "<C-u><C-e>", builtin.diagnostics, {})
+			-- resume
+			vim.keymap.set("n", "<C-u><C-r>", builtin.resume, {})
+			-- }}}
+
+			-- keymaps for extensions {{{
+			local function extensions(t)
+				local name, prop, opt = t[1], t[2], t[3] or {}
+				return function()
+					return telescope.extensions[name][prop](opt)
+				end
+			end
+
+			-- ghq
+			vim.keymap.set(
+				"n",
+				"<C-u>hq",
+				extensions({
+					"ghq",
+					"list",
+					{
+						attach_mappings = function(_)
+							local actions_set = require("telescope.actions.set")
+							actions_set.select:replace(function(_, _)
+								local from_entry = require("telescope.from_entry")
+								local actions_state = require("telescope.actions.state")
+								local entry = actions_state.get_selected_entry()
+								local dir = from_entry.path(entry)
+								builtin.git_files({ cwd = dir, show_untracked = true })
+							end)
+							return true
+						end,
+					},
+				})
+			)
+			-- }}}
 		end,
 	},
 	{
