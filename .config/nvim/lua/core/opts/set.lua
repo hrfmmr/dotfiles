@@ -10,7 +10,7 @@ vim.opt.list = true
 
 -- Backup
 vim.opt.backup = true
-vim.opt.backupdir = os.getenv("HOME") .. ".vim/backup"
+vim.opt.backupdir = os.getenv("HOME") .. "/.vim/backup"
 vim.opt.swapfile = false
 vim.opt.undofile = false
 
