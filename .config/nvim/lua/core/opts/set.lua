@@ -6,6 +6,7 @@ vim.opt.clipboard = "unnamedplus"
 
 -- GUI
 vim.opt.cmdheight = 2
+vim.opt.list = true
 
 -- Backup
 vim.opt.backup = true
