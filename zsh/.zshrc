@@ -216,6 +216,11 @@ if which rbenv > /dev/null; then eval "$(rbenv init -)"; fi
 if which goenv > /dev/null; then eval "$(goenv init -)"; fi
 
 #
+# * z
+#
+if brew --prefix z > /dev/null; then source $(brew --prefix)/etc/profile.d/z.sh; fi
+
+#
 # * fzf
 #
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
@@ -253,8 +258,20 @@ function fzf-cdr() {
     CURSOR=$#BUFFER
     zle accept-line
 }
+
+function fzf-z-search() {
+    local res=$(z | sort -rn | cut -c 12- | fzf)
+    if [ -n "$res" ]; then
+        BUFFER+="cd $res"
+        zle accept-line
+    else
+        return 1
+    fi
+}
 zle -N fzf-cdr
 bindkey '^x^d' fzf-cdr
+# zle -N fzf-z-search
+# bindkey '^x^d' fzf-z-search
 
 # find ghq directory
 function ghq-fzf() {
