@@ -216,6 +216,11 @@ if which rbenv > /dev/null; then eval "$(rbenv init -)"; fi
 if which goenv > /dev/null; then eval "$(goenv init -)"; fi
 
 #
+# * direnv
+#
+if which direnv > /dev/null; then eval "$(direnv hook zsh)"; fi
+
+#
 # * z
 #
 if brew --prefix z > /dev/null; then source $(brew --prefix)/etc/profile.d/z.sh; fi
