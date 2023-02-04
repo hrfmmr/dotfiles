@@ -1,0 +1,38 @@
+snippet details "Toggle folds open/close"
+<details><summary>${1:title}</summary>
+
+${2:body}
+</details>
+endsnippet
+
+snippet before_after_screenshots "Table of before|after images"
+
+before|after
+:---:|:---:
+<img width="320" src="${1:A}"> | <img width="320" src="${2:B}">
+
+endsnippet
+
+snippet uml "PlantUML"
+\`\`\`plantuml
+@startuml
+
+${1:}
+
+@enduml
+\`\`\`
+endsnippet
+
+snippet mermaid_gantt "Gantt with mermaid"
+
+\`\`\`mermaid
+gantt
+    axisFormat %m/%d
+    excludes weekends
+
+    section ${1: prj_title}
+    a: active, a, ${2: yyyy-mm-dd}, 3d
+    b: active, b, after a, 1w
+\`\`\`
+
+endsnippet
