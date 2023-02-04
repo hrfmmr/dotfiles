@@ -112,6 +112,18 @@ require("lazy").setup({
             ]])
 		end,
 	},
+	{
+		"scrooloose/nerdcommenter",
+		config = function()
+			vim.cmd([[
+              let g:NERDCreateDefaultMappings = 0
+              let g:NERDSpaceDelims = 1
+              nmap <Space>/ <Plug>NERDCommenterToggle
+              vmap <Space>/ <Plug>NERDCommenterToggle
+              vmap <Space>s <Plug>NERDCommenterSexy
+            ]])
+		end,
+	},
 	-- }}}
 
 	-- Explorer {{{
