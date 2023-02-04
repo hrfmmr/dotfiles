@@ -124,6 +124,34 @@ require("lazy").setup({
             ]])
 		end,
 	},
+	{
+		"previm/previm",
+		config = function()
+			vim.cmd([[
+                let g:previm_open_cmd = 'open -a "Google Chrome"'
+                nmap <Leader>P :PrevimOpen<CR>
+            ]])
+		end,
+	},
+	{
+		"easymotion/vim-easymotion",
+		config = function()
+			vim.cmd([[
+                let g:EasyMotion_do_mapping = 0
+                let g:EasyMotion_keys = ';a,oqepughtcrnwv'
+                let g:EasyMotion_smartcase = 1
+                nmap s <Plug>(easymotion-s2)
+                xmap s <Plug>(easymotion-s2)
+                nmap <Leader>s <Plug>(easymotion-sn)
+                xmap <Leader>s <Plug>(easymotion-sn)
+                map <Leader>j <Plug>(easymotion-j)
+                map <Leader>k <Plug>(easymotion-k)
+                let g:EasyMotion_enter_jump_first = 1
+                let g:EasyMotion_space_jump_first = 1
+                let g:EasyMotion_startofline = 0
+            ]])
+		end,
+	},
 	-- }}}
 
 	-- Fuzzy Finder {{{
@@ -245,7 +273,10 @@ require("lazy").setup({
 	},
 	-- }}}
 
-	-- Explorer {{{
+	-- UI {{{
+	{
+		"vim-airline/vim-airline",
+	},
 	{
 		"scrooloose/nerdtree",
 		config = function()
