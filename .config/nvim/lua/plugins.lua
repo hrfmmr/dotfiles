@@ -204,7 +204,6 @@ require("lazy").setup({
 			vim.keymap.set("n", "<M-u><M-u>", function()
 				builtin.find_files({ cwd = get_file_dir() })
 			end, {})
-			-- vim.keymap.set("n", "<C-u><C-h>", builtin.oldfiles, {})
 			-- buffers
 			vim.keymap.set("n", "<C-u><C-b>", builtin.buffers, {})
 			-- grep
@@ -226,6 +225,12 @@ require("lazy").setup({
 			vim.keymap.set("n", "<C-u><C-e>", builtin.diagnostics, {})
 			-- resume
 			vim.keymap.set("n", "<C-u><C-r>", builtin.resume, {})
+			-- command history
+			vim.keymap.set("n", "<C-u>:", builtin.command_history, {})
+			-- git
+			vim.keymap.set("n", "<C-u>gc", builtin.git_commits, {})
+			vim.keymap.set("n", "<C-u>gg", builtin.git_bcommits, {})
+			vim.keymap.set("n", "<C-u>gr", builtin.git_branches, {})
 			-- }}}
 
 			-- keymaps for extensions {{{
