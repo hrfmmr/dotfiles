@@ -132,11 +132,9 @@ require("lazy").setup({
 		dependencies = {
 			"nvim-lua/plenary.nvim",
 			"nvim-telescope/telescope-fzf-native.nvim",
+			"nvim-telescope/telescope-frecency.nvim",
 			"nvim-telescope/telescope-ghq.nvim",
 			"nvim-telescope/telescope-github.nvim",
-			"nvim-telescope/telescope-smart-history.nvim",
-			"nvim-telescope/telescope-ghq.nvim",
-			"nvim-telescope/telescope-symbols.nvim",
 		},
 		config = function()
 			-- setup {{{
@@ -157,7 +155,9 @@ require("lazy").setup({
 			-- This is needed to setup telescope-fzf-native. It overrides the sorters
 			-- in this.
 			telescope.load_extension("fzf")
+			telescope.load_extension("frecency")
 			telescope.load_extension("ghq")
+			telescope.load_extension("gh")
 			-- }}}
 
 			-- keymaps for builtin {{{
@@ -176,7 +176,7 @@ require("lazy").setup({
 			vim.keymap.set("n", "<M-u><M-u>", function()
 				builtin.find_files({ cwd = get_file_dir() })
 			end, {})
-			vim.keymap.set("n", "<C-u><C-h>", builtin.oldfiles, {})
+			-- vim.keymap.set("n", "<C-u><C-h>", builtin.oldfiles, {})
 			-- buffers
 			vim.keymap.set("n", "<C-u><C-b>", builtin.buffers, {})
 			-- grep
@@ -208,6 +208,8 @@ require("lazy").setup({
 				end
 			end
 
+			-- frecency
+			vim.keymap.set("n", "<C-u><C-h>", extensions({ "frecency", "frecency" }))
 			-- ghq
 			vim.keymap.set(
 				"n",
@@ -238,8 +240,8 @@ require("lazy").setup({
 		build = "make",
 	},
 	{
-		"nvim-telescope/telescope-smart-history.nvim",
-		dependencies = { "tami5/sql.nvim" },
+		"nvim-telescope/telescope-frecency.nvim",
+		dependencies = { "kkharji/sqlite.lua" },
 	},
 	-- }}}
 
