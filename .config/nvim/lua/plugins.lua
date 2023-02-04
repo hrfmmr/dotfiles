@@ -76,6 +76,35 @@ require("lazy").setup({
 			})
 		end,
 	},
+	{
+		"hrsh7th/cmp-cmdline",
+		config = function()
+			local cmp = require("cmp")
+			-- Completions for command mode
+			-- `:` cmdline setup.
+			cmp.setup.cmdline(":", {
+				mapping = cmp.mapping.preset.cmdline(),
+				sources = cmp.config.sources({
+					{ name = "path" },
+				}, {
+					{
+						name = "cmdline",
+						option = {
+							ignore_cmds = { "Man", "!" },
+						},
+					},
+				}),
+			})
+			-- Completions for / search based on current buffer
+			-- `/` cmdline setup.
+			cmp.setup.cmdline("/", {
+				mapping = cmp.mapping.preset.cmdline(),
+				sources = {
+					{ name = "buffer" },
+				},
+			})
+		end,
+	},
 	-- }}}
 
 	-- Editing {{{
