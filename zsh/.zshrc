@@ -196,6 +196,10 @@ if [[ -f $HOME/.zsh/antigen/antigen.zsh ]]; then
     antigen apply
 fi
 
+#
+# * asdf
+#
+if brew --prefix asdf > /dev/null; then source $(brew --prefix asdf)/libexec/asdf.sh; fi
 
 #
 # * pyenv
