@@ -13,7 +13,7 @@ vim.keymap.set("n", "gc", "gt")
 vim.keymap.set("n", "gr", "gT")
 -- Move tab
 vim.keymap.set("n", "gC", ":+tabm<CR>", { silent = true })
-vim.keymap.set("n", "gC", ":-tabm<CR>", { silent = true })
+vim.keymap.set("n", "gR", ":-tabm<CR>", { silent = true })
 -- Emacs key bind for moving cursole while INSERT
 vim.keymap.set("i", "<c-n>", "<down>")
 vim.keymap.set("i", "<c-p>", "<up>")

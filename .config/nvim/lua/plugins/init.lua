@@ -48,30 +48,74 @@ require("lazy").setup({
 			"hrsh7th/cmp-emoji",
 			"andersevenrud/cmp-tmux",
 			"lukas-reineke/cmp-rg",
-			"octaltree/cmp-look",
+			-- "octaltree/cmp-look",
 		},
 		config = function()
 			local cmp = require("cmp")
+			vim.o.completeopt = "menuone,noselect"
+			local t = function(str)
+				return vim.api.nvim_replace_termcodes(str, true, true, true)
+			end
+			local check_back_space = function()
+				local col = vim.fn.col(".") - 1
+				return col == 0 or vim.fn.getline("."):sub(col, col):match("%s") ~= nil
+			end
 			cmp.setup({
+				snippet = {
+					expand = function(args)
+						vim.fn["UltiSnips#Anon"](args.body)
+					end,
+				},
 				mapping = cmp.mapping.preset.insert({
 					["<CR>"] = cmp.mapping.confirm({ select = false }),
 					["<C-n>"] = cmp.mapping(cmp.mapping.select_next_item(), { "i", "c" }),
 					["<C-p>"] = cmp.mapping(cmp.mapping.select_prev_item(), { "i", "c" }),
 					["<C-b>"] = cmp.mapping.scroll_docs(-4),
 					["<C-f>"] = cmp.mapping.scroll_docs(4),
-					["<C-Space>"] = cmp.mapping.complete(),
-					["<C-e>"] = cmp.mapping.abort(),
+					["<C-e>"] = cmp.mapping.complete(),
+					["<C-q>"] = cmp.mapping.abort(),
+					-- expand snippet
+					["<C-y>"] = cmp.mapping(function(fallback)
+						if vim.fn["UltiSnips#CanExpandSnippet"]() == 1 then
+							vim.fn.feedkeys(t("<C-R>=UltiSnips#ExpandSnippet()<CR>"))
+						elseif check_back_space() then
+							vim.fn.feedkeys(t("<C-e>"), "n")
+						else
+							fallback()
+						end
+					end, { "i", "s" }),
+
+					-- cycle menu, jump through tabstop
+					["<Tab>"] = cmp.mapping(function(fallback)
+						if vim.fn["UltiSnips#CanJumpForwards"]() == 1 then
+							vim.fn.feedkeys(t("<ESC>:call UltiSnips#JumpForwards()<CR>"))
+						elseif vim.fn.pumvisible() == 1 then
+							vim.fn.feedkeys(t("<C-n>"), "n")
+						elseif check_back_space() then
+							vim.fn.feedkeys(t("<tab>"), "n")
+						else
+							fallback()
+						end
+					end, { "i", "s" }),
+					["<S-Tab>"] = cmp.mapping(function(fallback)
+						if vim.fn["UltiSnips#CanJumpBackwards"]() == 1 then
+							return vim.fn.feedkeys(t("<C-R>=UltiSnips#JumpBackwards()<CR>"))
+						elseif vim.fn.pumvisible() == 1 then
+							vim.fn.feedkeys(t("<C-p>"), "n")
+						else
+							fallback()
+						end
+					end, { "i", "s" }),
 				}),
 				sources = cmp.config.sources({
 					{ name = "nvim_lsp" },
 					{ name = "nvim_lua" },
 					{ name = "buffer" },
 					{ name = "path" },
-					{ name = "cmdline" },
 					{ name = "emoji" },
 					{ name = "tmux", keyword_length = 2, option = { trigger_characters = {}, all_panes = true } },
-					{ name = "rg" },
-					{ name = "look", keyword_length = 2, option = { convert_case = true, loud = true } },
+					{ name = "rg", keyword_length = 3 },
+					-- { name = "look", keyword_length = 2, option = { convert_case = true, loud = true } },
 				}),
 			})
 		end,
@@ -130,8 +174,22 @@ require("lazy").setup({
             ]])
 		end,
 	},
-	{ "jiangmiao/auto-pairs" },
-	{ "simeji/winresizer" },
+	{
+		"jiangmiao/auto-pairs",
+		config = function()
+			vim.cmd([[
+                autocmd! Filetype TelescopePrompt let b:autopairs_enabled = 0
+            ]])
+		end,
+	},
+	{
+		"simeji/winresizer",
+		config = function()
+			vim.cmd([[
+                let g:winresizer_start_key = '<C-e><C-w>'
+            ]])
+		end,
+	},
 	{
 		"wesQ3/vim-windowswap",
 		config = function()
@@ -143,12 +201,13 @@ require("lazy").setup({
 	},
 	{
 		"scrooloose/nerdcommenter",
+		init = function()
+			vim.cmd("let g:NERDCreateDefaultMappings = 0")
+		end,
 		config = function()
 			vim.cmd([[
-              let g:NERDCreateDefaultMappings = 0
               let g:NERDSpaceDelims = 1
               nmap <Space>/ <Plug>NERDCommenterToggle
-              vmap <Space>/ <Plug>NERDCommenterToggle
               vmap <Space>s <Plug>NERDCommenterSexy
             ]])
 		end,
@@ -178,6 +237,23 @@ require("lazy").setup({
                 let g:EasyMotion_enter_jump_first = 1
                 let g:EasyMotion_space_jump_first = 1
                 let g:EasyMotion_startofline = 0
+            ]])
+		end,
+	},
+	-- }}}
+
+	-- {{{ Snippets
+	{
+		"SirVer/ultisnips",
+		dependencies = {
+			"honza/vim-snippets",
+		},
+		config = function()
+			vim.cmd([[
+              let g:UltiSnipsJumpForwardTrigger="<tab>"
+              let g:UltiSnipsJumpBackwardTrigger="<s-tab>"
+              let g:UltiSnipsEditSplit="vertical"
+              nnoremap <silent> <C-s><C-n> :UltiSnipsEdit<CR>
             ]])
 		end,
 	},
@@ -252,10 +328,15 @@ require("lazy").setup({
 			vim.keymap.set("n", "<C-u><C-t>", builtin.filetypes, {})
 			-- lsp diagnostics
 			vim.keymap.set("n", "<C-u><C-e>", builtin.diagnostics, {})
+			-- lsp
+			vim.keymap.set("n", "<C-u>sr", builtin.lsp_references)
+			vim.keymap.set("n", "<C-u>sd", builtin.lsp_document_symbols)
+			vim.keymap.set("n", "<C-u>sw", builtin.lsp_workspace_symbols)
 			-- resume
 			vim.keymap.set("n", "<C-u><C-r>", builtin.resume, {})
 			-- command history
-			vim.keymap.set("n", "<C-u>:", builtin.command_history, {})
+			vim.keymap.set("n", "<C-u>ch", builtin.command_history, {})
+			vim.keymap.set("n", "<C-u>cr", builtin.commands, {})
 			-- git
 			vim.keymap.set("n", "<C-u>gc", builtin.git_commits, {})
 			vim.keymap.set("n", "<C-u>gg", builtin.git_bcommits, {})
@@ -320,6 +401,14 @@ require("lazy").setup({
               nnoremap <silent> [nerdtree]c :NERDTreeFind<CR>
               nnoremap <silent> [nerdtree]n :NERDTreeToggle<CR>
               nnoremap <silent> [nerdtree]r :NERDTree .<CR>
+            ]])
+		end,
+	},
+	{
+		"majutsushi/tagbar",
+		config = function()
+			vim.cmd([[
+                nmap <Leader>c :TagbarToggle<CR>
             ]])
 		end,
 	},
@@ -413,6 +502,11 @@ require("lazy").setup({
             ]])
 		end,
 	},
+	-- rust
+	{
+		"rust-lang/rust.vim",
+		ft = "rust",
+	},
 	-- html
 	{
 		"valloric/MatchTagAlways",
@@ -489,109 +583,202 @@ require("lazy").setup({
 
 	-- LSP {{{
 	{
-		"prabirshrestha/vim-lsp",
+		"williamboman/mason.nvim",
 		config = function()
-			vim.cmd([[
-              " swift
-              if executable('sourcekit-lsp')
-                au User lsp_setup call lsp#register_server({
-                  \ 'name': 'sourcekit-lsp',
-                  \ 'cmd': {server_info->['sourcekit-lsp']},
-                  \ 'allowlist': ['swift'],
-                  \ })
-              endif
-
-              " python
-              if (executable('pylsp'))
-                augroup LspPython
-                  autocmd!
-                  autocmd User lsp_setup call lsp#register_server({
-                    \ 'name': 'pylsp',
-                    \ 'cmd': {server_info->['pylsp']},
-                    \ 'allowlist': ['python']
-                    \ })
-                augroup END
-              endif
-
-              " Terraform
-              if executable('terraform-ls')
-                au User lsp_setup call lsp#register_server({
-                  \ 'name': 'terraform-ls',
-                  \ 'cmd': {server_info->['terraform-ls', 'serve']},
-                  \ 'allowlist': ['terraform'],
-                  \ })
-              endif
-
-              function! s:on_lsp_buffer_enabled() abort
-                  setlocal omnifunc=lsp#complete
-                  setlocal signcolumn=yes
-                  if exists('+tagfunc') | setlocal tagfunc=lsp#tagfunc | endif
-                  nmap <buffer> <C-g><C-d> <plug>(lsp-definition)
-                  nmap <buffer> <C-g><C-s> <plug>(lsp-document-symbol-search)
-                  nmap <buffer> <C-g><C-w> <plug>(lsp-workspace-symbol-search)
-                  nmap <buffer> <C-g><C-r> <plug>(lsp-references)
-                  nmap <buffer> <C-g><C-i> <plug>(lsp-implementation)
-                  nmap <buffer> <C-g><C-t> <plug>(lsp-type-definition)
-                  nmap <buffer> <C-g><C-f> <plug>(lsp-document-format)
-                  nmap <buffer> <C-g>r <plug>(lsp-rename)
-                  nmap <buffer> [g <plug>(lsp-previous-diagnostic)
-                  nmap <buffer> ]g <plug>(lsp-next-diagnostic)
-                  nmap <buffer> <C-g>d :LspDocumentDiagnostics<CR>
-                  nmap <buffer> K <plug>(lsp-hover)
-
-                  let g:lsp_format_sync_timeout = 1000
-                  autocmd! BufWritePre *.rs,*.go,*.py call execute('LspDocumentFormatSync')
-                  autocmd! BufWritePre *.rb,*.rake call execute('LspDocumentFormatSync --server=solargraph')
-              endfunction
-
-              augroup lsp_install
-                  au!
-                  " call s:on_lsp_buffer_enabled only for languages that has the server registered.
-                  autocmd User lsp_buffer_enabled call s:on_lsp_buffer_enabled()
-              augroup END
-
-              " Debugging
-              " let g:lsp_log_verbose = 1
-              " let g:lsp_log_file = expand('~/vim-lsp.log')
-            ]])
+			local mason = require("mason")
+			mason.setup({
+				ui = {
+					icons = {
+						package_installed = "✓",
+						package_pending = "➜",
+						package_uninstalled = "✗",
+					},
+				},
+			})
 		end,
 	},
 	{
-		"mattn/vim-lsp-settings",
+		"williamboman/mason-lspconfig.nvim",
+		dependencies = {
+			"williamboman/mason.nvim",
+			"neovim/nvim-lspconfig",
+			"folke/neodev.nvim",
+		},
 		config = function()
-			vim.cmd([[
-              let g:lsp_diagnostics_echo_cursor = 1
-
-              " Enable flake8 and mypy
-              let g:lsp_settings = {
-              \  'pylsp-all': {
-              \    'workspace_config': {
-              \      'pylsp': {
-              \        'configurationSources': ['flake8'],
-              \        'plugins': {
-              \          'flake8': {
-              \            'enabled': 1
-              \          },
-              \          'mccabe': {
-              \            'enabled': 0
-              \          },
-              \          'pycodestyle': {
-              \            'enabled': 0
-              \          },
-              \          'pyflakes': {
-              \            'enabled': 0
-              \          },
-              \          'pylsp_mypy': {
-              \            'enabled': 1
-              \          }
-              \        }
-              \      }
-              \    }
-              \  }
-              \}
-            ]])
+			local nvim_lsp = require("lspconfig")
+			local mason_lspconfig = require("mason-lspconfig")
+			require("neodev").setup({})
+			mason_lspconfig.setup({
+				ensure_installed = {
+					"bashls",
+					"gopls",
+					"jsonls",
+					"jsonnet_ls",
+					"pyright",
+					"rust_analyzer",
+					"sumneko_lua",
+					"sqls",
+					"terraformls",
+				},
+			})
+			mason_lspconfig.setup_handlers({
+				function(server_name)
+					local opts = {
+						on_attach = require("plugins.lsp.handler").on_attach,
+						capabilities = require("plugins.lsp.handler").capabilities,
+					}
+					if server_name == "sumneko_lua" then
+						local bashls_opts = require("plugins.lsp.settings.bashls")
+						opts = vim.tbl_deep_extend("force", opts, bashls_opts)
+					end
+					if server_name == "sumneko_lua" then
+						local sumneko_opts = require("plugins.lsp.settings.sumneko_lua")
+						opts = vim.tbl_deep_extend("force", opts, sumneko_opts)
+					end
+					nvim_lsp[server_name].setup(opts)
+				end,
+			})
 		end,
 	},
+	{
+		"neovim/nvim-lspconfig",
+		config = function()
+			local nvim_lsp = require("lspconfig")
+			local opts = {
+				on_attach = require("plugins.lsp.handler").on_attach,
+				capabilities = require("plugins.lsp.handler").capabilities,
+			}
+			nvim_lsp.sourcekit.setup(vim.tbl_deep_extend("force", opts, {
+				single_file_support = true,
+			}))
+		end,
+	},
+	{
+		"jose-elias-alvarez/null-ls.nvim",
+		config = function()
+			local null_ls = require("null-ls")
+			null_ls.setup({
+				sources = {
+					null_ls.builtins.diagnostics.shellcheck,
+					null_ls.builtins.diagnostics.mypy,
+					null_ls.builtins.formatting.black,
+					null_ls.builtins.formatting.stylua,
+					null_ls.builtins.formatting.gofmt,
+					null_ls.builtins.formatting.gofumpt,
+					null_ls.builtins.formatting.goimports,
+					null_ls.builtins.formatting.golines,
+					null_ls.builtins.formatting.rustfmt,
+					null_ls.builtins.formatting.shfmt.with({
+						extra_args = { "-i", "2", "-sr" },
+					}),
+				},
+			})
+		end,
+	},
+	-- {
+	-- "prabirshrestha/vim-lsp",
+	-- config = function()
+	-- vim.cmd([[
+	-- " swift
+	-- if executable('sourcekit-lsp')
+	-- au User lsp_setup call lsp#register_server({
+	-- \ 'name': 'sourcekit-lsp',
+	-- \ 'cmd': {server_info->['sourcekit-lsp']},
+	-- \ 'allowlist': ['swift'],
+	-- \ })
+	-- endif
+
+	-- " python
+	-- if (executable('pylsp'))
+	-- augroup LspPython
+	-- autocmd!
+	-- autocmd User lsp_setup call lsp#register_server({
+	-- \ 'name': 'pylsp',
+	-- \ 'cmd': {server_info->['pylsp']},
+	-- \ 'allowlist': ['python']
+	-- \ })
+	-- augroup END
+	-- endif
+
+	-- " Terraform
+	-- if executable('terraform-ls')
+	-- au User lsp_setup call lsp#register_server({
+	-- \ 'name': 'terraform-ls',
+	-- \ 'cmd': {server_info->['terraform-ls', 'serve']},
+	-- \ 'allowlist': ['terraform'],
+	-- \ })
+	-- endif
+
+	-- function! s:on_lsp_buffer_enabled() abort
+	-- setlocal omnifunc=lsp#complete
+	-- setlocal signcolumn=yes
+	-- if exists('+tagfunc') | setlocal tagfunc=lsp#tagfunc | endif
+	-- nmap <buffer> <C-g><C-d> <plug>(lsp-definition)
+	-- nmap <buffer> <C-g><C-s> <plug>(lsp-document-symbol-search)
+	-- nmap <buffer> <C-g><C-w> <plug>(lsp-workspace-symbol-search)
+	-- nmap <buffer> <C-g><C-r> <plug>(lsp-references)
+	-- nmap <buffer> <C-g><C-i> <plug>(lsp-implementation)
+	-- nmap <buffer> <C-g><C-t> <plug>(lsp-type-definition)
+	-- nmap <buffer> <C-g><C-f> <plug>(lsp-document-format)
+	-- nmap <buffer> <C-g>r <plug>(lsp-rename)
+	-- nmap <buffer> [g <plug>(lsp-previous-diagnostic)
+	-- nmap <buffer> ]g <plug>(lsp-next-diagnostic)
+	-- nmap <buffer> <C-g>d :LspDocumentDiagnostics<CR>
+	-- nmap <buffer> K <plug>(lsp-hover)
+
+	-- let g:lsp_format_sync_timeout = 1000
+	-- autocmd! BufWritePre *.rs,*.go,*.py call execute('LspDocumentFormatSync')
+	-- autocmd! BufWritePre *.rb,*.rake call execute('LspDocumentFormatSync --server=solargraph')
+	-- endfunction
+
+	-- augroup lsp_install
+	-- au!
+	-- " call s:on_lsp_buffer_enabled only for languages that has the server registered.
+	-- autocmd User lsp_buffer_enabled call s:on_lsp_buffer_enabled()
+	-- augroup END
+
+	-- " Debugging
+	-- " let g:lsp_log_verbose = 1
+	-- " let g:lsp_log_file = expand('~/vim-lsp.log')
+	-- ]])
+	-- end,
+	-- },
+	-- {
+	-- "mattn/vim-lsp-settings",
+	-- config = function()
+	-- vim.cmd([[
+	-- let g:lsp_diagnostics_echo_cursor = 1
+
+	-- " Enable flake8 and mypy
+	-- let g:lsp_settings = {
+	-- \  'pylsp-all': {
+	-- \    'workspace_config': {
+	-- \      'pylsp': {
+	-- \        'configurationSources': ['flake8'],
+	-- \        'plugins': {
+	-- \          'flake8': {
+	-- \            'enabled': 1
+	-- \          },
+	-- \          'mccabe': {
+	-- \            'enabled': 0
+	-- \          },
+	-- \          'pycodestyle': {
+	-- \            'enabled': 0
+	-- \          },
+	-- \          'pyflakes': {
+	-- \            'enabled': 0
+	-- \          },
+	-- \          'pylsp_mypy': {
+	-- \            'enabled': 1
+	-- \          }
+	-- \        }
+	-- \      }
+	-- \    }
+	-- \  }
+	-- \}
+	-- ]])
+	-- end,
+	-- },
 	-- }}}
 
 	-- Runner {{{
