@@ -27,6 +27,7 @@
   "previm": { "branch": "master", "commit": "dcda34b72f6b224602b02a179d4f35e06e53d465" },
   "rust.vim": { "branch": "master", "commit": "889b9a7515db477f4cb6808bef1769e53493c578" },
   "sqlite.lua": { "branch": "master", "commit": "93ff5824682ecc874200e338fd8ca9ccd08508f8" },
+  "sqls.nvim": { "branch": "main", "commit": "a0048b7018c99b68456f91b4aa42ce288f0c0774" },
   "swift.vim": { "branch": "master", "commit": "ba6f6cef58d08ac741aaf1626d3799d476cd43b6" },
   "tabular": { "branch": "master", "commit": "339091ac4dd1f17e225fe7d57b48aff55f99b23a" },
   "tagbar": { "branch": "master", "commit": "af3ce7c3cec81f2852bdb0a0651d2485fcd01214" },
