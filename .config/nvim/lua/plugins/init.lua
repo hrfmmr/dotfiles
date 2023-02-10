@@ -579,6 +579,20 @@ require("lazy").setup({
 	},
 	-- jsonnet
 	{ "google/vim-jsonnet" },
+	-- sql
+	{
+		"nanotee/sqls.nvim",
+		config = function()
+			vim.cmd([[
+              augroup SQLGroup
+                autocmd!
+                autocmd FileType sql nmap <Leader>E :SqlsExecuteQuery<CR>
+                autocmd FileType sql nmap <Leader>C :SqlsShowConnections<CR>
+                autocmd FileType sql nmap <Leader>S :SqlsSwitchConnection 
+              augroup END
+            ]])
+		end,
+	},
 	-- }}}
 
 	-- LSP {{{
@@ -603,6 +617,7 @@ require("lazy").setup({
 			"williamboman/mason.nvim",
 			"neovim/nvim-lspconfig",
 			"folke/neodev.nvim",
+			"nanotee/sqls.nvim",
 		},
 		config = function()
 			local nvim_lsp = require("lspconfig")
@@ -644,6 +659,12 @@ require("lazy").setup({
 						local sumneko_opts = require("plugins.lsp.settings.sumneko_lua")
 						opts = vim.tbl_deep_extend("force", opts, sumneko_opts)
 					end
+					if server_name == "sqls" then
+						opts.on_attach = function(client, bufnr)
+							require("plugins.lsp.handler").on_attach(client, bufnr)
+							require("sqls").on_attach(client, bufnr)
+						end
+					end
 					nvim_lsp[server_name].setup(opts)
 				end,
 			})
@@ -673,6 +694,7 @@ require("lazy").setup({
 					null_ls.builtins.diagnostics.mypy,
 					null_ls.builtins.diagnostics.flake8,
 					null_ls.builtins.diagnostics.rubocop,
+					null_ls.builtins.diagnostics.sqlfluff,
 					null_ls.builtins.formatting.black,
 					null_ls.builtins.formatting.stylua,
 					null_ls.builtins.formatting.gofmt,
@@ -684,6 +706,7 @@ require("lazy").setup({
 					null_ls.builtins.formatting.shfmt.with({
 						extra_args = { "-i", "2", "-sr" },
 					}),
+					null_ls.builtins.formatting.sqlfluff,
 				},
 				on_attach = require("plugins.lsp.handler").on_attach,
 			})
