@@ -627,9 +627,13 @@ require("lazy").setup({
 						on_attach = require("plugins.lsp.handler").on_attach,
 						capabilities = require("plugins.lsp.handler").capabilities,
 					}
-					if server_name == "sumneko_lua" then
+					if server_name == "bashls" then
 						local bashls_opts = require("plugins.lsp.settings.bashls")
 						opts = vim.tbl_deep_extend("force", opts, bashls_opts)
+					end
+					if server_name == "pyright" then
+						local pyright_opts = require("plugins.lsp.settings.pyright")
+						opts = vim.tbl_deep_extend("force", opts, pyright_opts)
 					end
 					if server_name == "sumneko_lua" then
 						local sumneko_opts = require("plugins.lsp.settings.sumneko_lua")
@@ -658,9 +662,11 @@ require("lazy").setup({
 		config = function()
 			local null_ls = require("null-ls")
 			null_ls.setup({
+				debug = true,
 				sources = {
 					null_ls.builtins.diagnostics.shellcheck,
 					null_ls.builtins.diagnostics.mypy,
+					null_ls.builtins.diagnostics.flake8,
 					null_ls.builtins.formatting.black,
 					null_ls.builtins.formatting.stylua,
 					null_ls.builtins.formatting.gofmt,
@@ -672,6 +678,7 @@ require("lazy").setup({
 						extra_args = { "-i", "2", "-sr" },
 					}),
 				},
+				on_attach = require("plugins.lsp.handler").on_attach,
 			})
 		end,
 	},
