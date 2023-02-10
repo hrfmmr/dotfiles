@@ -616,6 +616,7 @@ require("lazy").setup({
 					"jsonnet_ls",
 					"pyright",
 					"rust_analyzer",
+					"solargraph",
 					"sumneko_lua",
 					"sqls",
 					"terraformls",
@@ -627,6 +628,10 @@ require("lazy").setup({
 						on_attach = require("plugins.lsp.handler").on_attach,
 						capabilities = require("plugins.lsp.handler").capabilities,
 					}
+					if server_name == "solargraph" then
+						local solargraph_opts = { single_file_support = true }
+						opts = vim.tbl_deep_extend("force", opts, solargraph_opts)
+					end
 					if server_name == "bashls" then
 						local bashls_opts = require("plugins.lsp.settings.bashls")
 						opts = vim.tbl_deep_extend("force", opts, bashls_opts)
@@ -667,12 +672,14 @@ require("lazy").setup({
 					null_ls.builtins.diagnostics.shellcheck,
 					null_ls.builtins.diagnostics.mypy,
 					null_ls.builtins.diagnostics.flake8,
+					null_ls.builtins.diagnostics.rubocop,
 					null_ls.builtins.formatting.black,
 					null_ls.builtins.formatting.stylua,
 					null_ls.builtins.formatting.gofmt,
 					null_ls.builtins.formatting.gofumpt,
 					null_ls.builtins.formatting.goimports,
 					null_ls.builtins.formatting.golines,
+					null_ls.builtins.formatting.rubocop,
 					null_ls.builtins.formatting.rustfmt,
 					null_ls.builtins.formatting.shfmt.with({
 						extra_args = { "-i", "2", "-sr" },
