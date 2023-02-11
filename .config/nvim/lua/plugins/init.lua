@@ -686,6 +686,8 @@ require("lazy").setup({
 			nvim_lsp.sourcekit.setup(vim.tbl_deep_extend("force", opts, {
 				single_file_support = true,
 			}))
+
+			vim.keymap.set("n", "<C-g>il", ":LspInfo<CR>", { silent = true })
 		end,
 	},
 	{
@@ -716,6 +718,8 @@ require("lazy").setup({
 				},
 				on_attach = require("plugins.lsp.handler").on_attach,
 			})
+
+			vim.keymap.set("n", "<C-g>in", ":NullLsInfo<CR>", { silent = true })
 		end,
 	},
 	-- {
