@@ -18,9 +18,11 @@ end
 
 local function lsp_keymaps(bufnr)
 	local bufopts = { silent = true, buffer = bufnr }
+	vim.keymap.set("n", "K", vim.lsp.buf.hover, bufopts)
 	vim.keymap.set("n", "<C-g><C-d>", vim.lsp.buf.definition, bufopts)
 	vim.keymap.set("n", "<C-g><C-t>", vim.lsp.buf.type_definition, bufopts)
 	vim.keymap.set("n", "<C-g><C-r>", vim.lsp.buf.references, bufopts)
+	vim.keymap.set("n", "<C-g><C-n>", vim.lsp.buf.rename, bufopts)
 	vim.keymap.set("n", "<C-g><C-i>", vim.lsp.buf.implementation, bufopts)
 	vim.keymap.set("n", "<C-g><C-f>", vim.lsp.buf.format, bufopts)
 end
