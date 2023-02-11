@@ -635,6 +635,7 @@ require("lazy").setup({
 					"sumneko_lua",
 					"sqls",
 					"terraformls",
+					"tflint",
 				},
 			})
 			mason_lspconfig.setup_handlers({
@@ -695,6 +696,7 @@ require("lazy").setup({
 					null_ls.builtins.diagnostics.flake8,
 					null_ls.builtins.diagnostics.rubocop,
 					null_ls.builtins.diagnostics.sqlfluff,
+					null_ls.builtins.diagnostics.tfsec,
 					null_ls.builtins.formatting.black,
 					null_ls.builtins.formatting.stylua,
 					null_ls.builtins.formatting.gofmt,
