@@ -331,7 +331,7 @@ require("lazy").setup({
 			-- lsp
 			vim.keymap.set("n", "<C-u>sr", builtin.lsp_references)
 			vim.keymap.set("n", "<C-u>sd", builtin.lsp_document_symbols)
-			vim.keymap.set("n", "<C-u>sw", builtin.lsp_workspace_symbols)
+			vim.keymap.set("n", "<C-u>sw", ":Telescope lsp_workspace_symbols query=")
 			-- resume
 			vim.keymap.set("n", "<C-u><C-r>", builtin.resume, {})
 			-- command history
@@ -704,6 +704,7 @@ require("lazy").setup({
 					null_ls.builtins.diagnostics.sqlfluff,
 					null_ls.builtins.diagnostics.tfsec,
 					null_ls.builtins.formatting.black,
+					null_ls.builtins.formatting.jq,
 					null_ls.builtins.formatting.stylua,
 					null_ls.builtins.formatting.gofmt,
 					null_ls.builtins.formatting.gofumpt,
