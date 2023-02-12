@@ -25,6 +25,8 @@ local function lsp_keymaps(bufnr)
 	vim.keymap.set("n", "<C-g><C-n>", vim.lsp.buf.rename, bufopts)
 	vim.keymap.set("n", "<C-g><C-i>", vim.lsp.buf.implementation, bufopts)
 	vim.keymap.set("n", "<C-g><C-f>", vim.lsp.buf.format, bufopts)
+	vim.keymap.set("n", "<C-g>sd", vim.lsp.buf.document_symbol, bufopts)
+	vim.keymap.set("n", "<C-g>sw", vim.lsp.buf.workspace_symbol, bufopts)
 end
 
 M.on_attach = function(client, bufnr)
