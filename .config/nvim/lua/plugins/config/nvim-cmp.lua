@@ -32,7 +32,7 @@ return {
 				["<C-p>"] = cmp.mapping(cmp.mapping.select_prev_item(), { "i", "c" }),
 				["<C-b>"] = cmp.mapping.scroll_docs(-4),
 				["<C-f>"] = cmp.mapping.scroll_docs(4),
-				["<C-k>"] = cmp.mapping.complete(),
+				["<C-k>"] = cmp.mapping.complete({}),
 				["<C-q>"] = cmp.mapping.abort(),
 				-- expand snippet
 				["<C-y>"] = cmp.mapping(function(fallback)
