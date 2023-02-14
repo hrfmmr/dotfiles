@@ -312,9 +312,9 @@ require("lazy").setup({
 			end
 
 			-- files
-			vim.keymap.set("n", "<C-u><C-u>", builtin.find_files, {})
+			vim.keymap.set("n", "<C-u><C-u>", "<cmd>Telescope find_files hidden=true<cr>", {})
 			vim.keymap.set("n", "<M-u><M-u>", function()
-				builtin.find_files({ cwd = get_file_dir() })
+				builtin.find_files({ cwd = get_file_dir(), hidden = true })
 			end, {})
 			-- buffers
 			vim.keymap.set("n", "<C-u><C-b>", builtin.buffers, {})
@@ -345,9 +345,9 @@ require("lazy").setup({
 			vim.keymap.set("n", "<C-u>ch", builtin.command_history, {})
 			vim.keymap.set("n", "<C-u>cr", builtin.commands, {})
 			-- git
-			vim.keymap.set("n", "<C-u>gc", builtin.git_commits, {})
-			vim.keymap.set("n", "<C-u>gg", builtin.git_bcommits, {})
-			vim.keymap.set("n", "<C-u>gr", builtin.git_branches, {})
+			vim.keymap.set("n", "<C-u>Gc", builtin.git_commits, {})
+			vim.keymap.set("n", "<C-u>Gg", builtin.git_bcommits, {})
+			vim.keymap.set("n", "<C-u>Gr", builtin.git_branches, {})
 			-- }}}
 
 			-- keymaps for extensions {{{
