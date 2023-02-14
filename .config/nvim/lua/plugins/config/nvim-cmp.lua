@@ -20,7 +20,7 @@ return function()
 			["<C-p>"] = cmp.mapping(cmp.mapping.select_prev_item(), { "i", "c" }),
 			["<C-b>"] = cmp.mapping.scroll_docs(-4),
 			["<C-f>"] = cmp.mapping.scroll_docs(4),
-			["<C-e>"] = cmp.mapping.complete(),
+			["<C-k>"] = cmp.mapping.complete(),
 			["<C-q>"] = cmp.mapping.abort(),
 			-- expand snippet
 			["<C-y>"] = cmp.mapping(function(fallback)
@@ -65,5 +65,29 @@ return function()
 			{ name = "rg", keyword_length = 3 },
 			-- { name = "look", keyword_length = 2, option = { convert_case = true, loud = true } },
 		}),
+	})
+
+	-- Completions for command mode
+	-- `:` cmdline setup.
+	cmp.setup.cmdline(":", {
+		mapping = cmp.mapping.preset.cmdline(),
+		sources = cmp.config.sources({
+			{ name = "path" },
+		}, {
+			{
+				name = "cmdline",
+				option = {
+					ignore_cmds = { "Man", "!" },
+				},
+			},
+		}),
+	})
+	-- Completions for / search based on current buffer
+	-- `/` cmdline setup.
+	cmp.setup.cmdline("/", {
+		mapping = cmp.mapping.preset.cmdline(),
+		sources = {
+			{ name = "buffer" },
+		},
 	})
 end
