@@ -284,6 +284,13 @@ require("lazy").setup({
 						case_mode = "smart_case",
 					},
 				},
+				pickers = {
+					live_grep = {
+						additional_args = function(opts)
+							return { "--hidden" }
+						end,
+					},
+				},
 			})
 			-- This is needed to setup telescope-fzf-native. It overrides the sorters
 			-- in this.
