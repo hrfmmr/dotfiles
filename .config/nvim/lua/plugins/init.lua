@@ -481,7 +481,7 @@ require("lazy").setup({
 			})
 			vim.keymap.set("n", "<Leader>gM", "<cmd>DiffviewOpen<cr>", { silent = true })
 			vim.keymap.set("n", "<Leader>gc", "<cmd>DiffviewClose<cr>", { silent = true })
-			vim.keymap.set("n", "<Leader>gH", "<cmd>DiffviewFileHistory<cr>", { silent = true })
+			vim.keymap.set("n", "<Leader>gH", "<cmd>DiffviewFileHistory %<cr>", { silent = true })
 		end,
 	},
 	{
