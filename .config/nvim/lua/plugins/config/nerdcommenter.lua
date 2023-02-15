@@ -6,6 +6,7 @@ return {
 		vim.cmd([[
   let g:NERDSpaceDelims = 1
   nmap <Space>/ <Plug>NERDCommenterToggle
+  vmap <Space>/ <Plug>NERDCommenterToggle
   vmap <Space>s <Plug>NERDCommenterSexy
   ]])
 	end,
