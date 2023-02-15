@@ -25,7 +25,7 @@ require("lazy").setup({
 	{
 		"hrsh7th/nvim-cmp",
 		event = "InsertEnter",
-		dependencies = require('plugins.config.nvim-cmp').dependencies,
+		dependencies = require("plugins.config.nvim-cmp").dependencies,
 		config = require("plugins.config.nvim-cmp").config,
 	},
 	-- }}}
@@ -33,7 +33,7 @@ require("lazy").setup({
 	-- Editing {{{
 	{
 		"kana/vim-operator-replace",
-		dependencies = require('plugins.config.operator-replace').dependencies,
+		dependencies = require("plugins.config.operator-replace").dependencies,
 		config = require("plugins.config.operator-replace").config,
 	},
 	{ "tpope/vim-surround" },
@@ -63,27 +63,27 @@ require("lazy").setup({
 	},
 	{
 		"previm/previm",
-		config = require('plugins.config.previm'),
+		config = require("plugins.config.previm"),
 	},
 	{
 		"easymotion/vim-easymotion",
-		config = require('plugins.config.easymotion'),
+		config = require("plugins.config.easymotion"),
 	},
 	-- }}}
 
 	-- {{{ Snippets
 	{
 		"SirVer/ultisnips",
-		dependencies = require('plugins.config.ultisnips').dependencies,
-		config = require('plugins.config.ultisnips').config,
+		dependencies = require("plugins.config.ultisnips").dependencies,
+		config = require("plugins.config.ultisnips").config,
 	},
 	-- }}}
 
 	-- Fuzzy Finder {{{
 	{
 		"nvim-telescope/telescope.nvim",
-    dependencies = require('plugins.config.telescope').dependencies,
-    config = require('plugins.config.telescope').config
+		dependencies = require("plugins.config.telescope").dependencies,
+		config = require("plugins.config.telescope").config,
 	},
 	{
 		"nvim-telescope/telescope-fzf-native.nvim",
@@ -101,18 +101,18 @@ require("lazy").setup({
 	},
 	{
 		"scrooloose/nerdtree",
-		config = require('plugins.config.nerdtree'),
+		config = require("plugins.config.nerdtree"),
 	},
 	{
 		"majutsushi/tagbar",
-		config = require('plugins.config.tagbar'),
+		config = require("plugins.config.tagbar"),
 	},
 	-- }}}
 
 	-- git {{{
 	{
 		"tpope/vim-fugitive",
-		config = require('plugins.config.fugitive'),
+		config = require("plugins.config.fugitive"),
 	},
 	{ "tpope/vim-rhubarb", dependencies = {
 		"tpope/vim-fugitive",
@@ -120,25 +120,29 @@ require("lazy").setup({
 	{ "tpope/vim-dispatch" },
 	{
 		"rbong/vim-flog",
-		config = require('plugins.config.flog'),
+		config = require("plugins.config.flog"),
 	},
 	{
 		"sindrets/diffview.nvim",
-    dependencies = require('plugins.config.diffview').dependencies,
-    config = require('plugins.config.diffview').config,
+		dependencies = require("plugins.config.diffview").dependencies,
+		config = require("plugins.config.diffview").config,
 	},
 	{
 		"lewis6991/gitsigns.nvim",
-    config = require('plugins.config.gitsigns'),
+		config = require("plugins.config.gitsigns"),
 	},
 	-- }}}
 
 	-- Language & Syntax {{{
 	{
+		"nvim-treesitter/nvim-treesitter",
+		config = require("plugins.config.treesitter"),
+	},
+	{
 		-- go
 		"fatih/vim-go",
 		ft = "go",
-    config = require('plugins.config.vim-go'),
+		config = require("plugins.config.vim-go"),
 	},
 	-- rust
 	{
@@ -153,18 +157,18 @@ require("lazy").setup({
 	-- js
 	{
 		"pangloss/vim-javascript",
-		config = require('plugins.config.vim-javascript'),
+		config = require("plugins.config.vim-javascript"),
 	},
 	{ "leafgarland/typescript-vim" },
 	{
 		"peitalin/vim-jsx-typescript",
-		config = require('plugins.config.vim-jsx-typescript'),
+		config = require("plugins.config.vim-jsx-typescript"),
 	},
 	-- markdown
 	{
 		"plasticboy/vim-markdown",
-    dependencies = require('plugins.config.vim-markdown').dependencies,
-    config = require('plugins.config.vim-markdown').config,
+		dependencies = require("plugins.config.vim-markdown").dependencies,
+		config = require("plugins.config.vim-markdown").config,
 	},
 	-- swift
 	{ "keith/swift.vim" },
@@ -177,48 +181,48 @@ require("lazy").setup({
 	-- plantuml
 	{
 		"aklt/plantuml-syntax",
-		config = require('plugins.config.plantuml-syntax'),
+		config = require("plugins.config.plantuml-syntax"),
 	},
 	-- tmux
 	{ "tmux-plugins/vim-tmux" },
 	-- terraform
 	{
 		"hashivim/vim-terraform",
-		config = require('plugins.config.vim-terraform'),
+		config = require("plugins.config.vim-terraform"),
 	},
 	-- jsonnet
 	{ "google/vim-jsonnet" },
 	-- sql
 	{
 		"nanotee/sqls.nvim",
-		config = require('plugins.config.sqls'),
+		config = require("plugins.config.sqls"),
 	},
 	-- }}}
 
 	-- LSP {{{
 	{
 		"williamboman/mason.nvim",
-		config = require('plugins.config.mason'),
+		config = require("plugins.config.mason"),
 	},
 	{
 		"williamboman/mason-lspconfig.nvim",
-    dependencies = require('plugins.config.mason-lspconfig').dependencies,
-    config = require('plugins.config.mason-lspconfig').config,
+		dependencies = require("plugins.config.mason-lspconfig").dependencies,
+		config = require("plugins.config.mason-lspconfig").config,
 	},
 	{
 		"neovim/nvim-lspconfig",
-		config = require('plugins.config.nvim-lspconfig'),
+		config = require("plugins.config.nvim-lspconfig"),
 	},
 	{
 		"jose-elias-alvarez/null-ls.nvim",
-		config = require('plugins.config.null-ls'),
+		config = require("plugins.config.null-ls"),
 	},
 
 	-- Diagnostics {{{
 	{
 		"folke/trouble.nvim",
-		dependencies = require('plugins.config.trouble').dependencies,
-		config = require('plugins.config.trouble').config,
+		dependencies = require("plugins.config.trouble").dependencies,
+		config = require("plugins.config.trouble").config,
 	},
 	-- }}}
 
@@ -229,15 +233,15 @@ require("lazy").setup({
 	},
 	{
 		"thinca/vim-quickrun",
-		dependencies = require('plugins.config.quickrun').dependencies,
-		config = require('plugins.config.quickrun').config,
+		dependencies = require("plugins.config.quickrun").dependencies,
+		config = require("plugins.config.quickrun").config,
 	},
 	-- }}}
 
 	-- Testing {{{
 	{
 		"janko/vim-test",
-		config = require('plugins.config.vim-test'),
+		config = require("plugins.config.vim-test"),
 	},
 	-- }}}
 })
