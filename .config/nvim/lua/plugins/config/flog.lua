@@ -10,6 +10,7 @@ return function()
     au!
     au FileType floggraph nnoremap <buffer> <silent> <Tab> :<C-U>call flog#set_commit_mark_at_line('m', '.') \| call flog#run_command('vertical botright Gsplit %h:%p', 0, 0, 1)<CR>
     au FileType floggraph nnoremap <buffer> <silent> df :<C-U>call flog#run_command("vertical botright Gsplit %(h'm):%p \| Gdiffsplit %h", 0, 0, 1)<CR>
+    au FileType git nnoremap <buffer> <silent> <Leader>M :setl foldmethod=syntax<cr>
   augroup END
   ]])
 end
