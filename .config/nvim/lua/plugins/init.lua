@@ -131,6 +131,11 @@ require("lazy").setup({
 		"lewis6991/gitsigns.nvim",
 		config = require("plugins.config.gitsigns"),
 	},
+	{
+		"pwntester/octo.nvim",
+		dependencies = require("plugins.config.octo").dependencies,
+		config = require("plugins.config.octo").config,
+	},
 	-- }}}
 
 	-- Language & Syntax {{{
