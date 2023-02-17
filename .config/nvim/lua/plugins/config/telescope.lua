@@ -27,6 +27,11 @@ return {
 						return { "--hidden" }
 					end,
 				},
+				grep_string = {
+					additional_args = function(opts)
+						return { "--hidden" }
+					end,
+				},
 			},
 		})
 		-- This is needed to setup telescope-fzf-native. It overrides the sorters
