@@ -58,6 +58,7 @@ return {
 		vim.keymap.set("n", "<M-u><M-u>", function()
 			builtin.find_files({ cwd = get_file_dir(), hidden = true })
 		end, {})
+		vim.keymap.set("n", "<C-u><C-h>", "<cmd>Telescope oldfiles<cr>", {})
 		-- buffers
 		vim.keymap.set("n", "<C-u><C-b>", builtin.buffers, {})
 		-- grep
@@ -101,7 +102,7 @@ return {
 		end
 
 		-- frecency
-		vim.keymap.set("n", "<C-u><C-h>", extensions({ "frecency", "frecency" }))
+		vim.keymap.set("n", "<C-u>H", extensions({ "frecency", "frecency" }))
 		-- ghq
 		vim.keymap.set(
 			"n",
