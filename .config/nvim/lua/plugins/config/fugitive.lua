@@ -10,5 +10,7 @@ return function()
   nnoremap <silent> [fugitive]d :Gdiffsplit<CR>
   nnoremap <silent> [fugitive]r :tab Git! diff <CR>
   nnoremap <silent> [fugitive]R :tab Git! diff --staged<CR>
+  nnoremap [fugitive]p :Git push
+  nnoremap [fugitive]D :Git difftool 
   ]])
 end
