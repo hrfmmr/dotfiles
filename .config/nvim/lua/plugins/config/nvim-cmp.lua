@@ -8,10 +8,12 @@ return {
 		"hrsh7th/cmp-emoji",
 		"andersevenrud/cmp-tmux",
 		"lukas-reineke/cmp-rg",
+		"quangnguyen30192/cmp-nvim-ultisnips",
 		-- "octaltree/cmp-look",
 	},
 	config = function()
 		local cmp = require("cmp")
+		local cmp_ultisnips_mappings = require("cmp_nvim_ultisnips.mappings")
 		vim.o.completeopt = "menuone,noselect"
 		local t = function(str)
 			return vim.api.nvim_replace_termcodes(str, true, true, true)
@@ -44,27 +46,11 @@ return {
 						fallback()
 					end
 				end, { "i", "s" }),
-
-				-- cycle menu, jump through tabstop
 				["<Tab>"] = cmp.mapping(function(fallback)
-					if vim.fn["UltiSnips#CanJumpForwards"]() == 1 then
-						vim.fn.feedkeys(t("<ESC>:call UltiSnips#JumpForwards()<CR>"))
-					elseif vim.fn.pumvisible() == 1 then
-						vim.fn.feedkeys(t("<C-n>"), "n")
-					elseif check_back_space() then
-						vim.fn.feedkeys(t("<tab>"), "n")
-					else
-						fallback()
-					end
+					cmp_ultisnips_mappings.expand_or_jump_forwards(fallback)
 				end, { "i", "s" }),
 				["<S-Tab>"] = cmp.mapping(function(fallback)
-					if vim.fn["UltiSnips#CanJumpBackwards"]() == 1 then
-						return vim.fn.feedkeys(t("<C-R>=UltiSnips#JumpBackwards()<CR>"))
-					elseif vim.fn.pumvisible() == 1 then
-						vim.fn.feedkeys(t("<C-p>"), "n")
-					else
-						fallback()
-					end
+					cmp_ultisnips_mappings.jump_backwards(fallback)
 				end, { "i", "s" }),
 			}),
 			sources = cmp.config.sources({
@@ -75,6 +61,7 @@ return {
 				{ name = "emoji" },
 				{ name = "tmux", keyword_length = 2, option = { trigger_characters = {}, all_panes = true } },
 				{ name = "rg", keyword_length = 3 },
+				{ name = "ultisnips" },
 				-- { name = "look", keyword_length = 2, option = { convert_case = true, loud = true } },
 			}),
 		})
