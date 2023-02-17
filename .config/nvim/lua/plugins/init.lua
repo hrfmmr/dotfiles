@@ -146,8 +146,8 @@ require("lazy").setup({
 	{
 		-- go
 		"fatih/vim-go",
-		ft = "go",
 		config = require("plugins.config.vim-go"),
+		ft = "go",
 	},
 	-- rust
 	{
@@ -159,30 +159,15 @@ require("lazy").setup({
 		"valloric/MatchTagAlways",
 		ft = "html",
 	},
-	-- js
-	{
-		"pangloss/vim-javascript",
-		config = require("plugins.config.vim-javascript"),
-	},
-	{ "leafgarland/typescript-vim" },
-	{
-		"peitalin/vim-jsx-typescript",
-		config = require("plugins.config.vim-jsx-typescript"),
-	},
 	-- markdown
 	{
 		"plasticboy/vim-markdown",
 		dependencies = require("plugins.config.vim-markdown").dependencies,
 		config = require("plugins.config.vim-markdown").config,
+    ft = "markdown",
 	},
-	-- swift
-	{ "keith/swift.vim" },
-	-- toml
-	{ "cespare/vim-toml" },
 	-- nginx
 	{ "chr4/nginx.vim" },
-	-- Dockerfile
-	{ "ekalinin/Dockerfile.vim" },
 	-- plantuml
 	{
 		"aklt/plantuml-syntax",
@@ -196,11 +181,14 @@ require("lazy").setup({
 		config = require("plugins.config.vim-terraform"),
 	},
 	-- jsonnet
-	{ "google/vim-jsonnet" },
+	{
+		"google/vim-jsonnet",
+	},
 	-- sql
 	{
 		"nanotee/sqls.nvim",
 		config = require("plugins.config.sqls"),
+		ft = "sql",
 	},
 	-- }}}
 
