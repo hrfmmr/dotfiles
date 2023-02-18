@@ -18,16 +18,26 @@ require("lazy").setup({
 		"catppuccin/nvim",
 		name = "catppuccin",
 		config = require("plugins.config.catppuccin"),
+		event = "VimEnter",
 	},
 	-- }}}
 
 	-- Completions {{{
 	{
 		"hrsh7th/nvim-cmp",
-		event = "InsertEnter",
 		dependencies = require("plugins.config.nvim-cmp").dependencies,
 		config = require("plugins.config.nvim-cmp").config,
+		event = "InsertEnter",
 	},
+	{ "hrsh7th/cmp-nvim-lsp", event = "InsertEnter" },
+	{ "hrsh7th/cmp-nvim-lua", event = "InsertEnter" },
+	{ "hrsh7th/cmp-buffer", event = "InsertEnter" },
+	{ "hrsh7th/cmp-path", event = "InsertEnter" },
+	{ "hrsh7th/cmp-cmdline", event = "ModeChanged" },
+	{ "hrsh7th/cmp-emoji", event = "InsertEnter" },
+	{ "andersevenrud/cmp-tmux", event = "InsertEnter" },
+	{ "lukas-reineke/cmp-rg", event = "InsertEnter" },
+	{ "quangnguyen30192/cmp-nvim-ultisnips", event = "InsertEnter" },
 	-- }}}
 
 	-- Editing {{{
@@ -35,39 +45,47 @@ require("lazy").setup({
 		"kana/vim-operator-replace",
 		dependencies = require("plugins.config.operator-replace").dependencies,
 		config = require("plugins.config.operator-replace").config,
+		event = "VeryLazy",
 	},
-	{ "tpope/vim-surround" },
-	{ "tpope/vim-repeat" },
-	{ "tpope/vim-abolish" },
-	{ "vim-scripts/Align" },
+	{ "tpope/vim-surround", event = "VeryLazy" },
+	{ "tpope/vim-repeat", event = "VeryLazy" },
+	{ "tpope/vim-abolish", event = "VeryLazy" },
+	{ "vim-scripts/Align", event = "VeryLazy" },
 	{
 		"junegunn/vim-easy-align",
 		config = require("plugins.config.easy-align"),
+		event = "VeryLazy",
 	},
 	{
 		"jiangmiao/auto-pairs",
 		config = require("plugins.config.auto-pairs"),
+		event = "InsertEnter",
 	},
 	{
 		"simeji/winresizer",
 		config = require("plugins.config.winresizer"),
+		event = "VeryLazy",
 	},
 	{
 		"wesQ3/vim-windowswap",
 		config = require("plugins.config.windowswap"),
+		event = "VeryLazy",
 	},
 	{
 		"scrooloose/nerdcommenter",
 		init = require("plugins.config.nerdcommenter").init,
 		config = require("plugins.config.nerdcommenter").config,
+		event = "VeryLazy",
 	},
 	{
 		"previm/previm",
 		config = require("plugins.config.previm"),
+		event = "VeryLazy",
 	},
 	{
 		"easymotion/vim-easymotion",
 		config = require("plugins.config.easymotion"),
+		event = "VeryLazy",
 	},
 	-- }}}
 
@@ -76,6 +94,7 @@ require("lazy").setup({
 		"SirVer/ultisnips",
 		dependencies = require("plugins.config.ultisnips").dependencies,
 		config = require("plugins.config.ultisnips").config,
+		event = "InsertEnter",
 	},
 	-- }}}
 
@@ -84,28 +103,31 @@ require("lazy").setup({
 		"nvim-telescope/telescope.nvim",
 		dependencies = require("plugins.config.telescope").dependencies,
 		config = require("plugins.config.telescope").config,
+		event = "BufWinEnter",
 	},
 	{
 		"nvim-telescope/telescope-fzf-native.nvim",
 		build = "make",
+		event = "BufWinEnter",
 	},
 	{
 		"nvim-telescope/telescope-frecency.nvim",
 		dependencies = { "kkharji/sqlite.lua" },
+		event = "BufWinEnter",
 	},
 	-- }}}
 
-	-- UI {{{
-	{
-		"vim-airline/vim-airline",
-	},
+	-- Navigation {{{
+	{ "vim-airline/vim-airline", event = "VeryLazy" },
 	{
 		"scrooloose/nerdtree",
 		config = require("plugins.config.nerdtree"),
+		event = "BufWinEnter",
 	},
 	{
 		"majutsushi/tagbar",
 		config = require("plugins.config.tagbar"),
+		event = { "BufNewFile", "BufRead" },
 	},
 	-- }}}
 
@@ -113,28 +135,33 @@ require("lazy").setup({
 	{
 		"tpope/vim-fugitive",
 		config = require("plugins.config.fugitive"),
+		event = "VeryLazy",
 	},
 	{ "tpope/vim-rhubarb", dependencies = {
 		"tpope/vim-fugitive",
-	} },
-	{ "tpope/vim-dispatch" },
+	}, event = "VeryLazy" },
+	{ "tpope/vim-dispatch", event = "VeryLazy" },
 	{
 		"rbong/vim-flog",
 		config = require("plugins.config.flog"),
+		event = "VeryLazy",
 	},
 	{
 		"sindrets/diffview.nvim",
 		dependencies = require("plugins.config.diffview").dependencies,
 		config = require("plugins.config.diffview").config,
+		event = "VeryLazy",
 	},
 	{
 		"lewis6991/gitsigns.nvim",
 		config = require("plugins.config.gitsigns"),
+		event = { "BufNewFile", "BufRead" },
 	},
 	{
 		"pwntester/octo.nvim",
 		dependencies = require("plugins.config.octo").dependencies,
 		config = require("plugins.config.octo").config,
+		event = "VeryLazy",
 	},
 	-- }}}
 
@@ -142,6 +169,7 @@ require("lazy").setup({
 	{
 		"nvim-treesitter/nvim-treesitter",
 		config = require("plugins.config.treesitter"),
+		event = "VeryLazy",
 	},
 	{
 		-- go
@@ -164,25 +192,28 @@ require("lazy").setup({
 		"plasticboy/vim-markdown",
 		dependencies = require("plugins.config.vim-markdown").dependencies,
 		config = require("plugins.config.vim-markdown").config,
-    ft = "markdown",
+		ft = "markdown",
 	},
 	-- nginx
-	{ "chr4/nginx.vim" },
+	{ "chr4/nginx.vim", event = { "BufNewFile", "BufRead" } },
 	-- plantuml
 	{
 		"aklt/plantuml-syntax",
 		config = require("plugins.config.plantuml-syntax"),
+		event = { "BufNewFile", "BufRead" },
 	},
 	-- tmux
-	{ "tmux-plugins/vim-tmux" },
+	{ "tmux-plugins/vim-tmux", event = { "BufNewFile", "BufRead" } },
 	-- terraform
 	{
 		"hashivim/vim-terraform",
 		config = require("plugins.config.vim-terraform"),
+		event = { "BufNewFile", "BufRead" },
 	},
 	-- jsonnet
 	{
 		"google/vim-jsonnet",
+		event = { "BufNewFile", "BufRead" },
 	},
 	-- sql
 	{
@@ -196,19 +227,23 @@ require("lazy").setup({
 	{
 		"williamboman/mason.nvim",
 		config = require("plugins.config.mason"),
+		event = "VeryLazy",
 	},
 	{
 		"williamboman/mason-lspconfig.nvim",
 		dependencies = require("plugins.config.mason-lspconfig").dependencies,
 		config = require("plugins.config.mason-lspconfig").config,
+		event = "VeryLazy",
 	},
 	{
 		"neovim/nvim-lspconfig",
 		config = require("plugins.config.nvim-lspconfig"),
+		event = "VeryLazy",
 	},
 	{
 		"jose-elias-alvarez/null-ls.nvim",
 		config = require("plugins.config.null-ls"),
+		event = "VeryLazy",
 	},
 
 	-- Diagnostics {{{
@@ -216,6 +251,7 @@ require("lazy").setup({
 		"folke/trouble.nvim",
 		dependencies = require("plugins.config.trouble").dependencies,
 		config = require("plugins.config.trouble").config,
+		event = "BufWinEnter",
 	},
 	-- }}}
 
@@ -223,11 +259,13 @@ require("lazy").setup({
 	{
 		"Shougo/vimproc.vim",
 		build = "make",
+		event = "VeryLazy",
 	},
 	{
 		"thinca/vim-quickrun",
 		dependencies = require("plugins.config.quickrun").dependencies,
 		config = require("plugins.config.quickrun").config,
+		event = "VeryLazy",
 	},
 	-- }}}
 
@@ -235,6 +273,7 @@ require("lazy").setup({
 	{
 		"janko/vim-test",
 		config = require("plugins.config.vim-test"),
+		event = "VeryLazy",
 	},
 	-- }}}
 })
