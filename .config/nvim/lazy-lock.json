@@ -1,5 +1,6 @@
 {
   "Align": { "branch": "master", "commit": "787662fe90cd057942bc5b682fd70c87e1a9dd77" },
+  "ChatGPT.nvim": { "branch": "main", "commit": "3f6fd348df53b9d15aa0a58709562cf0a3b4636a" },
   "MatchTagAlways": { "branch": "master", "commit": "352eb479a4ad1608e0880b79ab2357aac2cf4bed" },
   "auto-pairs": { "branch": "master", "commit": "39f06b873a8449af8ff6a3eee716d3da14d63a76" },
   "catppuccin": { "branch": "main", "commit": "60f8f40df0db92b5715642b3ea7074380c4b7995" },
@@ -21,6 +22,7 @@
   "nerdcommenter": { "branch": "master", "commit": "d069f7fb562fb9eb6911fe23cda7aca2a387043e" },
   "nerdtree": { "branch": "master", "commit": "fc85a6f07c2cd694be93496ffad75be126240068" },
   "nginx.vim": { "branch": "master", "commit": "8a42e93c9f004fbc5b32bb2e4940107fb7b70a42" },
+  "nui.nvim": { "branch": "main", "commit": "d147222a1300901656f3ebd5b95f91732785a329" },
   "null-ls.nvim": { "branch": "main", "commit": "a82aa08c0063843926947f3688b0e61fd71db680" },
   "nvim-cmp": { "branch": "main", "commit": "ea9eaff5739856f3187d228d2c1181ea49fd4697" },
   "nvim-lspconfig": { "branch": "master", "commit": "649137cbc53a044bffde36294ce3160cb18f32c7" },

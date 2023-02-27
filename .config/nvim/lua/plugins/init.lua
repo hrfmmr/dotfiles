@@ -276,4 +276,13 @@ require("lazy").setup({
 		event = "VeryLazy",
 	},
 	-- }}}
+
+	-- Other {{{
+	{
+		"jackMort/ChatGPT.nvim",
+		dependencies = require("plugins.config.chatgpt").dependencies,
+		config = require("plugins.config.chatgpt").config,
+		event = "VeryLazy",
+	},
+	-- }}}
 })
