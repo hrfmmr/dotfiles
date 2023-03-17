@@ -56,11 +56,10 @@ require("lazy").setup({
 		config = require("plugins.config.easy-align"),
 		-- event = "VeryLazy",
 	},
-	{
-		"jiangmiao/auto-pairs",
-		config = require("plugins.config.auto-pairs"),
-		-- event = "InsertEnter",
-	},
+  {
+    "windwp/nvim-autopairs",
+    config = require("plugins.config.nvim-autopairs"),
+  },
 	{
 		"simeji/winresizer",
 		config = require("plugins.config.winresizer"),
