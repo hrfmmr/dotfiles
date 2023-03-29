@@ -386,7 +386,7 @@ function mpv-music() {
             --ytdl-format="worstvideo+bestaudio" \
             --shuffle \
             --playlist="$playlist" \
-		cd -
+            --loop-playlist
     elif [ $# = 1 ]; then
 		mpv \
             --no-video \
@@ -407,7 +407,8 @@ function mpv-video() {
             --quiet \
             --ytdl-format="[height<=480]+bestaudio" \
             --shuffle \
-            --playlist="$playlist"
+            --playlist="$playlist" \
+            --loop-playlist
     elif [ $# = 1 ]; then
 		mpv \
             --quiet \
