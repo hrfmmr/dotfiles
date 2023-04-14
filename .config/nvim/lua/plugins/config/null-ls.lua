@@ -5,11 +5,14 @@ return function()
 		sources = {
 			null_ls.builtins.diagnostics.shellcheck,
 			null_ls.builtins.diagnostics.mypy,
-			null_ls.builtins.diagnostics.flake8,
+			null_ls.builtins.diagnostics.flake8.with({
+				extra_args = { "--max-line-length", "88" },
+			}),
 			null_ls.builtins.diagnostics.rubocop,
 			null_ls.builtins.diagnostics.sqlfluff,
 			null_ls.builtins.diagnostics.tfsec,
 			null_ls.builtins.formatting.black,
+			null_ls.builtins.formatting.isort,
 			null_ls.builtins.formatting.jq,
 			null_ls.builtins.formatting.stylua,
 			null_ls.builtins.formatting.gofmt,
