@@ -39,8 +39,7 @@ vim.keymap.set("n", "<Space>Q", ":bd!<CR>", { silent = true })
 vim.keymap.set("n", "<Space>e", ":e!<CR>", { silent = true })
 -- Tab Handling
 vim.keymap.set("n", "<leader>te", ":<C-u>tabedit<CR>", { silent = true })
-vim.keymap.set("n", "<leader>tc", ":<C-u>tabclose<CR>", { silent = true })
-vim.keymap.set("n", "<leader>ts", ":tab<space>split<CR>", { silent = true })
+vim.keymap.set("n", "<leader>tc", ":tab<space>split<CR>", { silent = true })
 -- Search visual selected
 vim.keymap.set("v", "//", 'y/<C-R>"<CR>')
 -- quickfix
