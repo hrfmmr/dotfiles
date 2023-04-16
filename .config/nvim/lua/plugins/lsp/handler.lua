@@ -34,6 +34,23 @@ M.on_attach = function(client, bufnr)
 			client.server_capabilities.documentFormattingProvider = false
 		end
 	end
+	-- Format on save
+	if client.server_capabilities.documentFormattingProvider then
+		vim.api.nvim_create_autocmd("BufWritePre", {
+			group = vim.api.nvim_create_augroup("Format", { clear = true }),
+			buffer = bufnr,
+			callback = function()
+				local fname = vim.api.nvim_buf_get_name(bufnr)
+				local ignores = { "Podfile", "Fastfile" }
+				for _, v in ipairs(ignores) do
+					if string.match(fname, v) then
+						return
+					end
+				end
+				vim.lsp.buf.format({ silent = true, buffer = bufnr })
+			end,
+		})
+	end
 	lsp_keymaps(bufnr)
 	lsp_highlight_document(client)
 end
