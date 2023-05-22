@@ -70,6 +70,9 @@ return {
 		vim.keymap.set("n", "<M-u>g", function()
 			builtin.live_grep({ cwd = get_file_dir() })
 		end, {})
+		vim.keymap.set("n", "<M-b>g", function()
+			builtin.live_grep({ grep_open_files = true })
+		end, {})
 		-- buffer lines
 		vim.keymap.set("n", "<C-u><C-l>", function()
 			builtin.current_buffer_fuzzy_find({ skip_empty_lines = true })
