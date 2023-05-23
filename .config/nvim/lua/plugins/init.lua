@@ -86,6 +86,11 @@ require("lazy").setup({
 		config = require("plugins.config.easymotion"),
 		-- event = "VeryLazy",
 	},
+	{
+		"kevinhwang91/nvim-bqf",
+		dependencies = require("plugins.config.nvim-bqf").dependencies,
+		config = require("plugins.config.nvim-bqf").config,
+	},
 	-- }}}
 
 	-- {{{ Snippets
