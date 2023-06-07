@@ -77,7 +77,7 @@
   output = ""
 
 [[snippets]]
-  description = "[AWS] Describe 🐳 ECS Task status by tracer cli"
+  description = "[AWS] Describe 🐳 ECS Task status"
   command = '''
 ecs_cluster=$(tracer | fzf) && \
 ecs_task=$(tracer "$ecs_cluster" | fzf | awk '{ print $1 }') && \
@@ -102,11 +102,15 @@ xargs -I {} \
   output = ""
 
 [[snippets]]
-  description = "[AWS] Describe 🐳 ECS Task for target cluster"
+  description = "[AWS] Describe a 🐳 ECS Tasks"
   command = '''
+ecs_cluster=$(tracer | fzf) && \
+ecs_task=$(tracer "$ecs_cluster" | fzf | awk '{ print $1 }') && \
 aws ecs describe-tasks \
-  --cluster <CLUSTER_NAME> \
-  --tasks <TASK_ARN>
+  --cluster $ecs_cluster \
+  --tasks $ecs_task \
+  --no-paginate \
+  --output json
 '''
   output = ""
 
