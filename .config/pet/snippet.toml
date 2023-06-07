@@ -1,4 +1,9 @@
 [[snippets]]
+  description = "🌐 Get public ip"
+  command = "curl https://ipinfo.io/ip"
+  output = ""
+
+[[snippets]]
   description = "Generate new ssk key by specifying output path and give comment"
   command = "ssh-keygen -t rsa -f ./github_rsa -C github.com"
   output = ""
@@ -68,14 +73,14 @@
 # https://github.com/fujiwara/tracer
 [[snippets]]
   description = "[AWS] Pick a 🐳 ECS cluster by tracer cli"
-  command = "cluster=$(tracer | tail -2 | fzf)"
+  command = "cluster=$(tracer | fzf)"
   output = ""
 
 [[snippets]]
   description = "[AWS] Describe 🐳 ECS Task status by tracer cli"
   command = '''
-ecs_cluster=$(tracer | tail -2 | fzf) && \
-ecs_task=$(tracer "$ecs_cluster" | tail -2 | fzf | awk '{ print $1 }') && \
+ecs_cluster=$(tracer | fzf) && \
+ecs_task=$(tracer "$ecs_cluster" | fzf | awk '{ print $1 }') && \
 tracer $ecs_cluster $ecs_task
 '''
   output = ""
@@ -128,8 +133,8 @@ column -t -s "|"
 [[snippets]]
   description = "[AWS] 🐳 ECS Exec"
   command = '''
-ecs_cluster=$(tracer | tail -2 | fzf) && \
-ecs_task=$(tracer "$ecs_cluster" | tail -2 | fzf | awk '{ print $1 }') && \
+ecs_cluster=$(tracer | fzf) && \
+ecs_task=$(tracer "$ecs_cluster" | fzf | awk '{ print $1 }') && \
 aws ecs execute-command --cluster $ecs_cluster --task $ecs_task --container <CONTAINER_NAME> --interactive --command <COMMAND>
 '''
   output = ""
@@ -167,5 +172,37 @@ cw tail -f $cw_log_group -b2h
 cw_log_group=$(cw ls groups | fzf) && \
 cw_log_stream=$(cw ls streams $cw_log_group | fzf) && \
 cw tail -f "$cw_log_group:$cw_log_stream" -b2h
+'''
+  output = ""
+
+[[snippets]]
+  description = "[AWS] tail and follow CloudWatch Logs target log stream(from 10 latest streams)"
+  command = '''
+cw_log_group=$(cw ls groups | fzf) && \
+cw_log_stream=$(aws logs describe-log-streams \
+    --log-group-name $cw_log_group \
+    --max-items 10 \
+    --order-by LastEventTime \
+    --descending \
+    --query 'logStreams[].logStreamName' \
+    --output json | jq -r ".[]" | fzf \
+) && \
+cw tail -f "$cw_log_group:$cw_log_stream" -b1h
+'''
+  output = ""
+
+[[snippets]]
+  description = "[AWS] dump CloudWatch Logs target log stream(from 10 latest streams)"
+  command = '''
+cw_log_group=$(cw ls groups | fzf) && \
+cw_log_stream=$(aws logs describe-log-streams \
+    --log-group-name $cw_log_group \
+    --max-items 10 \
+    --order-by LastEventTime \
+    --descending \
+    --query 'logStreams[].logStreamName' \
+    --output json | jq -r ".[]" | fzf \
+) && \
+aws logs get-log-events --log-group-name $cw_log_group --log-stream-name $cw_log_stream --output json | jq ".events[].message"
 '''
   output = ""
