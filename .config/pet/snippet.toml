@@ -28,7 +28,10 @@
   command = "ifconfig | grep -oE \"\\b((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\b\" | grep -o \"^192.*\" | head -n1 | tr -d '\\n' | pbcopy"
   output = ""
 
-# GCP
+#
+# Google Cloud
+#
+
 [[snippets]]
   description = "[GCP] Listing Google Cloud Storage(GCS) buckets"
   command = "gsutil ls -p $PROJECT_ID"
@@ -62,6 +65,23 @@
   sed -e "s/.* \(.*\)$/\1/" |
   xargs -I {} bq show --format=prettyjson --transfer_run {} |
   pbcopy
+'''
+  output = ""
+
+#
+# AWS
+#
+
+[[snippets]]
+  description = "[AWS] 👤 Get AWS account ID"
+  command = "aws sts get-caller-identity --query 'Account' --output text"
+  output = ""
+
+[[snippets]]
+  description = "[AWS] 🐳 Log in to ECR"
+  command = '''
+account_id=$(aws sts get-caller-identity --query 'Account' --output text) && \
+aws ecr get-login-password | docker login --username AWS --password-stdin https://$account_id.dkr.ecr.ap-northeast-1.amazonaws.com
 '''
   output = ""
 
