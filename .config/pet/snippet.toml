@@ -130,9 +130,33 @@ aws ecs describe-tasks \
   --cluster $ecs_cluster \
   --tasks $ecs_task \
   --no-paginate \
-  --output json
+  --output json | pbcopy
 '''
   output = ""
+
+[[snippets]]
+  description = "[AWS] 🔍 Detect EC2 instance for a ECS task"
+  command = '''
+AWS_PAGER= && \
+ecs_cluster=$(tracer | fzf) && \
+ecs_task=$(tracer "$ecs_cluster" | fzf | awk '{ print $1 }') && \
+ecs_container_instance=$(
+    aws ecs describe-tasks \
+      --cluster $ecs_cluster \
+      --tasks $ecs_task \
+      --output json | jq -r '.tasks[0].containerInstanceArn' | sed 's|.*/||' \
+) && \
+ec2_instance_id=$(
+    aws ecs describe-container-instances \
+        --cluster $ecs_cluster \
+        --container-instances $ecs_container_instance \
+        | jq -r '.containerInstances[0].ec2InstanceId'
+) && \
+aws ec2 describe-instances \
+    --instance-ids $ec2_instance_id | pbcopy
+'''
+  output = ""
+
 
 [[snippets]]
   description = "[AWS] List EC2 public DNS names"
@@ -227,6 +251,6 @@ cw_log_stream=$(aws logs describe-log-streams \
     --query 'logStreams[].logStreamName' \
     --output json | jq -r ".[]" | fzf \
 ) && \
-aws logs get-log-events --log-group-name $cw_log_group --log-stream-name $cw_log_stream --output json | jq ".events[].message"
+aws logs get-log-events --log-group-name $cw_log_group --log-stream-name $cw_log_stream --output json | jq ".events[].message" | pbcopy
 '''
   output = ""
