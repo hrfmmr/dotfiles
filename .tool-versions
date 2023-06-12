@@ -8,7 +8,11 @@ stylua 0.16.0
 neovim nightly
 github-cli 2.22.1
 tfsec 1.28.1
-terraform-ls 0.30.1
+terraform-ls 0.31.2
 git 2.39.1
 shellcheck 0.9.0
 poetry 1.4.0
+terraform 1.4.6
+tflint 0.46.1
+sops 3.7.3
+terraformer 0.8.22
