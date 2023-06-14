@@ -54,7 +54,18 @@ return {
 		end
 
 		-- files
-		vim.keymap.set("n", "<C-u><C-u>", "<cmd>Telescope find_files hidden=true<cr>", {})
+		vim.keymap.set("n", "<C-u>u", function()
+			builtin.find_files({
+        hidden = true,
+				default_text = "'",
+			})
+		end, {})
+		vim.keymap.set("n", "<C-u><C-u>", function()
+			builtin.find_files({
+        hidden = true,
+				default_text = "'" .. vim.fn.expand("<cword>"),
+			})
+		end, {})
 		vim.keymap.set("n", "<M-u><M-u>", function()
 			builtin.find_files({ cwd = get_file_dir(), hidden = true })
 		end, {})
