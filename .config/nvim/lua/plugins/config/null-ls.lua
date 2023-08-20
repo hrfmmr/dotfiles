@@ -3,6 +3,7 @@ return function()
 	null_ls.setup({
 		debug = true,
 		sources = {
+			null_ls.builtins.diagnostics.cppcheck,
 			null_ls.builtins.diagnostics.shellcheck,
 			null_ls.builtins.diagnostics.mypy,
 			null_ls.builtins.diagnostics.flake8.with({
@@ -11,6 +12,7 @@ return function()
 			null_ls.builtins.diagnostics.rubocop,
 			null_ls.builtins.diagnostics.sqlfluff,
 			null_ls.builtins.diagnostics.tfsec,
+			null_ls.builtins.formatting.clang_format,
 			null_ls.builtins.formatting.black,
 			null_ls.builtins.formatting.isort,
 			null_ls.builtins.formatting.jq,

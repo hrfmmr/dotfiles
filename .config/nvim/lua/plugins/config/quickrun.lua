@@ -10,6 +10,10 @@ return {
     "\   'runner' : 'vimproc',
     "\   'runner/vimproc/updatetime' : 40,
     "\}
+    let g:quickrun_config.cpp = {
+    \ 'command': 'clang++',
+    \ 'cmdopt': '-std=c++20',
+    \}
     let g:quickrun_config.python = {
     \ 'command': expand('~/.pyenv/shims/python'),
     \}
