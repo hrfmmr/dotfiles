@@ -54,20 +54,19 @@ return {
 		end
 
 		-- files
+		local find_files_opts = { find_command = { "rg", "--files", "--hidden", "-g", "!.git" } }
 		vim.keymap.set("n", "<C-u>u", function()
-			builtin.find_files({
-        hidden = true,
-				default_text = "'",
-			})
+			builtin.find_files(find_files_opts)
 		end, {})
 		vim.keymap.set("n", "<C-u><C-u>", function()
-			builtin.find_files({
-        hidden = true,
+			local opts = vim.tbl_deep_extend("force", find_files_opts, {
 				default_text = "'" .. vim.fn.expand("<cword>"),
 			})
+			builtin.find_files(opts)
 		end, {})
 		vim.keymap.set("n", "<M-u><M-u>", function()
-			builtin.find_files({ cwd = get_file_dir(), hidden = true })
+			local opts = vim.tbl_deep_extend("force", find_files_opts, { cwd = get_file_dir(), hidden = true })
+			builtin.find_files(opts)
 		end, {})
 		vim.keymap.set("n", "<C-u><C-h>", "<cmd>Telescope oldfiles<cr>", {})
 		-- buffers
