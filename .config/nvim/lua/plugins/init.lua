@@ -167,6 +167,11 @@ require("lazy").setup({
 		config = require("plugins.config.octo").config,
 		event = "VeryLazy",
 	},
+	{
+		"rhysd/ghpr-blame.vim",
+		config = require("plugins.config.ghpr-blame"),
+		event = "VeryLazy",
+	},
 	-- }}}
 
 	-- Language & Syntax {{{
