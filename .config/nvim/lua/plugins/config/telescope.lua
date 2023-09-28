@@ -12,6 +12,7 @@ return {
 		telescope.setup({
 			defaults = {
 				sorting_strategy = "ascending",
+				file_ignore_patterns = { ".git", "node_modules", "vendor", ".venv", ".build" },
 			},
 			extensions = {
 				fzf = {
@@ -54,19 +55,17 @@ return {
 		end
 
 		-- files
-		local find_files_opts = { find_command = { "rg", "--files", "--hidden", "-g", "!.git" } }
 		vim.keymap.set("n", "<C-u>u", function()
-			builtin.find_files(find_files_opts)
+			builtin.find_files({ hidden = true })
 		end, {})
 		vim.keymap.set("n", "<C-u><C-u>", function()
-			local opts = vim.tbl_deep_extend("force", find_files_opts, {
+			builtin.find_files({
+				hidden = true,
 				default_text = "'" .. vim.fn.expand("<cword>"),
 			})
-			builtin.find_files(opts)
 		end, {})
 		vim.keymap.set("n", "<M-u><M-u>", function()
-			local opts = vim.tbl_deep_extend("force", find_files_opts, { cwd = get_file_dir(), hidden = true })
-			builtin.find_files(opts)
+			builtin.find_files({ cwd = get_file_dir(), hidden = true })
 		end, {})
 		vim.keymap.set("n", "<C-u><C-h>", "<cmd>Telescope oldfiles<cr>", {})
 		-- buffers
