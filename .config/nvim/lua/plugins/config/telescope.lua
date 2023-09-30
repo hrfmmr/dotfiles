@@ -32,6 +32,12 @@ return {
 						return { "--hidden" }
 					end,
 				},
+				current_buffer_fuzzy_find = {
+					tiebreak = function(current_entry, existing_entry)
+						-- returning true means preferring current entry
+						return current_entry.lnum < existing_entry.lnum
+					end,
+				},
 			},
 		})
 		-- This is needed to setup telescope-fzf-native. It overrides the sorters
