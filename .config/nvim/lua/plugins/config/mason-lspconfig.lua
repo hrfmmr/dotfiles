@@ -3,7 +3,6 @@ return {
 		"williamboman/mason.nvim",
 		"neovim/nvim-lspconfig",
 		"folke/neodev.nvim",
-		"nanotee/sqls.nvim",
 	},
 	config = function()
 		local nvim_lsp = require("lspconfig")
@@ -20,7 +19,7 @@ return {
 				"rust_analyzer",
 				"solargraph",
 				"lua_ls",
-				"sqls",
+				"sqlls",
 				"terraformls",
 				"tflint",
 			},
@@ -47,10 +46,9 @@ return {
 					local lua_ls_opts = require("plugins.lsp.settings.lua_ls")
 					opts = vim.tbl_deep_extend("force", opts, lua_ls_opts)
 				end
-				if server_name == "sqls" then
+				if server_name == "sqlls" then
 					opts.on_attach = function(client, bufnr)
 						require("plugins.lsp.handler").on_attach(client, bufnr)
-						require("sqls").on_attach(client, bufnr)
 					end
 				end
 				nvim_lsp[server_name].setup(opts)

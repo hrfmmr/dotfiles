@@ -56,10 +56,10 @@ require("lazy").setup({
 		config = require("plugins.config.easy-align"),
 		-- event = "VeryLazy",
 	},
-  {
-    "windwp/nvim-autopairs",
-    config = require("plugins.config.nvim-autopairs"),
-  },
+	{
+		"windwp/nvim-autopairs",
+		config = require("plugins.config.nvim-autopairs"),
+	},
 	{
 		"simeji/winresizer",
 		config = require("plugins.config.winresizer"),
@@ -223,12 +223,6 @@ require("lazy").setup({
 	{
 		"google/vim-jsonnet",
 		event = { "BufNewFile", "BufRead" },
-	},
-	-- sql
-	{
-		"nanotee/sqls.nvim",
-		config = require("plugins.config.sqls"),
-		ft = "sql",
 	},
 	-- }}}
 
