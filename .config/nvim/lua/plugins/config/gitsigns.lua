@@ -10,9 +10,9 @@ return function()
 			end
 
 			-- Navigation
-			map("n", "]c", function()
+			map("n", "<C-n>", function()
 				if vim.wo.diff then
-					return "]c"
+					return "<C-n>"
 				end
 				vim.schedule(function()
 					gs.next_hunk()
@@ -20,9 +20,9 @@ return function()
 				return "<Ignore>"
 			end, { expr = true })
 
-			map("n", "[c", function()
+			map("n", "<C-p>", function()
 				if vim.wo.diff then
-					return "[c"
+					return "<C-p>"
 				end
 				vim.schedule(function()
 					gs.prev_hunk()
