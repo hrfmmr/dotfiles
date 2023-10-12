@@ -22,6 +22,7 @@ return {
 				"sqlls",
 				"terraformls",
 				"tflint",
+				"bufls",
 			},
 		})
 		mason_lspconfig.setup_handlers({
@@ -30,6 +31,10 @@ return {
 					on_attach = require("plugins.lsp.handler").on_attach,
 					capabilities = require("plugins.lsp.handler").capabilities,
 				}
+				if server_name == "clangd" then
+					local bashls_opts = require("plugins.lsp.settings.clangd")
+					opts = vim.tbl_deep_extend("force", opts, bashls_opts)
+				end
 				if server_name == "solargraph" then
 					local solargraph_opts = { single_file_support = true }
 					opts = vim.tbl_deep_extend("force", opts, solargraph_opts)
