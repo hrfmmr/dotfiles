@@ -1,5 +1,16 @@
 return function()
 	local null_ls = require("null-ls")
+
+	local function get_swiftformat_path()
+		local handle = io.popen("mint which swiftformat")
+		if not handle then
+			return "swiftformat"
+		end
+		local result = handle:read("*a")
+		handle:close()
+		return result:gsub("%s+", "")
+	end
+
 	null_ls.setup({
 		debug = true,
 		sources = {
@@ -26,6 +37,9 @@ return function()
 			null_ls.builtins.formatting.golines,
 			null_ls.builtins.formatting.rubocop,
 			null_ls.builtins.formatting.rustfmt,
+			null_ls.builtins.formatting.swiftformat.with({
+				command = get_swiftformat_path(),
+			}),
 			null_ls.builtins.formatting.shfmt.with({
 				extra_args = { "-i", "2", "-sr" },
 			}),
