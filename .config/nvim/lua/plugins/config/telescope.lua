@@ -11,6 +11,14 @@ return {
 		local telescope = require("telescope")
 		telescope.setup({
 			defaults = {
+				layout_strategy = "vertical",
+				layout_config = {
+					prompt_position = "top",
+					vertical = {
+						width = 0.99,
+						mirror = true,
+					},
+				},
 				sorting_strategy = "ascending",
 			},
 			extensions = {
