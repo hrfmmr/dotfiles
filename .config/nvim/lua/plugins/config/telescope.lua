@@ -101,6 +101,10 @@ return {
 		vim.keymap.set("n", "<C-u><C-l>", function()
 			builtin.current_buffer_fuzzy_find()
 		end, {})
+		-- marks
+		vim.keymap.set("n", "<C-u><C-m>", function()
+			builtin.marks()
+		end, {})
 		-- file types
 		vim.keymap.set("n", "<C-u><C-t>", builtin.filetypes, {})
 		-- lsp diagnostics
