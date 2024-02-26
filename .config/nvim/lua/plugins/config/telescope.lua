@@ -5,6 +5,7 @@ return {
 		"nvim-telescope/telescope-frecency.nvim",
 		"nvim-telescope/telescope-ghq.nvim",
 		"nvim-telescope/telescope-github.nvim",
+		"gbprod/yanky.nvim",
 	},
 	config = function()
 		-- setup {{{
@@ -54,6 +55,7 @@ return {
 		telescope.load_extension("frecency")
 		telescope.load_extension("ghq")
 		telescope.load_extension("gh")
+		telescope.load_extension("yank_history")
 		-- }}}
 
 		-- keymaps for builtin {{{
@@ -156,6 +158,10 @@ return {
 				},
 			})
 		)
+		-- yanky
+		-- default mappings: https://github.com/gbprod/yanky.nvim?tab=readme-ov-file#pickertelescopeuse_default_mappings
+		vim.keymap.set("n", "<C-u>y", extensions({ "yank_history", "yank_history" }))
+		vim.keymap.set("i", "<C-y><C-y>", extensions({ "yank_history", "yank_history" }))
 		-- }}}
 	end,
 }

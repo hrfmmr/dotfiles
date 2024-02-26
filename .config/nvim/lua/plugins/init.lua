@@ -91,6 +91,12 @@ require("lazy").setup({
 		dependencies = require("plugins.config.nvim-bqf").dependencies,
 		config = require("plugins.config.nvim-bqf").config,
 	},
+	{
+		"gbprod/yanky.nvim",
+		dependencies = require("plugins.config.yanky").dependencies,
+		opts = require("plugins.config.yanky").opts,
+		config = require("plugins.config.yanky").config,
+	},
 	-- }}}
 
 	-- {{{ Snippets
