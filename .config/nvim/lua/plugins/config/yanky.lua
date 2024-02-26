@@ -6,7 +6,12 @@ return {
 		ring = { storage = "sqlite" },
 	},
 	config = function()
-		require("yanky").setup({})
+		require("yanky").setup({
+			highlight = {
+				on_put = false,
+				on_yank = false,
+			}
+		})
 		vim.keymap.set({ "n", "x" }, "p", "<Plug>(YankyPutAfter)")
 		vim.keymap.set({ "n", "x" }, "P", "<Plug>(YankyPutBefore)")
 		vim.keymap.set({ "n", "x" }, "gp", "<Plug>(YankyGPutAfter)")

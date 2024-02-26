@@ -160,7 +160,7 @@ return {
 		)
 		-- yanky
 		-- default mappings: https://github.com/gbprod/yanky.nvim?tab=readme-ov-file#pickertelescopeuse_default_mappings
-		vim.keymap.set("n", "<C-u>y", extensions({ "yank_history", "yank_history" }))
+		vim.keymap.set("n", "<C-y><C-y>", extensions({ "yank_history", "yank_history" }))
 		vim.keymap.set("i", "<C-y><C-y>", extensions({ "yank_history", "yank_history" }))
 		-- }}}
 	end,
