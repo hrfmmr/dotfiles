@@ -43,7 +43,7 @@ return function()
 			null_ls.builtins.formatting.shfmt.with({
 				extra_args = { "-i", "2", "-sr" },
 			}),
-			null_ls.builtins.formatting.sqlfluff,
+			null_ls.builtins.formatting.sql_formatter,
 			null_ls.builtins.formatting.buf,
 		},
 		on_attach = require("plugins.lsp.handler").on_attach,
