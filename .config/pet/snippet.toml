@@ -90,6 +90,24 @@ aws ecr get-login-password | docker login --username AWS --password-stdin https:
   command = "aws ecs list-clusters"
   output = ""
 
+[[snippets]]
+  description = "[AWS] 🐳 Describe ECS Service definition"
+  command = '''
+ecs_cluster=$(tracer | fzf) && \
+ecs_service=$(aws ecs list-services --cluster $ecs_cluster | jq -r '.serviceArns[]' | fzf | awk -F'/' '{print $NF}') && \
+aws ecs describe-services --cluster $ecs_cluster --services $ecs_service
+'''
+  output = ""
+
+[[snippets]]
+  description = "[AWS] 🐳 Describe ECS Task definition"
+  command = '''
+ecs_cluster=$(tracer | fzf) && \
+ecs_task=$(tracer "$ecs_cluster" | fzf | awk '{ print $1 }') && \
+aws ecs describe-tasks --cluster $ecs_cluster --tasks $ecs_task
+'''
+  output = ""
+
 # https://github.com/fujiwara/tracer
 [[snippets]]
   description = "[AWS] Pick a 🐳 ECS cluster by tracer cli"
