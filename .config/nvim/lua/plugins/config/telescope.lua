@@ -33,12 +33,12 @@ return {
 			pickers = {
 				live_grep = {
 					additional_args = function(opts)
-						return { "--hidden" }
+						return { "--hidden", "-g", "!.git" }
 					end,
 				},
 				grep_string = {
 					additional_args = function(opts)
-						return { "--hidden" }
+						return { "--hidden", "-g", "!.git" }
 					end,
 				},
 				current_buffer_fuzzy_find = {
