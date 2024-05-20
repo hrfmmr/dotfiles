@@ -141,7 +141,7 @@ alias fcd='dir=$(fd -t d| fzf +m) && cd "$dir"'
 alias rg='rg --smart-case --hidden'
 alias be='bundle exec'
 alias d='docker'
-alias d-c='docker-compose'
+alias dc='docker compose'
 alias lzd='lazydocker'
 alias tf='terraform'
 
