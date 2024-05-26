@@ -19,11 +19,11 @@
 	std = stash drop
     lg = log \
         --pretty='format:%C(magenta)%h %C(green)%cd %C(reset)%s %C(red)%d %C(cyan)[%an]' \
-        --date=short \
+        --date=format:'%Y/%m/%d %H:%M:%S' \
         --all \
         --graph
 	li = !hub issue --format='%sC %i %t labels:%l milestone:%Mt | %as  %Nc%n'
-	lp = !hub pr list --format='%sC %i %t labels:%l milestone:%Mt | author:@%au  %Nc%n'
+    lp = !hub pr list --format='%sC %i %t labels:%l milestone:%Mt | author:@%au  %Nc%n'
 	issue = "!ghi show $(echo $(git symbolic-ref --short HEAD) | awk -F "/" '{print $NF}')"
 	pr = !hub browse -- compare/$(git symbolic-ref --short HEAD)'?'expand=1'&'body=%0A%23$(echo $(git symbolic-ref --short HEAD) | awk -F '[/_-]' '{print $NF}')
 [pull]
