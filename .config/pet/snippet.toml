@@ -233,16 +233,7 @@ cw tail -f $cw_log_group -b2h
   output = ""
 
 [[snippets]]
-  description = "[AWS] tail and follow CloudWatch Logs target log group/stream[cw]"
-  command = '''
-cw_log_group=$(cw ls groups | fzf) && \
-cw_log_stream=$(cw ls streams $cw_log_group | fzf) && \
-cw tail -f "$cw_log_group:$cw_log_stream" -b2h
-'''
-  output = ""
-
-[[snippets]]
-  description = "[AWS] tail and follow CloudWatch Logs target log stream(from 10 latest streams)"
+  description = "[AWS] tail and follow CloudWatch Logs target log stream"
   command = '''
 cw_log_group=$(cw ls groups | fzf) && \
 cw_log_stream=$(aws logs describe-log-streams \
