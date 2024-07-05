@@ -108,6 +108,16 @@ aws ecs describe-tasks --cluster $ecs_cluster --tasks $ecs_task
 '''
   output = ""
 
+[[snippets]]
+  description = "[AWS] 🐳 Current ECS Task's app container image tag"
+  command = '''
+ecs_cluster=$(tracer | fzf) && \
+ecs_task=$(tracer "$ecs_cluster" | fzf | awk '{ print $1 }') && \
+aws ecs describe-tasks --cluster $ecs_cluster --tasks $ecs_task \
+| jq '.tasks[0].containers[] | select(.name == "app") | .image'
+'''
+  output = ""
+
 # https://github.com/fujiwara/tracer
 [[snippets]]
   description = "[AWS] Pick a 🐳 ECS cluster by tracer cli"
