@@ -17,6 +17,8 @@
 --regex-Swift=/^[ \t]*class[ \t]+([a-zA-Z_][a-zA-Z0-9_]*).*$/\1/c/{scope=push}
 --regex-Swift=/^[ \t]*extension[ \t]+([a-zA-Z_][a-zA-Z0-9_]*).*$/\1/e/{scope=push}
 --regex-Swift=/^[ \t]+func[ \t]+([a-zA-Z_][a-zA-Z0-9_]*)\(/\1/f/{scope=ref}
+--regex-Swift=/^[ \t]+static[ \t]+func[ \t]+([a-zA-Z_][a-zA-Z0-9_]*)\(/\1/f/{scope=ref}
 --regex-Swift=/^[ \t]+(var|let)[ \t]+([a-zA-Z_][a-zA-Z0-9_]*)[: =]/\2/v/{scope=ref}
+--regex-Swift=/^[ \t]+static[ \t]+(var|let)[ \t]+([a-zA-Z_][a-zA-Z0-9_]*)[: =]/\2/v/{scope=ref}
 --regex-Swift=/^[ \t]*\}.*$//{placeholder}{scope=pop}
 --extras=+r
