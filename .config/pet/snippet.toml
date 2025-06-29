@@ -78,6 +78,11 @@
   output = ""
 
 [[snippets]]
+  description = "[AWS] 🐳 Create ECR repository "
+  command = "aws ecr create-repository --repository-name <REPOSITORY_NAME>"
+  output = ""
+
+[[snippets]]
   description = "[AWS] 🐳 Log in to ECR"
   command = '''
 account_id=$(aws sts get-caller-identity --query 'Account' --output text) && \

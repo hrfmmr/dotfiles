@@ -28,8 +28,9 @@ vim.opt.hlsearch = true
 -- Indent
 vim.opt.expandtab = true
 vim.opt.smarttab = true
-vim.opt.autoindent = true
-vim.opt.smartindent = true
+-- vim.opt.autoindent = true
+-- vim.opt.smartindent = true
+vim.opt.cindent = true
 vim.opt.backspace = "indent,eol,start"
 vim.opt.whichwrap = "b,s,h,l,<,>,[,]"
 vim.opt.tabstop = 4

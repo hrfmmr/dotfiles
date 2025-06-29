@@ -38,5 +38,5 @@
 	token = !security find-internet-password -a hrfmmr -s github.com -l 'ghi token' -w
 [ghq]
 	root = ~/src
-[url "ssh://git@github.com/"]
-  insteadOf = https://github.com/
+; [url "ssh://git@github.com/"]
+  ; insteadOf = https://github.com/
