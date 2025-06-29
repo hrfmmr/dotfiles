@@ -1,7 +1,7 @@
 " Swift support for TagBar
 let g:tagbar_type_swift = {
     \ 'ctagsbin': '/usr/local/bin/ctags',
-    \ 'ctagsargs': '--options=' . expand('~/.ctags') . ' -f - --format=2 --excmd=pattern --fields=nksSafet --sort=no --append=no',
+    \ 'ctagsargs': '--options=' . expand('~/.ctags') . ' -f - --format=2 --excmd=pattern --fields=nksSafetE --sort=no --append=no',
     \ 'kinds': [
         \ 'n:Enums',
         \ 't:Typealiases',

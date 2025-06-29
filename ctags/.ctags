@@ -10,11 +10,13 @@
 --kinddef-Swift=f,function,functions
 --kinddef-Swift=v,variable,variables
 --kinddef-Swift=e,extension,extensions
---regex-Swift=/enum[ \t]+([^\{\}]+).*$/\1/n/
---regex-Swift=/typealias[ \t]+([^:=]+).*$/\1/t/
---regex-Swift=/protocol[ \t]+([^:\{<]+).*$/\1/p/
---regex-Swift=/struct[ \t]+([^:\{<]+).*$/\1/s/
---regex-Swift=/class[ \t]+([^:\{<]+).*$/\1/c/
---regex-Swift=/func[ \t]+([^\(\)<]+)\([^\(\)]*\)/\1/f/
---regex-Swift=/(var|let)[ \t]+([^:=<]+).*$/\2/v/
---regex-Swift=/^[ \t]*extension[ \t]+([^:\{]+).*$/\1/e/
+--regex-Swift=/^[ \t]*enum[ \t]+([^:\{<\s]+).*$/\1/n/{scope=push}
+--regex-Swift=/^[ \t]*typealias[ \t]+([^:=<\s]+).*$/\1/t/
+--regex-Swift=/^[ \t]*protocol[ \t]+([^:\{<\s]+).*$/\1/p/{scope=push}
+--regex-Swift=/^[ \t]*struct[ \t]+([^:\{<\s]+).*$/\1/s/{scope=push}
+--regex-Swift=/^[ \t]*class[ \t]+([^:\{<\s]+).*$/\1/c/{scope=push}
+--regex-Swift=/^[ \t]*extension[ \t]+([^:\{<\s]+).*$/\1/e/{scope=push}
+--regex-Swift=/^[ \t]+func[ \t]+([^\(\)<\s]+)\([^\(\)]*\)/\1/f/{scope=ref}
+--regex-Swift=/^[ \t]+(var|let)[ \t]+([^:=<\s]+).*$/\2/v/{scope=ref}
+--regex-Swift=/^[ \t]*\}//{placeholder}{scope=pop}
+--extras=+r

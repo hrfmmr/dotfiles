@@ -9,7 +9,7 @@ return function()
 	-- Swift support for Tagbar
 	vim.g.tagbar_type_swift = {
 		ctagsbin = vim.g.tagbar_ctags_bin,
-		ctagsargs = '--options=' .. vim.fn.expand('~/.ctags') .. ' -f - --format=2 --excmd=pattern --fields=nksSafet --sort=no --append=no',
+		ctagsargs = '--options=' .. vim.fn.expand('~/.ctags') .. ' -f - --format=2 --excmd=pattern --fields=nksSafetE --sort=no --append=no',
 		kinds = {
 			'n:Enums',
 			't:Typealiases', 
