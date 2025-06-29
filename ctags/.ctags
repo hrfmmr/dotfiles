@@ -2,11 +2,19 @@
 --python-kinds=-iv
 --langdef=Swift
 --langmap=Swift:.swift
---regex-Swift=/enum[ \t]+([^\{\}]+).*$/\1/n,enum,enums/
---regex-Swift=/typealias[ \t]+([^:=]+).*$/\1/t,typealias,typealiases/
---regex-Swift=/protocol[ \t]+([^:\{<]+).*$/\1/p,protocol,protocols/
---regex-Swift=/struct[ \t]+([^:\{<]+).*$/\1/s,struct,structs/
---regex-Swift=/class[ \t]+([^:\{<]+).*$/\1/c,class,classes/
---regex-Swift=/func[ \t]+([^\(\)<]+)\([^\(\)]*\)/\1/f,function,functions/
---regex-Swift=/(var|let)[ \t]+([^:=<]+).*$/\2/v,variable,variables/
---regex-Swift=/^[ \t]*extension[ \t]+([^:\{]+).*$/\1/e,extension,extensions/
+--kinddef-Swift=n,enum,enums
+--kinddef-Swift=t,typealias,typealiases  
+--kinddef-Swift=p,protocol,protocols
+--kinddef-Swift=s,struct,structs
+--kinddef-Swift=c,class,classes
+--kinddef-Swift=f,function,functions
+--kinddef-Swift=v,variable,variables
+--kinddef-Swift=e,extension,extensions
+--regex-Swift=/enum[ \t]+([^\{\}]+).*$/\1/n/
+--regex-Swift=/typealias[ \t]+([^:=]+).*$/\1/t/
+--regex-Swift=/protocol[ \t]+([^:\{<]+).*$/\1/p/
+--regex-Swift=/struct[ \t]+([^:\{<]+).*$/\1/s/
+--regex-Swift=/class[ \t]+([^:\{<]+).*$/\1/c/
+--regex-Swift=/func[ \t]+([^\(\)<]+)\([^\(\)]*\)/\1/f/
+--regex-Swift=/(var|let)[ \t]+([^:=<]+).*$/\2/v/
+--regex-Swift=/^[ \t]*extension[ \t]+([^:\{]+).*$/\1/e/

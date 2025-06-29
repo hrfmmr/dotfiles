@@ -3,18 +3,21 @@ return function()
   nmap <Leader>c :TagbarToggle<CR>
   ]])
 
+	-- Ensure ctags path is set
+	vim.g.tagbar_ctags_bin = '/usr/local/bin/ctags'
+	
 	-- Swift support for Tagbar
 	vim.g.tagbar_type_swift = {
-		ctagstype = 'swift',
+		ctagstype = 'Swift',
 		kinds = {
-			'n:enums',
-			't:typealiases', 
-			'p:protocols',
-			's:structs',
-			'c:classes',
-			'f:functions',
-			'v:variables',
-			'e:extensions'
+			'n:Enums',
+			't:Typealiases', 
+			'p:Protocols',
+			's:Structs',
+			'c:Classes',
+			'f:Functions',
+			'v:Variables',
+			'e:Extensions'
 		},
 		sro = '.',
 		kind2scope = {
@@ -31,6 +34,7 @@ return function()
 			protocol = 'p',
 			enum = 'n'
 		},
-		sort = 0
+		sort = 0,
+		deffile = vim.fn.expand('~/.ctags')
 	}
 end
