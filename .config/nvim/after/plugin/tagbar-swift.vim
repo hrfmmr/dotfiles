@@ -8,6 +8,7 @@ let g:tagbar_type_swift = {
         \ 'p:Protocols', 
         \ 's:Structs',
         \ 'c:Classes',
+        \ 'a:Actors',
         \ 'f:Functions',
         \ 'v:Variables',
         \ 'e:Extensions'
@@ -16,6 +17,7 @@ let g:tagbar_type_swift = {
     \ 'kind2scope': {
         \ 'c': 'class',
         \ 's': 'struct',
+        \ 'a': 'actor',
         \ 'e': 'extension',
         \ 'p': 'protocol',
         \ 'n': 'enum'
@@ -23,6 +25,7 @@ let g:tagbar_type_swift = {
     \ 'scope2kind': {
         \ 'class': 'c',
         \ 'struct': 's',
+        \ 'actor': 'a',
         \ 'extension': 'e',
         \ 'protocol': 'p',
         \ 'enum': 'n'

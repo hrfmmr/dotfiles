@@ -16,6 +16,7 @@ return function()
 			'p:Protocols',
 			's:Structs',
 			'c:Classes',
+			'a:Actors',
 			'f:Functions',
 			'v:Variables',
 			'e:Extensions'
@@ -24,6 +25,7 @@ return function()
 		kind2scope = {
 			c = 'class',
 			s = 'struct',
+			a = 'actor',
 			e = 'extension',
 			p = 'protocol',
 			n = 'enum'
@@ -31,6 +33,7 @@ return function()
 		scope2kind = {
 			class = 'c',
 			struct = 's',
+			actor = 'a',
 			extension = 'e',
 			protocol = 'p',
 			enum = 'n'
