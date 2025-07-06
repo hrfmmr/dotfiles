@@ -1,0 +1,183 @@
+# Swift Snippets for UltiSnips
+
+# Basic structure
+snippet func "Function" b
+func ${1:name}(${2:parameters}) ${3:-> ${4:ReturnType} }{
+	${0:// implementation}
+}
+endsnippet
+
+snippet class "Class" b
+class ${1:ClassName}${2: : ${3:SuperClass}} {
+	${0:// implementation}
+}
+endsnippet
+
+snippet struct "Struct" b
+struct ${1:StructName}${2: : ${3:Protocol}} {
+	${0:// implementation}
+}
+endsnippet
+
+snippet enum "Enum" b
+enum ${1:EnumName}${2: : ${3:Type}} {
+	${0:// cases}
+}
+endsnippet
+
+snippet protocol "Protocol" b
+protocol ${1:ProtocolName} {
+	${0:// requirements}
+}
+endsnippet
+
+snippet extension "Extension" b
+extension ${1:TypeName}${2: : ${3:Protocol}} {
+	${0:// implementation}
+}
+endsnippet
+
+# Property wrappers
+snippet @State "@State property" b
+@State private var ${1:property}: ${2:Type} = ${0:defaultValue}
+endsnippet
+
+snippet @Binding "@Binding property" b
+@Binding var ${1:property}: ${0:Type}
+endsnippet
+
+snippet @ObservedObject "@ObservedObject property" b
+@ObservedObject var ${1:object}: ${0:ObjectType}
+endsnippet
+
+snippet @StateObject "@StateObject property" b
+@StateObject private var ${1:object} = ${0:ObjectType()}
+endsnippet
+
+snippet @Published "@Published property" b
+@Published var ${1:property}: ${2:Type} = ${0:defaultValue}
+endsnippet
+
+# SwiftUI Views
+snippet view "SwiftUI View" b
+struct ${1:ViewName}: View {
+	var body: some View {
+		${0:// view content}
+	}
+}
+endsnippet
+
+snippet vstack "VStack" b
+VStack${1:(${2:alignment: .${3:center}, spacing: ${4:nil}})} {
+	${0:// content}
+}
+endsnippet
+
+snippet hstack "HStack" b
+HStack${1:(${2:alignment: .${3:center}, spacing: ${4:nil}})} {
+	${0:// content}
+}
+endsnippet
+
+snippet zstack "ZStack" b
+ZStack${1:(${2:alignment: .${3:center}})} {
+	${0:// content}
+}
+endsnippet
+
+# Common patterns
+snippet guard "Guard statement" b
+guard ${1:condition} else {
+	${2:return}
+}
+${0}
+endsnippet
+
+snippet if "If let binding" b
+if let ${1:value} = ${2:optional} {
+	${0:// use value}
+}
+endsnippet
+
+snippet switch "Switch statement" b
+switch ${1:value} {
+case ${2:pattern}:
+	${3:// action}
+default:
+	${0:// default action}
+}
+endsnippet
+
+snippet for "For loop" b
+for ${1:item} in ${2:collection} {
+	${0:// action}
+}
+endsnippet
+
+snippet while "While loop" b
+while ${1:condition} {
+	${0:// action}
+}
+endsnippet
+
+# Error handling
+snippet do "Do-catch block" b
+do {
+	${1:try statement}
+} catch ${2:error} {
+	${0:// handle error}
+}
+endsnippet
+
+snippet throws "Throwing function" b
+func ${1:name}(${2:parameters}) throws ${3:-> ${4:ReturnType} }{
+	${0:// implementation}
+}
+endsnippet
+
+# Testing
+snippet test "XCTest method" b
+func test${1:MethodName}() throws {
+	${0:// test implementation}
+}
+endsnippet
+
+snippet setup "XCTest setUp" b
+override func setUpWithError() throws {
+	${0:// setup}
+}
+endsnippet
+
+snippet teardown "XCTest tearDown" b
+override func tearDownWithError() throws {
+	${0:// teardown}
+}
+endsnippet
+
+# Combine
+snippet publisher "Publisher" b
+${1:Just(${2:value})}
+	.sink { ${3:completion} in
+		${4:// handle completion}
+	} receiveValue: { ${5:value} in
+		${0:// handle value}
+	}
+	.store(in: &${6:cancellables})
+endsnippet
+
+# Async/await
+snippet async "Async function" b
+func ${1:name}(${2:parameters}) async ${3:throws }${4:-> ${5:ReturnType} }{
+	${0:// implementation}
+}
+endsnippet
+
+snippet await "Await call" b
+let ${1:result} = try await ${0:asyncFunction()}
+endsnippet
+
+snippet task "Task" b
+Task {
+	${0:// async work}
+}
+endsnippet

@@ -1,6 +1,6 @@
-nodejs 14.17.6
-mysql 5.7.31
-ecspresso 2.0.0
+nodejs 24.2.0
+mysql 8.0.34
+ecspresso 2.3.4
 jsonnet 0.19.1
 golang 1.19.5
 lua 5.4.4
