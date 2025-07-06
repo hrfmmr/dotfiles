@@ -19,7 +19,7 @@ return {
     \}
     let g:quickrun_config.swift = {
     \ 'command': 'xcrun',
-    \ 'cmdopt': 'swift',
+    \ 'cmdopt': 'swift -swift-version 6 -strict-concurrency=complete',
     \ 'exec': '%c %o %s',
     \}
     let g:quickrun_config.haskell = {
