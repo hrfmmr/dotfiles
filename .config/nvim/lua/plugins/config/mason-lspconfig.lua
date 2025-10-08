@@ -48,6 +48,10 @@ return {
 					local pyright_opts = require("plugins.lsp.settings.pyright")
 					opts = vim.tbl_deep_extend("force", opts, pyright_opts)
 				end
+				if server_name == "tsserver" then
+					local tsserver_opts = require("plugins.lsp.settings.tsserver")
+					opts = vim.tbl_deep_extend("force", opts, tsserver_opts)
+				end
 				if server_name == "lua_ls" then
 					local lua_ls_opts = require("plugins.lsp.settings.lua_ls")
 					opts = vim.tbl_deep_extend("force", opts, lua_ls_opts)

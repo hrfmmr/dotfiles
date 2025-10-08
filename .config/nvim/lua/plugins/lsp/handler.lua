@@ -35,7 +35,12 @@ M.on_attach = function(client, bufnr)
 		end
 	end
 	-- Format on save
-	if client.server_capabilities.documentFormattingProvider then
+	local disable_autoformat = {
+		typescript = true,
+		typescriptreact = true,
+	}
+	local filetype = vim.api.nvim_buf_get_option(bufnr, "filetype")
+	if client.server_capabilities.documentFormattingProvider and not disable_autoformat[filetype] then
 		vim.api.nvim_create_autocmd("BufWritePre", {
 			group = vim.api.nvim_create_augroup("Format", { clear = true }),
 			buffer = bufnr,

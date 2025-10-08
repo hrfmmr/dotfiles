@@ -25,7 +25,9 @@ return function()
 			null_ls.builtins.formatting.gofumpt,
 			null_ls.builtins.formatting.goimports,
 			null_ls.builtins.formatting.golines,
-			null_ls.builtins.formatting.rubocop,
+			null_ls.builtins.formatting.prettier.with({
+				filetypes = { "typescript", "typescriptreact" },
+			}),
 			null_ls.builtins.formatting.rustfmt,
 			null_ls.builtins.formatting.shfmt.with({
 				extra_args = { "-i", "2", "-sr" },
