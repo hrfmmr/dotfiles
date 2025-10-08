@@ -4,7 +4,7 @@ return {
 	},
 	config = function()
 		require("trouble").setup({
-			height = 20,
+			height = 10,
 		})
 		vim.keymap.set("n", "<leader>dd", "<cmd>TroubleToggle<cr>", { silent = true, noremap = true })
 		vim.keymap.set(

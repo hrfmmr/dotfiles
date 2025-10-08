@@ -144,6 +144,8 @@ alias d='docker'
 alias dc='docker compose'
 alias lzd='lazydocker'
 alias tf='terraform'
+alias py='poetry'
+alias ecs='ecspresso'
 
 function git-checkout() {
     g checkout B;
@@ -212,7 +214,7 @@ if which pyenv-virtualenv-init > /dev/null; then eval "$(pyenv virtualenv-init -
 #
 # * rbenv
 #
-if which rbenv > /dev/null; then eval "$(rbenv init -)"; fi
+# if which rbenv > /dev/null; then eval "$(rbenv init -)"; fi
 
 #
 # * goenv
@@ -377,7 +379,7 @@ bindkey '^x^p' pet-select
 # mpv
 #
 function mpv-music() {
-    local PLAYLISTDIR=~/Dropbox/memo/youtube
+    local PLAYLISTDIR=~/Library/Mobile\ Documents/iCloud~md~obsidian/Documents/ObsidianVault/yt-playlist
     local playlist=$(ls $PLAYLISTDIR/*.m3u | fzf-tmux -d --reverse --no-sort +m --prompt="Playlist > ")
     if [ $# = 0 ]; then
 		mpv \
@@ -400,7 +402,7 @@ function mpv-music() {
 }
 
 function mpv-video() {
-    local PLAYLISTDIR=~/Dropbox/memo/youtube
+    local PLAYLISTDIR=~/Library/Mobile\ Documents/iCloud~md~obsidian/Documents/ObsidianVault/yt-playlist
     local playlist=$(ls $PLAYLISTDIR/*.m3u | fzf-tmux -d --reverse --no-sort +m --prompt="Playlist > ")
 	if [ $# = 0 ]; then
 		mpv \

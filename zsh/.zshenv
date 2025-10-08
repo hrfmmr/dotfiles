@@ -32,13 +32,18 @@ export PGHOST=localhost
 # * android
 #
 export ANDROID_HOME=~/Library/Android/sdk
-export JAVA_HOME=`/usr/libexec/java_home -v "1.8" -F`
+# export JAVA_HOME=`/usr/libexec/java_home -v "1.8" -F`
 
 #
 # * Flutter
 #
 export FLUTTER_SDK=~/src/github.com/flutter/flutter
 export DART_SDK=$FLUTTER_SDK/bin/cache/dart-sdk
+
+#
+# * OpenAI
+#
+# export OPENAI_API_KEY=`envchain openai env | grep OPENAI_API_KEY | sed 's/.*=//'`
 
 path=(    
     $HOME/bin(N-/)
@@ -47,8 +52,8 @@ path=(
     $HOME/.cargo/bin(N-/)
     $HOME/.pyenv/bin(N-/)
     $HOME/.pyenv/shims(N-/)
-    $HOME/.rbenv/bin(N-/)
-    $HOME/.rbenv/shims(N-/)
+    # $HOME/.rbenv/bin(N-/)
+    # $HOME/.rbenv/shims(N-/)
     $HOME/.goenv/bin(N-/)
     $HOME/.goenv/shims(N-/)
     $HOME/.nodebrew/current/bin(N-)
@@ -67,3 +72,4 @@ path=(
     /Applications/Vagrant/bin(N-/)
     $path
 )
+. "$HOME/.cargo/env"
