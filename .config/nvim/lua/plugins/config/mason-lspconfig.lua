@@ -23,6 +23,7 @@ return {
 				"terraformls",
 				"tflint",
 				"bufls",
+				"tsserver",
 			},
 		})
 		mason_lspconfig.setup_handlers({
