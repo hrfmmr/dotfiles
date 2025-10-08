@@ -52,7 +52,6 @@ return {
 		-- This is needed to setup telescope-fzf-native. It overrides the sorters
 		-- in this.
 		telescope.load_extension("fzf")
-		telescope.load_extension("frecency")
 		telescope.load_extension("ghq")
 		telescope.load_extension("gh")
 		telescope.load_extension("yank_history")
@@ -134,8 +133,6 @@ return {
 			end
 		end
 
-		-- frecency
-		vim.keymap.set("n", "<C-u>H", extensions({ "frecency", "frecency" }))
 		-- ghq
 		vim.keymap.set(
 			"n",
