@@ -26,6 +26,10 @@ return {
     \ 'command': 'stack',
     \ 'cmdopt': 'runghc',
     \}
+    let g:quickrun_config.typescript = {
+    \ 'command': 'bun',
+    \ 'exec': ['%c run %s'],
+    \}
     ]])
 	end,
 }
