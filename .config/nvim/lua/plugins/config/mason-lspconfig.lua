@@ -24,6 +24,7 @@ return {
 				"tflint",
 				"bufls",
 				"tsserver",
+				"denols",
 			},
 		})
 		mason_lspconfig.setup_handlers({
@@ -51,6 +52,10 @@ return {
 				if server_name == "tsserver" then
 					local tsserver_opts = require("plugins.lsp.settings.tsserver")
 					opts = vim.tbl_deep_extend("force", opts, tsserver_opts)
+				end
+				if server_name == "denols" then
+					local denols_opts = require("plugins.lsp.settings.denols")
+					opts = vim.tbl_deep_extend("force", opts, denols_opts)
 				end
 				if server_name == "lua_ls" then
 					local lua_ls_opts = require("plugins.lsp.settings.lua_ls")
