@@ -1,46 +1,79 @@
 return function()
-	local ok, none_ls = pcall(require, "none-ls")
+	local ok, null_ls = pcall(require, "none-ls")
 	if not ok then
-		vim.notify("none-ls.nvim が読み込めません。:Lazy sync などでプラグインを取得してください。", vim.log.levels.WARN)
+		ok, null_ls = pcall(require, "null-ls")
+	end
+	if not ok then
+		vim.notify("none-ls.nvim(null-ls) が読み込めません。:Lazy sync などでプラグインを取得してください。", vim.log.levels.WARN)
 		return
 	end
 
-	none_ls.setup({
+	local function require_extra(mod)
+		local ok_extra, builtin = pcall(require, mod)
+		if not ok_extra then
+			vim.notify(('none-ls-extras "%s" の読み込みに失敗しました: %s'):format(mod, builtin), vim.log.levels.WARN)
+			return nil
+		end
+		return builtin
+	end
+
+	local diagnostics = {
+		null_ls.builtins.diagnostics.buf,
+		null_ls.builtins.diagnostics.cppcheck,
+		null_ls.builtins.diagnostics.mypy,
+		null_ls.builtins.diagnostics.rubocop,
+		null_ls.builtins.diagnostics.sqlfluff,
+		null_ls.builtins.diagnostics.tfsec,
+	}
+
+	local shellcheck = require_extra('none-ls-extras.diagnostics.shellcheck')
+	if shellcheck then
+		table.insert(diagnostics, shellcheck)
+	end
+
+	local flake8 = require_extra('none-ls-extras.diagnostics.flake8')
+	if flake8 then
+		flake8 = flake8.with({ extra_args = { '--max-line-length', '88' } })
+		table.insert(diagnostics, flake8)
+	end
+
+	local formatting = {
+		null_ls.builtins.formatting.clang_format.with({
+			filetypes = { 'c', 'cpp', 'objc', 'objcpp' },
+		}),
+		null_ls.builtins.formatting.black,
+		null_ls.builtins.formatting.isort,
+		null_ls.builtins.formatting.stylua,
+		null_ls.builtins.formatting.gofmt,
+		null_ls.builtins.formatting.gofumpt,
+		null_ls.builtins.formatting.goimports,
+		null_ls.builtins.formatting.golines,
+		null_ls.builtins.formatting.prettier.with({
+			filetypes = { 'typescript', 'typescriptreact' },
+		}),
+		null_ls.builtins.formatting.shfmt.with({
+			extra_args = { '-i', '2', '-sr' },
+		}),
+		null_ls.builtins.formatting.sql_formatter,
+		null_ls.builtins.formatting.buf,
+	}
+
+	local jq = require_extra('none-ls-extras.formatting.jq')
+	if jq then
+		table.insert(formatting, jq)
+	else
+		table.insert(formatting, null_ls.builtins.formatting.jq)
+	end
+
+	local sources = {}
+	vim.list_extend(sources, diagnostics)
+	vim.list_extend(sources, formatting)
+
+	null_ls.setup({
 		debug = true,
-		sources = {
-			none_ls.builtins.diagnostics.buf,
-			none_ls.builtins.diagnostics.cppcheck,
-			none_ls.builtins.diagnostics.shellcheck,
-			none_ls.builtins.diagnostics.mypy,
-			none_ls.builtins.diagnostics.flake8.with({
-				extra_args = { "--max-line-length", "88" },
-			}),
-			none_ls.builtins.diagnostics.rubocop,
-			none_ls.builtins.diagnostics.sqlfluff,
-			none_ls.builtins.diagnostics.tfsec,
-			none_ls.builtins.formatting.clang_format.with({
-				filetypes = { "c", "cpp", "objc", "objcpp" },
-			}),
-			none_ls.builtins.formatting.black,
-			none_ls.builtins.formatting.isort,
-			none_ls.builtins.formatting.jq,
-			none_ls.builtins.formatting.stylua,
-			none_ls.builtins.formatting.gofmt,
-			none_ls.builtins.formatting.gofumpt,
-			none_ls.builtins.formatting.goimports,
-			none_ls.builtins.formatting.golines,
-			none_ls.builtins.formatting.prettier.with({
-				filetypes = { "typescript", "typescriptreact" },
-			}),
-			none_ls.builtins.formatting.rustfmt,
-			none_ls.builtins.formatting.shfmt.with({
-				extra_args = { "-i", "2", "-sr" },
-			}),
-			none_ls.builtins.formatting.sql_formatter,
-			none_ls.builtins.formatting.buf,
-		},
-		on_attach = require("plugins.lsp.handler").on_attach,
+		sources = sources,
+		on_attach = require('plugins.lsp.handler').on_attach,
 	})
 
-	vim.keymap.set("n", "<C-g>in", ":NoneLsInfo<CR>", { silent = true })
+	vim.keymap.set('n', '<C-g>in', ':NullLsInfo<CR>', { silent = true })
 end

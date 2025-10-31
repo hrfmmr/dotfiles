@@ -251,6 +251,7 @@ require("lazy").setup({
 	},
 	{
 		"nvimtools/none-ls.nvim",
+		dependencies = { "nvimtools/none-ls-extras.nvim" },
 		config = require("plugins.config.null-ls"),
 		-- event = "VeryLazy",
 	},
