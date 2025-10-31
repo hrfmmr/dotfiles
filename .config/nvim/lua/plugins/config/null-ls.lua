@@ -1,42 +1,42 @@
 return function()
-	local null_ls = require("null-ls")
+	local none_ls = require("none-ls")
 
-	null_ls.setup({
+	none_ls.setup({
 		debug = true,
 		sources = {
-			null_ls.builtins.diagnostics.buf,
-			null_ls.builtins.diagnostics.cppcheck,
-			null_ls.builtins.diagnostics.shellcheck,
-			null_ls.builtins.diagnostics.mypy,
-			null_ls.builtins.diagnostics.flake8.with({
+			none_ls.builtins.diagnostics.buf,
+			none_ls.builtins.diagnostics.cppcheck,
+			none_ls.builtins.diagnostics.shellcheck,
+			none_ls.builtins.diagnostics.mypy,
+			none_ls.builtins.diagnostics.flake8.with({
 				extra_args = { "--max-line-length", "88" },
 			}),
-			null_ls.builtins.diagnostics.rubocop,
-			null_ls.builtins.diagnostics.sqlfluff,
-			null_ls.builtins.diagnostics.tfsec,
-			null_ls.builtins.formatting.clang_format.with({
+			none_ls.builtins.diagnostics.rubocop,
+			none_ls.builtins.diagnostics.sqlfluff,
+			none_ls.builtins.diagnostics.tfsec,
+			none_ls.builtins.formatting.clang_format.with({
 				filetypes = { "c", "cpp", "objc", "objcpp" },
 			}),
-			null_ls.builtins.formatting.black,
-			null_ls.builtins.formatting.isort,
-			null_ls.builtins.formatting.jq,
-			null_ls.builtins.formatting.stylua,
-			null_ls.builtins.formatting.gofmt,
-			null_ls.builtins.formatting.gofumpt,
-			null_ls.builtins.formatting.goimports,
-			null_ls.builtins.formatting.golines,
-			null_ls.builtins.formatting.prettier.with({
+			none_ls.builtins.formatting.black,
+			none_ls.builtins.formatting.isort,
+			none_ls.builtins.formatting.jq,
+			none_ls.builtins.formatting.stylua,
+			none_ls.builtins.formatting.gofmt,
+			none_ls.builtins.formatting.gofumpt,
+			none_ls.builtins.formatting.goimports,
+			none_ls.builtins.formatting.golines,
+			none_ls.builtins.formatting.prettier.with({
 				filetypes = { "typescript", "typescriptreact" },
 			}),
-			null_ls.builtins.formatting.rustfmt,
-			null_ls.builtins.formatting.shfmt.with({
+			none_ls.builtins.formatting.rustfmt,
+			none_ls.builtins.formatting.shfmt.with({
 				extra_args = { "-i", "2", "-sr" },
 			}),
-			null_ls.builtins.formatting.sql_formatter,
-			null_ls.builtins.formatting.buf,
+			none_ls.builtins.formatting.sql_formatter,
+			none_ls.builtins.formatting.buf,
 		},
 		on_attach = require("plugins.lsp.handler").on_attach,
 	})
 
-	vim.keymap.set("n", "<C-g>in", ":NullLsInfo<CR>", { silent = true })
+	vim.keymap.set("n", "<C-g>in", ":NoneLsInfo<CR>", { silent = true })
 end
