@@ -1,5 +1,9 @@
 return function()
-	local none_ls = require("none-ls")
+	local ok, none_ls = pcall(require, "none-ls")
+	if not ok then
+		vim.notify("none-ls.nvim が読み込めません。:Lazy sync などでプラグインを取得してください。", vim.log.levels.WARN)
+		return
+	end
 
 	none_ls.setup({
 		debug = true,
