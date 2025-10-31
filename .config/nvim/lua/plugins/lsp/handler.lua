@@ -28,7 +28,7 @@ end
 
 M.on_attach = function(client, bufnr)
 	-- Disable client specific features, e.g. to use null-ls formatting instead
-	local clients = { "gopls", "sumneko_lua", "sqlls", "sourcekit", "tsserver" }
+	local clients = { "gopls", "lua_ls", "sqlls", "sourcekit", "ts_ls" }
 	for _, v in ipairs(clients) do
 		if client.name == v then
 			client.server_capabilities.documentFormattingProvider = false

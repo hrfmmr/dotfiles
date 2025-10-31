@@ -5,9 +5,24 @@ return {
 		"folke/neodev.nvim",
 	},
 	config = function()
-		local nvim_lsp = require("lspconfig")
 		local mason_lspconfig = require("mason-lspconfig")
+		local handler = require("plugins.lsp.handler")
+
 		require("neodev").setup({})
+
+		vim.lsp.config("*", {
+			on_attach = handler.on_attach,
+			capabilities = handler.capabilities,
+		})
+
+		vim.lsp.config("clangd", require("plugins.lsp.settings.clangd"))
+		vim.lsp.config("solargraph", { single_file_support = true })
+		vim.lsp.config("bashls", require("plugins.lsp.settings.bashls"))
+		vim.lsp.config("pyright", require("plugins.lsp.settings.pyright"))
+		vim.lsp.config("ts_ls", require("plugins.lsp.settings.ts_ls"))
+		vim.lsp.config("denols", require("plugins.lsp.settings.denols"))
+		vim.lsp.config("lua_ls", require("plugins.lsp.settings.lua_ls"))
+
 		mason_lspconfig.setup({
 			ensure_installed = {
 				"bashls",
@@ -22,52 +37,11 @@ return {
 				"sqlls",
 				"terraformls",
 				"tflint",
-				"bufls",
-				"tsserver",
+				"buf_ls",
+				"ts_ls",
 				"denols",
 			},
-		})
-		mason_lspconfig.setup_handlers({
-			function(server_name)
-				local opts = {
-					on_attach = require("plugins.lsp.handler").on_attach,
-					capabilities = require("plugins.lsp.handler").capabilities,
-				}
-				if server_name == "clangd" then
-					local bashls_opts = require("plugins.lsp.settings.clangd")
-					opts = vim.tbl_deep_extend("force", opts, bashls_opts)
-				end
-				if server_name == "solargraph" then
-					local solargraph_opts = { single_file_support = true }
-					opts = vim.tbl_deep_extend("force", opts, solargraph_opts)
-				end
-				if server_name == "bashls" then
-					local bashls_opts = require("plugins.lsp.settings.bashls")
-					opts = vim.tbl_deep_extend("force", opts, bashls_opts)
-				end
-				if server_name == "pyright" then
-					local pyright_opts = require("plugins.lsp.settings.pyright")
-					opts = vim.tbl_deep_extend("force", opts, pyright_opts)
-				end
-				if server_name == "tsserver" then
-					local tsserver_opts = require("plugins.lsp.settings.tsserver")
-					opts = vim.tbl_deep_extend("force", opts, tsserver_opts)
-				end
-				if server_name == "denols" then
-					local denols_opts = require("plugins.lsp.settings.denols")
-					opts = vim.tbl_deep_extend("force", opts, denols_opts)
-				end
-				if server_name == "lua_ls" then
-					local lua_ls_opts = require("plugins.lsp.settings.lua_ls")
-					opts = vim.tbl_deep_extend("force", opts, lua_ls_opts)
-				end
-				if server_name == "sqlls" then
-					opts.on_attach = function(client, bufnr)
-						require("plugins.lsp.handler").on_attach(client, bufnr)
-					end
-				end
-				nvim_lsp[server_name].setup(opts)
-			end,
+			automatic_enable = true,
 		})
 	end,
 }

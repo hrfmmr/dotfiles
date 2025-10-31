@@ -1,7 +1,7 @@
-local nvim_lsp = require("lspconfig")
+local util = require("lspconfig.util")
 
 return {
-	root_dir = nvim_lsp.util.root_pattern("deno.json", "deno.jsonc"),
+	root_dir = util.root_pattern("deno.json", "deno.jsonc"),
 	init_options = {
 		enable = true,
 		lint = true,
