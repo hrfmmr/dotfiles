@@ -26,19 +26,20 @@ return function()
 		null_ls.builtins.diagnostics.tfsec,
 	}
 
-	local shellcheck = require_extra('none-ls.diagnostics.shellcheck')
-	if shellcheck then
-		table.insert(diagnostics, shellcheck)
-	elseif null_ls.builtins.diagnostics.shellcheck then
+	if vim.fn.executable('shellcheck') == 1 and null_ls.builtins.diagnostics.shellcheck then
 		table.insert(diagnostics, null_ls.builtins.diagnostics.shellcheck)
 	else
-		vim.notify('shellcheck source not available; install shellcheck or none-ls-shellcheck.nvim', vim.log.levels.INFO)
+		vim.notify('shellcheck is not executable; skipping shell diagnostics', vim.log.levels.INFO)
 	end
 
 	local flake8 = require_extra('none-ls.diagnostics.flake8')
-	if flake8 then
+	if flake8 and vim.fn.executable('flake8') == 1 then
 		flake8 = flake8.with({ extra_args = { '--max-line-length', '88' } })
 		table.insert(diagnostics, flake8)
+	else
+		if flake8 then
+			vim.notify('flake8 executable not found; skipping diagnostics.flake8', vim.log.levels.INFO)
+		end
 	end
 
 	local formatting = {
@@ -63,10 +64,14 @@ return function()
 	}
 
 	local jq = require_extra('none-ls.formatting.jq')
-	if jq then
-		table.insert(formatting, jq)
+	if vim.fn.executable('jq') == 1 then
+		if jq then
+			table.insert(formatting, jq)
+		elseif null_ls.builtins.formatting.jq then
+			table.insert(formatting, null_ls.builtins.formatting.jq)
+		end
 	else
-		table.insert(formatting, null_ls.builtins.formatting.jq)
+		vim.notify('jq executable not found; skipping jq formatter', vim.log.levels.INFO)
 	end
 
 	local sources = {}
