@@ -11,7 +11,7 @@ return function()
 	local function require_extra(mod)
 		local ok_extra, builtin = pcall(require, mod)
 		if not ok_extra then
-			vim.notify(('none-ls-extras "%s" の読み込みに失敗しました: %s'):format(mod, builtin), vim.log.levels.WARN)
+			vim.notify(('none-ls "%s" の読み込みに失敗しました: %s'):format(mod, builtin), vim.log.levels.WARN)
 			return nil
 		end
 		return builtin
@@ -26,12 +26,16 @@ return function()
 		null_ls.builtins.diagnostics.tfsec,
 	}
 
-	local shellcheck = require_extra('none-ls-extras.diagnostics.shellcheck')
+	local shellcheck = require_extra('none-ls.diagnostics.shellcheck')
 	if shellcheck then
 		table.insert(diagnostics, shellcheck)
+	elseif null_ls.builtins.diagnostics.shellcheck then
+		table.insert(diagnostics, null_ls.builtins.diagnostics.shellcheck)
+	else
+		vim.notify('shellcheck source not available; install shellcheck or none-ls-shellcheck.nvim', vim.log.levels.INFO)
 	end
 
-	local flake8 = require_extra('none-ls-extras.diagnostics.flake8')
+	local flake8 = require_extra('none-ls.diagnostics.flake8')
 	if flake8 then
 		flake8 = flake8.with({ extra_args = { '--max-line-length', '88' } })
 		table.insert(diagnostics, flake8)
@@ -58,7 +62,7 @@ return function()
 		null_ls.builtins.formatting.buf,
 	}
 
-	local jq = require_extra('none-ls-extras.formatting.jq')
+	local jq = require_extra('none-ls.formatting.jq')
 	if jq then
 		table.insert(formatting, jq)
 	else
