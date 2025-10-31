@@ -29,7 +29,8 @@ return function()
 	if vim.fn.executable('shellcheck') == 1 and null_ls.builtins.diagnostics.shellcheck then
 		table.insert(diagnostics, null_ls.builtins.diagnostics.shellcheck)
 	else
-		vim.notify('shellcheck is not executable; skipping shell diagnostics', vim.log.levels.INFO)
+		null_ls.disable({ name = 'shellcheck', method = null_ls.methods.DIAGNOSTICS })
+		vim.notify('shellcheck is not executable; shell diagnostics disabled', vim.log.levels.INFO)
 	end
 
 	local flake8 = require_extra('none-ls.diagnostics.flake8')
