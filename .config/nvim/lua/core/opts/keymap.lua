@@ -52,5 +52,4 @@ vim.keymap.set("n", "]<C-q>", ":<C-u>cnfile<CR>", { silent = true })
 vim.keymap.set("n", "<Leader>ff", require("utils").toggleQuickfix)
 -- term
 vim.keymap.set("n", "<C-t>", ":term<CR>", { silent = true })
-vim.keymap.set("t", "<C-[>", "<C-\\><C-n>")
-vim.keymap.set("t", "<C-q>", "<ESC>")
+vim.keymap.set("t", "<C-q>", "<C-\\><C-n>")
