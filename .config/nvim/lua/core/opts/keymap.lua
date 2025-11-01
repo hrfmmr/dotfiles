@@ -8,12 +8,11 @@ end, { desc = "Reload nvim config" })
 
 -- insert new line
 vim.keymap.set("n", "<CR>", "i<CR><ESC>")
--- Switch tab
-vim.keymap.set("n", "gc", "gt")
-vim.keymap.set("n", "gr", "gT")
+vim.keymap.set("n", "[e", "gT", { desc = "Previous tab" })
+vim.keymap.set("n", "]e", "gt", { desc = "Next tab" })
 -- Move tab
-vim.keymap.set("n", "gC", ":+tabm<CR>", { silent = true })
-vim.keymap.set("n", "gR", ":-tabm<CR>", { silent = true })
+vim.keymap.set("n", "[E", ":-tabm<CR>", { silent = true, desc = "Move tab left" })
+vim.keymap.set("n", "]E", ":+tabm<CR>", { silent = true, desc = "Move tab right" })
 -- Emacs key bind for moving cursole while INSERT
 vim.keymap.set("i", "<c-n>", "<down>")
 vim.keymap.set("i", "<c-p>", "<up>")
