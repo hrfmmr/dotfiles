@@ -28,7 +28,6 @@ return function()
 
 	local ruff_diagnostics = require_extra('none-ls.diagnostics.ruff')
 	if ruff_diagnostics and vim.fn.executable('ruff') == 1 then
-		ruff_diagnostics = ruff_diagnostics.with({ args = { 'check', '--no-fix', '--stdin-filename', '$FILENAME', '-' } })
 		table.insert(diagnostics, ruff_diagnostics)
 	else
 		if ruff_diagnostics then
