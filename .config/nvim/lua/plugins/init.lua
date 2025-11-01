@@ -250,7 +250,8 @@ require("lazy").setup({
 		-- event = "VeryLazy",
 	},
 	{
-		"jose-elias-alvarez/null-ls.nvim",
+		"nvimtools/none-ls.nvim",
+		dependencies = { "nvimtools/none-ls-extras.nvim" },
 		config = require("plugins.config.null-ls"),
 		-- event = "VeryLazy",
 	},
