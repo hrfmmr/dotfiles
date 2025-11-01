@@ -6,21 +6,18 @@ return {
 		require("trouble").setup({
 			height = 10,
 		})
-		vim.keymap.set("n", "<leader>dd", "<cmd>TroubleToggle<cr>", { silent = true, noremap = true })
-		vim.keymap.set(
-			"n",
-			"<leader>dw",
-			"<cmd>TroubleToggle workspace_diagnostics<cr>",
-			{ silent = true, noremap = true }
-		)
+		vim.keymap.set("n", "<leader>dd", "<cmd>Trouble toggle<cr>", { silent = true, noremap = true })
+		vim.keymap.set("n", "<leader>dw", "<cmd>Trouble diagnostics toggle<cr>", { silent = true, noremap = true })
 		vim.keymap.set(
 			"n",
 			"<leader>db",
-			"<cmd>TroubleToggle document_diagnostics<cr>",
+			"<cmd>Trouble diagnostics toggle filter.buf=0<cr>",
 			{ silent = true, noremap = true }
 		)
-		vim.keymap.set("n", "<leader>dl", "<cmd>TroubleToggle loclist<cr>", { silent = true, noremap = true })
-		vim.keymap.set("n", "<leader>dq", "<cmd>TroubleToggle quickfix<cr>", { silent = true, noremap = true })
-		vim.keymap.set("n", "<leader>dr", "<cmd>TroubleToggle lsp_references<cr>", { silent = true, noremap = true })
+		vim.keymap.set("n", "<leader>ds", "<cmd>Trouble symbols toggle<cr>", { silent = true, noremap = true })
+		vim.keymap.set("n", "<leader>dr", "<cmd>Trouble lsp_references toggle<cr>", { silent = true, noremap = true })
+
+		vim.keymap.set("n", "<leader>dl", "<cmd>Trouble loclist toggle<cr>", { silent = true, noremap = true })
+		vim.keymap.set("n", "<leader>dq", "<cmd>Trouble quickfix toggle<cr>", { silent = true, noremap = true })
 	end,
 }
