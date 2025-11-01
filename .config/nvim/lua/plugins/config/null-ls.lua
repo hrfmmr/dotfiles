@@ -40,8 +40,6 @@ return function()
 		null_ls.builtins.formatting.clang_format.with({
 			filetypes = { 'c', 'cpp', 'objc', 'objcpp' },
 		}),
-		null_ls.builtins.formatting.black,
-		null_ls.builtins.formatting.isort,
 		null_ls.builtins.formatting.stylua,
 		null_ls.builtins.formatting.gofmt,
 		null_ls.builtins.formatting.gofumpt,
@@ -56,6 +54,15 @@ return function()
 		null_ls.builtins.formatting.sql_formatter,
 		null_ls.builtins.formatting.buf,
 	}
+
+	local ruff_format = require_extra('none-ls.formatting.ruff_format')
+	if ruff_format and vim.fn.executable('ruff') == 1 then
+		table.insert(formatting, ruff_format)
+	else
+		if ruff_format then
+			vim.notify('ruff executable not found; skipping formatting.ruff_format', vim.log.levels.INFO)
+		end
+	end
 
 	local jq = require_extra('none-ls.formatting.jq')
 	if vim.fn.executable('jq') == 1 then
