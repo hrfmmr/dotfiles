@@ -26,13 +26,6 @@ return function()
 		null_ls.builtins.diagnostics.tfsec,
 	}
 
-	if vim.fn.executable('shellcheck') == 1 and null_ls.builtins.diagnostics.shellcheck then
-		table.insert(diagnostics, null_ls.builtins.diagnostics.shellcheck)
-	else
-		null_ls.disable({ name = 'shellcheck', method = null_ls.methods.DIAGNOSTICS })
-		vim.notify('shellcheck is not executable; shell diagnostics disabled', vim.log.levels.INFO)
-	end
-
 	local flake8 = require_extra('none-ls.diagnostics.flake8')
 	if flake8 and vim.fn.executable('flake8') == 1 then
 		flake8 = flake8.with({ extra_args = { '--max-line-length', '88' } })
