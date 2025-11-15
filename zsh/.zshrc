@@ -126,7 +126,6 @@ alias ll='ls -alFG'
 alias mkdir='mkdir -p'
 alias hist='history 1'
 alias zmv='noglob zmv -W'
-alias brew="env PATH=${PATH/$HOME/\.pyenv\/shims:/} brew"
 alias weather='curl -4 wttr.in'
 alias v='nvim'
 alias vim='nvim'
@@ -199,27 +198,9 @@ if [[ -f $HOME/.zsh/antigen/antigen.zsh ]]; then
 fi
 
 #
-# * asdf
+# * mise
 #
-if brew --prefix asdf > /dev/null; then source $(brew --prefix asdf)/libexec/asdf.sh; fi
-
-#
-# * pyenv
-#
-export PYENV_ROOT=~/.pyenv
-if which pyenv > /dev/null; then eval "$(pyenv init -)"; fi
-if which pyenv-virtualenv-init > /dev/null; then eval "$(pyenv virtualenv-init -)"; fi
-
-
-#
-# * rbenv
-#
-# if which rbenv > /dev/null; then eval "$(rbenv init -)"; fi
-
-#
-# * goenv
-#
-if which goenv > /dev/null; then eval "$(goenv init -)"; fi
+eval "$(mise activate zsh)"
 
 #
 # * direnv
