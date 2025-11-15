@@ -50,6 +50,7 @@ path=(
     $HOME/.local/bin(N-/)
     $HOME/.cargo/env(N-/)
     $HOME/.cargo/bin(N-/)
+    $HOME/.local/share/mise/shims(N-/)
     $HOME/bin/FDK/Tools/osx(N-/)
     $GOPATH/bin(N-/)
     $FLUTTER_SDK/bin(N-/)
