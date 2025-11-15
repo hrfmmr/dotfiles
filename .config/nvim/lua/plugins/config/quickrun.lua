@@ -14,9 +14,6 @@ return {
     \ 'command': 'clang++',
     \ 'cmdopt': '-std=c++20',
     \}
-    let g:quickrun_config.python = {
-    \ 'command': expand('~/.pyenv/shims/python'),
-    \}
     let g:quickrun_config.swift = {
     \ 'command': 'xcrun',
     \ 'cmdopt': 'swift -swift-version 6 -strict-concurrency=complete',
