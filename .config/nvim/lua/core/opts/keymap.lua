@@ -1,5 +1,6 @@
 -- global
 vim.g.mapleader = ","
+vim.g.maplocalleader = "<Space>"
 vim.keymap.set("i", "<C-c>", "<ESC>")
 vim.keymap.set("", "s", "<Nop>")
 vim.keymap.set("n", "<Leader>R", function()
