@@ -16,6 +16,7 @@ return {
       autocmd FileType octo       nmap <silent> <Leader>rc :Octo review comments<CR>
       autocmd FileType octo_panel nmap <silent> <Leader>sb :Octo review submit<CR>
     augroup END
+	nmap <silent><Leader>rl :Octo pr list<CR>
 	nmap <Leader>re :Octo pr edit<Space>
     ]])
 	end,
