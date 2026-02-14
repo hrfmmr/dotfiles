@@ -10,7 +10,8 @@ return {
     hi! link OctoEditable Search
     augroup OctoGroup
     autocmd!
-      autocmd FileType octo       nmap <silent> <Leader>co :Octo pr checkout<CR>
+      autocmd FileType octo       nmap <silent> <Leader>rd :Octo pr diff<CR>
+      autocmd FileType octo       nmap <silent> <Leader>ro :Octo pr checkout<CR>
       autocmd FileType octo       nmap <silent> <Leader>rs :Octo review start<CR>
       autocmd FileType octo       nmap <silent> <Leader>rr :Octo review resume<CR>
       autocmd FileType octo       nmap <silent> <Leader>rc :Octo review comments<CR>
