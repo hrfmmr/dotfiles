@@ -1,7 +1,3 @@
-## Conversation rules
-
-- Provide all answers in Japanese
-
 ## Problem-Solving Default: Double Diamond
 
 Use Double Diamond to avoid converging too early: separate "are we solving the right problem?" from "are we building the right thing?"
@@ -45,12 +41,31 @@ In this repo, that stop-and-ask behavior is explicitly disabled:
 
 ## Response Format
 
-- Echo: include `Echo:` with the most recent user message (max two lines, truncate with `...`) exactly once per user turn, in the final assistant response only. Do not include Echo in intermediary/progress updates. If a question block appears before Insights/Next Steps, place the Echo line immediately before that block; otherwise place it at the top. This requirement applies even when using skills or templates. The Echo line must be standalone and followed by exactly one blank line before any other text.
-
-Example:
+The final assistant response must follow the structure below exactly:
 
 ```
-Echo: Most recent user message goes here, truncated to two lines if needed...
-GRILL ME: HUMAN INPUT REQUIRED
-1. ...
+Echo: {the most recent user message, truncated to a maximum of two lines using `...` if necessary}
+
+{main response content in Japanese}
+
+===
+{English Review Appendix}
 ```
+
+Rules:
+
+- The Echo line must appear exactly once per user turn and only in the final assistant response.
+- The Echo line is a standalone line and must be followed by exactly one blank line.
+- The main response content must be written entirely in Japanese.
+- The `===` separator must appear exactly once and must be placed after the main response content.
+- The English Review Appendix must always appear after the `===` separator.
+
+English Review Appendix requirements:
+
+- If the user prompt is in English:
+    - Provide a bullet-point list of grammar or wording issues found in the user's English text.
+    - Provide exactly one corrected version phrased naturally as a native English speaker would say it.
+
+- If the user prompt is in Japanese:
+    - Provide a bullet-point list explaining how the content should be expressed naturally in English (phrasing, tone, nuance).
+    - Provide exactly one English translation phrased naturally as a native English speaker would say it.
