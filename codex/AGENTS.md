@@ -56,7 +56,7 @@ Rules:
 
 - The Echo line must appear exactly once per user turn and only in the final assistant response.
 - The Echo line is a standalone line and must be followed by exactly one blank line.
-- The main response content must be written entirely in Japanese.
+- The natural language portions of the main response content must be written in Japanese. Code blocks, commands, identifiers, and other non-natural-language tokens are exempt.
 - The `===` separator must appear exactly once and must be placed after the main response content.
 - The English Review Appendix must always appear after the `===` separator.
 
