@@ -44,6 +44,8 @@ description: 最小差分のマイクロコミットを作成し、コミット�
 
 ### 5) Commit
 - メッセージは簡潔に。詩的さより明瞭さ。
+- デフォルトは Conventional Commits 接頭辞を使う（`feat:` / `fix:` / `chore:`）。
+- 接頭辞の指定がない場合は変更の性質で選ぶ（機能追加=`feat`、不具合修正=`fix`、運用/雑務=`chore`）。
 - 少なくとも 1 つのシグナルが通ってからコミットする。
 
 ### 6) Repeat
@@ -57,4 +59,3 @@ description: 最小差分のマイクロコミットを作成し、コミット�
 ## Resources
 - `scripts/micro_scope.py`
 - `references/loop-detection.md`
-
