@@ -22,7 +22,8 @@ args = [
     "--context",
     "codex",
     "--project",
-    "."
+    ".",
+    "--enable-web-dashboard=false",
 ]
 cwd = "."
 startup_timeout_ms = 20_000
