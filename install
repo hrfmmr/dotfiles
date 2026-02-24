@@ -1,0 +1,129 @@
+#!/bin/bash
+
+DOTFILES_ROOT="$(pwd)"
+LINKS_CONF="$DOTFILES_ROOT/links.conf"
+
+set -euo pipefail
+
+echo ''
+
+info () {
+  printf "  [ \033[00;34m..\033[0m ] %s\n" "$1"
+}
+
+user () {
+  printf "\r  [ \033[0;33m?\033[0m ] %s " "$1"
+}
+
+success () {
+  printf "\r\033[2K  [ \033[00;32mOK\033[0m ] %s\n" "$1"
+}
+
+fail () {
+  printf "\r\033[2K  [\033[0;31mFAIL\033[0m] %s\n" "$1"
+  echo ''
+  exit
+}
+
+setup_files () {
+  mkdir -p "$(dirname "$2")"
+  ln -s "$1" "$2"
+  success "linked $1 to $2"
+}
+
+symlink_files() {
+  info 'creating symlinks from links.conf'
+
+  if [ ! -f "$LINKS_CONF" ]; then
+    fail "links.conf not found at $LINKS_CONF"
+  fi
+
+  overwrite_all=false
+  skip_all=false
+
+  # Read each line from links.conf
+  while IFS= read -r line || [ -n "$line" ]; do
+    # Skip comments and empty lines
+    if [[ "$line" =~ ^# ]] || [[ -z "${line// }" ]]; then
+      continue
+    fi
+
+    # Split the line by the first colon
+    source_path="${line%%:*}"
+    dest_path="${line#*:}"
+
+    # Trim whitespace
+    source_path=$(echo "$source_path" | xargs)
+    dest_path=$(echo "$dest_path" | xargs)
+
+    # Strip quotes from dest_path if present
+    dest_path=$(echo "$dest_path" | sed -e 's/^"//' -e 's/"$//')
+
+    # Expand $HOME safely without eval
+    dest_path="${dest_path//\$HOME/$HOME}"
+    dest_path="${dest_path//\$\{HOME\}/$HOME}"
+
+    # Get full source path
+    source="$DOTFILES_ROOT/$source_path"
+
+    # Skip if source doesn't exist
+    if [ ! -f "$source" ] && [ ! -d "$source" ]; then
+      fail "Source not found: $source"
+    fi
+
+    if [ -f "$dest_path" ] || [ -d "$dest_path" ] || [ -L "$dest_path" ]; then
+      # Handle existing files
+      overwrite=false
+      skip=false
+
+      if [ "$overwrite_all" = "false" ] && [ "$skip_all" = "false" ]; then
+        if [ -t 0 ]; then
+          user "Already exists: ${dest_path}, what do you want to do? [s]kip, [S]kip all, [o]verwrite, [O]verwrite all?"
+          read -r action
+        else
+          action='s'
+          info "non-interactive mode: defaulting to skip for $dest_path"
+        fi
+
+        case "$action" in
+          o )
+            overwrite=true;;
+          O )
+            overwrite_all=true;;
+          s )
+            skip=true;;
+          S )
+            skip_all=true;;
+          * )
+            skip=true;;  # Default to skip
+        esac
+      fi
+
+      if [ "$overwrite" = "true" ] || [ "$overwrite_all" = "true" ]; then
+        rm -rf "$dest_path"
+        success "removed $dest_path"
+        if [ "$overwrite_all" = "false" ]; then
+          echo ''
+        fi
+        setup_files "$source" "$dest_path"
+        if [ "$overwrite_all" = "false" ]; then
+          echo ''
+        fi
+      elif [ "$skip" = "false" ] && [ "$skip_all" = "false" ]; then
+        setup_files "$source" "$dest_path"
+      else
+        success "skipped $dest_path"
+        if [ "$skip_all" = "false" ]; then
+          echo ''
+        fi
+      fi
+    else
+      setup_files "$source" "$dest_path"
+    fi
+  done < "$LINKS_CONF"
+}
+
+symlink_files
+
+echo ''
+echo '  All installed!'
