@@ -1,0 +1,4 @@
+interface:
+  display_name: "beads"
+  short_description: "Run beads workflow in Codex"
+  default_prompt: "Use $beads to manage bd issues with ready/claim/close and persist session state via notes plus bd dolt pull/push when remote is configured."
