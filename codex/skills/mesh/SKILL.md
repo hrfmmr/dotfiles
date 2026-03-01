@@ -388,6 +388,73 @@ When review returns `request_changes` with findings:
 5. close child issues as each finding is resolved and re-reviewed
 6. close the parent review issue only after all child finding issues are closed
 
+## End-to-End Orchestration Sequence (Reference)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant U as User
+    participant O as Orchestrator
+    participant BD as bd
+    participant P as Proposer
+    participant C as Critics
+    participant S as Synthesizer
+    participant V as Voters
+    participant R as Reviewer
+
+    U->>O: Run mesh
+    O->>BD: Preflight (where/status), resolve scope
+    O->>BD: Select one runnable task
+    O->>BD: Set in_progress (if needed)
+
+    O->>P: Round A (proposal)
+    P-->>O: proposal artifact
+    O->>BD: comment [orch:proposal]
+
+    O->>C: Round B (critique)
+    C-->>O: critique artifacts
+    O->>BD: comment [orch:critique]
+
+    O->>S: Round C (synthesis)
+    S-->>O: patch + validation_commands
+    O->>BD: comment [orch:synthesis]
+
+    O->>V: Round D (vote)
+    V-->>O: agree/disagree votes
+    O->>BD: comment [orch:vote]
+
+    alt no consensus
+        O->>BD: set blocked(no_consensus)
+    else consensus reached
+        O->>O: apply patch
+        O->>O: run validation_commands
+
+        loop review cycle (max: review_max_cycles)
+            O->>R: Round E (review gate)
+            R-->>O: decision + findings
+            O->>BD: comment [orch:review]
+
+            alt decision = request_changes
+                O->>BD: create/update review parent issue
+                O->>BD: create child issues per finding
+                O->>BD: comment [orch:review-cycle]/[orch:revision-plan]
+                O->>C: critique + vote on revision plan
+                C-->>O: revision consensus input
+                O->>O: implement revisions
+                O->>O: rerun validation_commands
+            else decision = approve
+                O->>O: mark review_approved=true
+            end
+        end
+
+        alt close conditions satisfied
+            O->>BD: close task (vote+validation+review+no open MUST_FIX)
+        else review not approved in limit
+            O->>BD: set blocked(review_not_approved)
+        end
+    end
+```
+
 ## Known Caveats and Fallbacks
 
 Observed in current CLI versions:
@@ -449,4 +516,3 @@ bd gate resolve "$GATE_ID" --reason "approved"
 # complete
 bd close <task-id> --reason "vote consensus + validation pass + review approve + no open MUST_FIX findings"
 ```
-
