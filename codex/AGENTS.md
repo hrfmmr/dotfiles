@@ -81,3 +81,21 @@ English Review Appendix requirements:
 - If the user prompt is in Japanese:
     - Provide a bullet-point list explaining how the content should be expressed naturally in English (phrasing, tone, nuance).
     - Provide exactly one English translation phrased naturally as a native English speaker would say it.
+
+## Tooling Standards
+
+### GIT
+
+- **Important:** Prefix both `git merge --continue` and `git rebase --continue` with `GIT_EDITOR=true` (for example, `GIT_EDITOR=true git merge --continue`) so the commands finish without waiting on an editor.
+
+### GitHub CLI (gh)
+
+`gh` is the expected interface for all GitHub work in this repo—authenticate once and keep everything else in the terminal.
+
+- **Authenticate first**: run `gh auth login`, pick GitHub.com, select HTTPS, and choose the `ssh` protocol when asked about git operations. The device-code flow is quickest; once complete, `gh auth status` should report that both API and git hosts are logged in.
+- **Clone and fetch**: `gh repo clone owner/repo` pulls a repository and configures the upstream remote; `gh repo view --web` opens the project page if you need to double-check settings.
+- **Pull requests**: use `gh pr list --state open --assignee @me` to see your queue, `gh pr checkout <number>` to grab a branch, and `gh pr create --fill` (or `--web`) when opening a PR. Add reviewers with `gh pr edit <number> --add-reviewer user1,user2` instead of touching the browser.
+- **Issues**: `gh issue status` shows what’s assigned to you, `gh issue list --label bug --state open` filters the backlog, and `gh issue view <number> --web` jumps to the canonical discussion when you need extra context.
+- **Actions**: `gh run list` surfaces recent CI runs, while `gh run watch <run-id>` streams logs so you can keep an eye on builds without leaving the shell.
+- **Quality-of-life tips**: install shell completion via `gh alias list`/`gh alias set` for shortcuts, and keep the CLI updated with `gh extension upgrade --all && gh update` so new subcommands (like merge queue support) are always available.
+- **Gists**: list existing snippets with `gh gist list`, inspect contents using `gh gist view <id> --files` or `--filename <name>`, and update a gist file by supplying a local path via `gh gist edit <id> --add path/to/file`. Use `--filename` when you need to edit inline.
