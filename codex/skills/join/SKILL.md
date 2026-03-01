@@ -26,10 +26,13 @@ Example prompt forms:
 - `$join --scope open --update-branch rebase --handoff on-green`
 - `$join --create-missing-prs --mode remote`
 - `$join --ci-stall 10m --on-stall pause+comment`
+- `$join --pr 123 --review auto --review-target pr --no-merge`
 
 ## Usage notes
 - `--repo owner/repo` required before mutation.
 - `--mode sequential` per PR (no parallel PR workers).
+- `--review off|auto|required` (default: `auto`).
+- `--review-target pr|artifact` (default: `pr`).
 - `--gate required-only` (optional checks ignored for handoff).
 - `--wait poll:30-60s` via `gh pr checks --required --json ...`.
 - `--status comment:Join Operator --update in-place`.
@@ -84,8 +87,28 @@ Process PRs sequentially (blocking per PR on CI):
    - Keep the branch current with `gh pr update-branch <num> --rebase` when available.
    - Enforce CI gate (required checks only; see below).
    - If failing, run the surgical fix loop.
-   - When green, publish merge-ready handoff status.
+   - Run review gate when `--review != off` (see Review integration).
+   - When green and review gate is satisfied, publish merge-ready handoff status.
    - Do not approve or merge.
+
+## Review integration
+- Trigger point: after required checks are green, before handoff.
+- Invocation:
+  - PR mode: `$review --mode pr-comment --target-pr <num>`
+  - Artifact mode: `$review --mode artifact-report --artifact join:<patch_id>`
+- Policy:
+  - `--review off`: skip review gate.
+  - `--review auto`: run review gate; if unavailable/error, continue with handoff and record `review_skipped`.
+  - `--review required`: run review gate; if unavailable/error, pause automation for that PR and comment block reason.
+- Reviewer output contract (must match mesh Round E):
+  - `decision: approve|request_changes`
+  - `findings[]` with `finding_id, location, severity, label, issue, evidence, minimal_fix, code_context`
+  - `summary`
+- Decision handling:
+  - `approve`: continue to handoff.
+  - `request_changes`: post consolidated findings comment; optionally `gh pr review --request-changes`; return to surgical fix loop.
+- Beads integration:
+  - If `BEADS_DIR` is present and any finding label is `MUST_FIX`, open/update bd issue(s) and link finding ids.
 
 ## CI gate (required checks only)
 - Gate on required checks only (`gh pr checks --required`). Optional checks do not block handoff.
@@ -116,7 +139,7 @@ Smallest change that makes CI green using `gh` only:
    - Pause automation for that PR.
 
 ## Handoff (no merge)
-- When required checks are green (or no required checks exist) and no pause condition:
+- When required checks are green (or no required checks exist), review gate is satisfied, and no pause condition:
   - Update status/comment to indicate: ready for human review/merge.
   - Keep the PR open.
 - Policy:
@@ -164,6 +187,7 @@ Investigate the linked runs, unblock CI, then resume automation.
 - Actions runs (by branch): `gh run list --branch <branch> --limit 10`
 - Actions run logs: `gh run view <run-id> --log-failed`
 - Request changes: `gh pr review <num> --request-changes --body "<reason>"`
+- Review trigger (example): `$review --mode pr-comment --target-pr <num>`
 - Handoff state: `gh pr view <num> --json state,mergeStateStatus,reviewDecision`
 - Handoff note (example): `gh pr comment <num> --body "Join Operator: required checks are green; ready for human merge."`
 
