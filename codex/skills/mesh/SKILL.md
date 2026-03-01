@@ -28,6 +28,7 @@ The orchestrator is responsible for:
 - resolving execution scope (`plan_label` or `parent_epic`)
 - selecting exactly one runnable task
 - mediating propose/critique/synthesize/vote rounds
+- invoking `$review` for Review Gate decisions
 - applying accepted output and running validation
 - persisting status and evidence to beads
 
@@ -39,6 +40,7 @@ Safety constraints:
 Worker execution mode:
 - preferred: in-session spawned workers (one role per worker)
 - fallback: if worker spawning is unavailable, run roles sequentially in the same session while preserving the same artifact contract
+- review gate execution is offloaded to `$review` (subagent invocation), not an internal reviewer role worker
 
 ## Branch Safety (Required)
 
@@ -87,13 +89,13 @@ Fixed:
 Behavioral defaults:
 - `integrate=true`
 - `strict_output=false`
-- roles: `proposer,critic_a,critic_b,skeptic,synthesizer,reviewer`
+- roles: `proposer,critic_a,critic_b,skeptic,synthesizer`
 - fallback roles: `proposer,skeptic,synthesizer`
 - `consensus_threshold=4/5` (or `3/3` in fallback)
 - `consensus_retries=2`
 - `review_max_cycles=3`
 - `review_required_for_close=true`
-- reviewer role: `reviewer` (third-party perspective, independent from implementation ownership)
+- review executor: `$review` skill subagent (third-party perspective, independent from implementation ownership)
 
 ## Source of Truth and Scope (Required)
 
@@ -262,14 +264,14 @@ Important:
 - do not emit final quality findings in this round
 
 ### Round E: Review Gate (Required)
-- run reviewer subagent from a third-party perspective
+- run `$review` as a subagent from a third-party perspective
 - purpose: final artifact quality gate before closure
 - non-goal: redesign debate; route design changes via `revision_plan` back to Vote
-- reviewer evaluates:
+- `$review` evaluates:
   - bugs, spec deviations, regressions, security, performance, and missing tests
   - deviations from codebase conventions (naming, responsibility boundaries, exception handling, test style)
   - technical judgment points and why the chosen option is justified over alternatives
-- required reviewer output:
+- required `$review` output:
   - `decision: approve|request_changes`
   - `findings` (array)
   - `summary` (1-5 lines)
@@ -292,7 +294,7 @@ Important:
   - `[orch:review-cycle]`
   - `[orch:revision-plan]`
   - `[orch:revision]`
-- if no material issues are found, reviewer must explicitly state this in `summary`
+- if no material issues are found, `$review` must explicitly state this in `summary`
 - if `decision=request_changes`:
   1. create/update `revision_plan`
   2. run critique + vote consensus on the revision plan
@@ -300,6 +302,12 @@ Important:
   4. rerun `validation_commands`
   5. run review again
 - repeat until `approve` or `review_max_cycles` is reached
+
+Round E invocation contract:
+- invoke `$review` with one of:
+  - `$review --mode artifact-report --artifact <task_artifact_id>`
+  - `$review --mode pr-comment --target-pr <num>` (when PR context is available)
+- the orchestrator must parse `$review` output into the same `decision/findings/summary` schema and persist artifacts with `[orch:review*]` prefixes
 
 ## Retry and Recovery Semantics (Required)
 
@@ -316,10 +324,10 @@ Important:
   - one strict follow-up per invalid vote
   - if unresolved, count as `disagree`
 - `review_no_response`:
-  - retry reviewer once
+  - retry `$review` subagent once
   - if still failing, block task with `review_no_response`
 - `invalid_finding_shape`:
-  - one strict follow-up request to reviewer
+  - one strict follow-up request to `$review`
   - if still invalid, block task with `invalid_finding_shape`
 - `no_consensus`:
   - rerun critique -> synthesis -> vote cycle
@@ -400,7 +408,7 @@ sequenceDiagram
     participant C as Critics
     participant S as Synthesizer
     participant V as Voters
-    participant R as Reviewer
+    participant R as $review
 
     U->>O: Run mesh
     O->>BD: Preflight (where/status), resolve scope
@@ -430,7 +438,7 @@ sequenceDiagram
         O->>O: run validation_commands
 
         loop review cycle (max: review_max_cycles)
-            O->>R: Round E (review gate)
+            O->>R: Round E (review gate via $review)
             R-->>O: decision + findings
             O->>BD: comment [orch:review]
 
@@ -507,6 +515,9 @@ bd comments add <task-id> "[orch:proposal] ..."
 bd comments add <task-id> "[orch:critique] ..."
 bd comments add <task-id> "[orch:vote] agree 4/5"
 bd comments add <task-id> "[orch:review] decision=request_changes ..."
+
+# review offload
+$review --mode artifact-report --artifact <task_artifact_id>
 
 # gate flow
 GATE_ID=$(bd create "Wait for external approval" --type gate --description "..." --json | jq -r '.id')
