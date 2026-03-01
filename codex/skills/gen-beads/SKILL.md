@@ -13,6 +13,7 @@ Markdown 計画を、明確な依存関係と自己文書化されたコメン�
 - 計画 Markdown のパス
 - スコープ境界、順序制約、優先度の指示
 - ワークフロー制約（例: "stacked PR なし", "merge で close", "必ず直列", "molecule を使う"）
+- 実行対象を隔離する `plan_label`（例: `plan:checkout-v2`）
 
 ## Defaults (override if the user says otherwise)
 
@@ -28,6 +29,7 @@ Markdown 計画を、明確な依存関係と自己文書化されたコメン�
   - (Optional) Double Diamond: `contract` = Define; `implementation` = Develop/Deliver; `integration|checkpoint` = Deliver。
 - エージェントルーティングラベルは付けない。
 - molecule は繰り返しチェックリストにのみ使用。
+- 実行オーケストレーション互換のため、生成・更新したすべての task/sub-task/bead に `plan_label` を付与する（epic にも同ラベルを推奨）。
 
 ## Workflow
 
@@ -38,6 +40,7 @@ Markdown 計画を、明確な依存関係と自己文書化されたコメン�
 5. "Generate Step Prompt" を**そのまま**使って beads を生成。作成・依存追加は bd コマンドのみ。
 6. "Review Prompt" を**そのまま**使って各 bead を評価し、必要なら bd で修正。
 7. 作成/更新内容と未解決の曖昧点を報告。
+8. 作成/更新後に `plan_label` 付与漏れがないことを確認し、漏れがあれば `bd label add` で補正する。
 
 ## Generate Step Prompt (use verbatim)
 
@@ -59,6 +62,7 @@ PR + 粒度の前提:
 - 各 bead は独立して PR 可能（中粒度）。
 - bead の完了は PR を開いた時点とみなす。stacked PR は許容。
 - エージェントのルーティングラベルは付けない。割り当ては手動で維持する。
+- ただし実行対象隔離ラベル（`plan_label`）は必須で付与する。これはルーティングラベルではなく実行境界ラベル。
 
 すべての bead に、明確な受け入れ基準と少なくとも 1 つの検証シグナル（test/build/lint コマンド、または精密な手動チェック）を含める。\nbead コメントには短いメタデータブロックを付ける:
 - ワークストリーム: <name>
@@ -91,6 +95,7 @@ bead の作成/修正/依存追加は `bd` ツールのみを使う。
 - checkpoint/integration の合流点が頻繁に存在すること。
 - 各 bead が独立 PR 可能で、明確な受け入れ + 検証を持つこと。
 - 各 bead コメントに Workstream/Role/Parallelism のメタデータブロックがあること。
+- 対象 issue 全件に同一 `plan_label` が付与されていること（実行対象集合の隔離）。
 - グラフ作成後に `bd ready` を実行する。不要に直列なために 1 件しか出ない場合は、並列作業が可能になるまで依存を見直す（真の前提は維持）。
 ```
 
@@ -101,9 +106,11 @@ bead の作成/修正/依存追加は `bd` ツールのみを使う。
 - 単一チェーンではなく、並列化可能なワークストリームと合流点を優先する。
 - 大きなタスクより、小さく合成可能な bead と明示的な前提を優先。
 - molecule は繰り返しチェックリストにのみ使う（デフォルト構造にしない）。
+- `plan_label` が未指定なら作成を止めて確認する（暗黙値で進めない）。
+- bd issue の metadata（title/description/design/notes/acceptance など）の自然言語記述は、原則として日本語で記述する。
+- 専門用語・固有名詞・仕様名・引用は無理に直訳せず、必要に応じて原語を維持する。
 
 ## Output Expectations
 
 - 並列実行向けに設計された、タスク/サブタスク/依存を備えた整合的な bead グラフ。
 - 作成/更新の要約と、残る質問の一覧。
-
