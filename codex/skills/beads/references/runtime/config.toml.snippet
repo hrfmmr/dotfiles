@@ -1,0 +1,17 @@
+# Example ~/.codex/config.toml snippet for beads workflow
+
+# Keep Codex instruction loading predictable
+instructions_file = "~/.codex/instructions.md"
+
+[profiles.beads]
+model = "gpt-5"
+sandbox_mode = "workspace-write"
+approval_policy = "on-request"
+
+# Optional MCP registration:
+# Configure this only if you have a valid beads MCP bridge/server command.
+# Example skeleton:
+#
+# [mcp_servers.beads]
+# command = "<your-beads-mcp-server-command>"
+# args = ["<arg1>", "<arg2>"]

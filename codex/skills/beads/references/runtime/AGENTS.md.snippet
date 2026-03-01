@@ -1,0 +1,38 @@
+# beads Codex Runtime Snippet
+
+## Session Start
+
+Always run:
+
+```bash
+bd dolt pull || true
+bd prime
+bd ready --json
+```
+
+## Claim Protocol
+
+Claim before starting work:
+
+```bash
+bd show <issue-id>
+bd update <issue-id> --claim
+```
+
+## Discovery Protocol
+
+For newly discovered work, create a bead and link it with `discovered-from`:
+
+```bash
+bd create "<title>" -t task -p 2 --json
+bd dep add <new-id> <current-id> --type discovered-from
+```
+
+## Handoff Protocol
+
+At session end, update notes and push (if remote is configured):
+
+```bash
+bd update <issue-id> --notes "COMPLETED: ...\nIN PROGRESS: ...\nNEXT: ..."
+bd dolt push || true
+```
