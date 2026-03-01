@@ -97,6 +97,7 @@ Behavioral defaults:
 Rules:
 - never hand-edit `.beads/*`
 - mutate state only with `bd` commands
+- unless this skill explicitly specifies a `bd` operation, execute it according to `$beads`
 
 Scope resolution order:
 1. invocation argument `plan_label=<label>`
