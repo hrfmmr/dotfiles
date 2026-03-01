@@ -192,8 +192,9 @@ Required handoff order:
 2. `proposal` -> Critique
 3. `proposal + critiques` -> Synthesis
 4. `synthesis` -> Vote
-5. `votes + validation result` -> Review Gate
-6. `review decision` -> Integration decision
+5. `vote consensus` -> Implementation/Validation
+6. `validation result` -> Review Gate
+7. `review decision` -> Integration decision
 
 Worker outbox rule:
 - A worker may return `outbox` messages.
@@ -247,6 +248,8 @@ Important:
 
 ### Round D: Vote
 - each role returns `agree` or `disagree`
+- purpose: design consensus on plan/architecture/risk tradeoffs
+- non-goal: final artifact quality approval
 - consensus rule:
   - 5-role set: `agree >= 4`
   - 3-role fallback: `agree == 3`
@@ -256,9 +259,12 @@ Important:
   - `vote: agree|disagree`
   - `reason` (one line)
 - store votes in memory under `votes.<role>`
+- do not emit final quality findings in this round
 
 ### Round E: Review Gate (Required)
 - run reviewer subagent from a third-party perspective
+- purpose: final artifact quality gate before closure
+- non-goal: redesign debate; route design changes via `revision_plan` back to Vote
 - reviewer evaluates:
   - bugs, spec deviations, regressions, security, performance, and missing tests
   - deviations from codebase conventions (naming, responsibility boundaries, exception handling, test style)
@@ -289,7 +295,7 @@ Important:
 - if no material issues are found, reviewer must explicitly state this in `summary`
 - if `decision=request_changes`:
   1. create/update `revision_plan`
-  2. run critique consensus on the revision plan
+  2. run critique + vote consensus on the revision plan
   3. implement revisions
   4. rerun `validation_commands`
   5. run review again
@@ -342,8 +348,14 @@ When `integrate=true`:
 3. require review approval when `review_required_for_close=true`
 4. persist status transitions:
    - set `in_progress` at start if needed
-   - `bd close <id> --reason "consensus + validation + review approve"` on success
+   - `bd close <id> --reason "vote consensus + validation pass + review approve + no open MUST_FIX findings"` on success
    - `bd update <id> --status blocked` on failure
+
+Close is allowed only when all are true:
+- `vote_consensus=true`
+- `validation_pass=true` (latest revision cycle)
+- `review_decision=approve`
+- `open_must_fix_findings=0`
 
 Always append an outcome comment:
 - outcome state
@@ -435,6 +447,6 @@ bd dep add <task-id> "$GATE_ID" --type blocks
 bd gate resolve "$GATE_ID" --reason "approved"
 
 # complete
-bd close <task-id> --reason "consensus + validation + review approve"
+bd close <task-id> --reason "vote consensus + validation pass + review approve + no open MUST_FIX findings"
 ```
 
