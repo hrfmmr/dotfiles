@@ -87,10 +87,13 @@ Fixed:
 Behavioral defaults:
 - `integrate=true`
 - `strict_output=false`
-- roles: `proposer,critic_a,critic_b,skeptic,synthesizer`
+- roles: `proposer,critic_a,critic_b,skeptic,synthesizer,reviewer`
 - fallback roles: `proposer,skeptic,synthesizer`
 - `consensus_threshold=4/5` (or `3/3` in fallback)
 - `consensus_retries=2`
+- `review_max_cycles=3`
+- `review_required_for_close=true`
+- reviewer role: `reviewer` (third-party perspective, independent from implementation ownership)
 
 ## Source of Truth and Scope (Required)
 
@@ -147,6 +150,10 @@ Persist round artifacts as comments with typed prefixes:
 - `[orch:synthesis]`
 - `[orch:vote]`
 - `[orch:proof]`
+- `[orch:review]`
+- `[orch:review-cycle]`
+- `[orch:revision-plan]`
+- `[orch:revision]`
 
 If metadata is missing:
 1. run a hydration round
@@ -165,8 +172,13 @@ Per-task in-memory state must include:
 - `critiques` (by role key: `critic_a`, `critic_b`, `skeptic`)
 - `synthesis`
 - `votes` (by role key)
+- `reviews` (by cycle; each includes `decision`, `findings`, `summary`)
+- `revision_plan` (current cycle)
+- `review_issue` (parent review issue id, optional)
+- `review_subtasks` (map: `finding_id -> issue_id`, optional)
 - `mail` (optional orchestrator-mediated follow-up messages)
 - `retry_counters` (`worker_retry`, `parse_retry`, `consensus_cycle`)
+- `review_cycle` (current review cycle count)
 - `history` (prior round artifacts for audit/debug)
 
 Execution invariants:
@@ -180,7 +192,8 @@ Required handoff order:
 2. `proposal` -> Critique
 3. `proposal + critiques` -> Synthesis
 4. `synthesis` -> Vote
-5. `votes + validation result` -> Integration decision
+5. `votes + validation result` -> Review Gate
+6. `review decision` -> Integration decision
 
 Worker outbox rule:
 - A worker may return `outbox` messages.
@@ -244,6 +257,44 @@ Important:
   - `reason` (one line)
 - store votes in memory under `votes.<role>`
 
+### Round E: Review Gate (Required)
+- run reviewer subagent from a third-party perspective
+- reviewer evaluates:
+  - bugs, spec deviations, regressions, security, performance, and missing tests
+  - deviations from codebase conventions (naming, responsibility boundaries, exception handling, test style)
+  - technical judgment points and why the chosen option is justified over alternatives
+- required reviewer output:
+  - `decision: approve|request_changes`
+  - `findings` (array)
+  - `summary` (1-5 lines)
+- finding severity must be one of: `Critical|High|Medium|Low`
+- finding label must be one of:
+  - `MUST_FIX`: Must be addressed in this PR.
+  - `SHOULD_CONSIDER`: Worth strong consideration in this PR.
+  - `CAN_IGNORE`: No action needed at this time.
+- each finding must include:
+  - `finding_id`
+  - `location` (`file:line`)
+  - `severity`
+  - `label`
+  - `issue`
+  - `evidence`
+  - `minimal_fix`
+  - `code_context` (short contextual code block; required)
+- persist review artifacts as:
+  - `[orch:review]`
+  - `[orch:review-cycle]`
+  - `[orch:revision-plan]`
+  - `[orch:revision]`
+- if no material issues are found, reviewer must explicitly state this in `summary`
+- if `decision=request_changes`:
+  1. create/update `revision_plan`
+  2. run critique consensus on the revision plan
+  3. implement revisions
+  4. rerun `validation_commands`
+  5. run review again
+- repeat until `approve` or `review_max_cycles` is reached
+
 ## Retry and Recovery Semantics (Required)
 
 - `no_response`:
@@ -258,6 +309,12 @@ Important:
 - `invalid_vote_shape`:
   - one strict follow-up per invalid vote
   - if unresolved, count as `disagree`
+- `review_no_response`:
+  - retry reviewer once
+  - if still failing, block task with `review_no_response`
+- `invalid_finding_shape`:
+  - one strict follow-up request to reviewer
+  - if still invalid, block task with `invalid_finding_shape`
 - `no_consensus`:
   - rerun critique -> synthesis -> vote cycle
   - increment `consensus_cycle`
@@ -266,6 +323,10 @@ Important:
 Retry invariant:
 - Retries must not overwrite prior artifacts destructively.
 - Current-cycle artifacts are active; previous cycles remain queryable in memory history.
+
+Review-cycle invariant:
+- Every review cycle must append durable evidence to issue comments.
+- Findings must remain traceable via stable `finding_id`.
 
 ## Integration, Validation, Persistence
 
@@ -278,15 +339,18 @@ When `integrate=false`:
 When `integrate=true`:
 1. apply patch
 2. run validation commands
-3. persist status transitions:
+3. require review approval when `review_required_for_close=true`
+4. persist status transitions:
    - set `in_progress` at start if needed
-   - `bd close <id> --reason "..."` on success
+   - `bd close <id> --reason "consensus + validation + review approve"` on success
    - `bd update <id> --status blocked` on failure
 
 Always append an outcome comment:
 - outcome state
 - vote tally
 - validation command(s) and result
+- review decision and review cycle count
+- review issue/subtask linkage summary (if created)
 
 Durability boundary:
 - Beads stores durable checkpoints and resumability evidence.
@@ -301,6 +365,16 @@ Use gates for asynchronous or external conditions:
 - resolve/check gate when condition is satisfied
 
 This keeps waiting logic inside the dependency graph and preserves resumability.
+
+## Review Findings Issue Flow (Required)
+
+When review returns `request_changes` with findings:
+1. create one parent review issue
+2. create one child sub-task issue per finding
+3. connect parent-child linkage only (do not substitute with `blocks`)
+4. store created ids in the in-memory bus and append linkage evidence to comments
+5. close child issues as each finding is resolved and re-reviewed
+6. close the parent review issue only after all child finding issues are closed
 
 ## Known Caveats and Fallbacks
 
@@ -328,7 +402,9 @@ Return:
 - no runnable task: report and exit cleanly
 - no consensus after retries: set blocked (`no_consensus`)
 - unparsable synthesis: one follow-up retry, then blocked
-- missing validation requirements: blocked unless explicitly waived
+- review decision unparsable: one strict follow-up retry, then blocked (`review_unparsable`)
+- review not approved within `review_max_cycles`: set blocked (`review_not_approved`)
+- missing validation requirements: set blocked (`missing_validation_requirements`)
 
 ## Command Quick Reference
 
@@ -351,6 +427,7 @@ bd agent state <agent-id> working
 bd comments add <task-id> "[orch:proposal] ..."
 bd comments add <task-id> "[orch:critique] ..."
 bd comments add <task-id> "[orch:vote] agree 4/5"
+bd comments add <task-id> "[orch:review] decision=request_changes ..."
 
 # gate flow
 GATE_ID=$(bd create "Wait for external approval" --type gate --description "..." --json | jq -r '.id')
@@ -358,6 +435,6 @@ bd dep add <task-id> "$GATE_ID" --type blocks
 bd gate resolve "$GATE_ID" --reason "approved"
 
 # complete
-bd close <task-id> --reason "consensus + validation pass"
+bd close <task-id> --reason "consensus + validation + review approve"
 ```
 
