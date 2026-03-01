@@ -13,6 +13,7 @@ Use Double Diamond to avoid converging too early: separate "are we solving the r
 - Develop: `$creative-problem-solver` (five-tier portfolio)
 - Planning/Issue tracking: `$gen-plan`, `$gen-beads`, `$beads`
 - Deliver: `$tk`, `$commit`
+- Skill authoring/maintenance: `$ms`, `$refine`
 
 ## Issue Tracking
 
