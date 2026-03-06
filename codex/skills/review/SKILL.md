@@ -12,6 +12,11 @@ Run a critical third-party review and return a strict decision artifact.
 - `pr-comment`: review a target PR and post consolidated review output.
 - `artifact-report`: review current working artifact in-memory and return report to caller context.
 
+### Artifact Scope Rules (`artifact-report`)
+- Review only files directly modified by the current agent in the ongoing work context.
+- Exclude unstaged or dirty diffs that were not directly modified by the current agent, even if present in the working tree.
+- Emit findings only for in-scope files; do not report out-of-scope file noise.
+
 ## Required inputs
 - `--mode pr-comment|artifact-report`
 - one of:
