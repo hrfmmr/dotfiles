@@ -11,6 +11,7 @@ Run a continuous PR operator using `gh` commands only. Keep PRs created, green, 
 ## Command boundary (hard rule)
 - Use only `gh` CLI commands (`gh pr`, `gh run`, `gh api`, `gh repo`).
 - Do not run `git` or any non-`gh` command.
+- Exception: when linking a created PR to an existing bd issue, allow `bd show` and `bd update` only for that linkage write.
 - If a required action cannot be completed with `gh` alone, pause automation for that PR and leave a blocking comment.
 
 ## Quick start
@@ -56,9 +57,16 @@ Example prompt forms:
 
 ## PR creation policy (gh-only)
 - For every non-default branch discoverable via `gh api` without an open PR, create a PR.
-- Use the repo PR template if present; else use `assets/pr-template.md`.
-- Prefer `gh pr create --fill`.
+- If `.github/pull_request_template.md` exists on the target base branch, create the PR body from that template and fill every markdown heading with obvious context (do not leave heading sections empty).
+  - Fill with concrete values from available fields (`intent_summary`, `changed_paths`, `issue_refs`, `patch_id`, current validation/check state).
+  - Keep template heading structure unchanged; append concise bullets/sentences under each heading as needed.
+- If the repo template does not exist, use `assets/pr-template.md` or `gh pr create --fill`.
+- Prefer explicit body create when template is present: `gh pr create --title <title> --head <branch> --base <base> --body "<rendered-template-body>"`.
 - Default to ready-for-review (no drafts unless configured).
+- If `issue_refs` includes one or more bd issue IDs and `BEADS_DIR` is present, record PR linkage on each issue immediately after creation:
+  - Set external reference: `bd update <issue-id> --external-ref pr:<number>`
+  - Append durable log token for extraction: `bd update <issue-id> --append-notes "Linked PR #<number> (pr:<number>)"`
+  - Verify linkage write: `bd show <issue-id> --json`
 
 ## Operating mode
 Use one mode only:
@@ -177,7 +185,10 @@ Investigate the linked runs, unblock CI, then resume automation.
 ## Recipes (gh-only)
 - Default branch: `gh repo view --json defaultBranchRef --jq .defaultBranchRef.name`
 - Branch discovery: `gh api repos/<owner>/<repo>/branches --paginate --jq '.[].name'`
+- PR template check: `gh api repos/<owner>/<repo>/contents/.github/pull_request_template.md?ref=<base> --jq .path`
+- PR template fetch (decoded): `gh api repos/<owner>/<repo>/contents/.github/pull_request_template.md?ref=<base> --jq '.content | gsub("\n"; "") | @base64d'`
 - Create: `gh pr create --fill --head <branch>`
+- Create with rendered template body: `gh pr create --title <title> --head <branch> --base <base> --body "<rendered-template-body>"`
 - Open PRs: `gh pr list --state open --json number,title,headRefName,isDraft`
 - Mark ready: `gh pr ready <num>`
 - Update branch: `gh pr update-branch <num> --rebase`
@@ -190,6 +201,8 @@ Investigate the linked runs, unblock CI, then resume automation.
 - Review trigger (example): `$review --mode pr-comment --target-pr <num>`
 - Handoff state: `gh pr view <num> --json state,mergeStateStatus,reviewDecision`
 - Handoff note (example): `gh pr comment <num> --body "Join Operator: required checks are green; ready for human merge."`
+- bd issue linkage (exception path): `bd update <issue-id> --external-ref pr:<num>`
+- bd issue linkage log token: `bd update <issue-id> --append-notes "Linked PR #<num> (pr:<num>)"`
 
 ## Assets
 - `assets/pr-template.md`
