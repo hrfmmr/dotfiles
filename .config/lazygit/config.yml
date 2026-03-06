@@ -1,3 +1,6 @@
+os:
+  editCommand: "nvim"
+
 customCommands:
   - key: "Z"
     description: "Checkout branch via fzf"
