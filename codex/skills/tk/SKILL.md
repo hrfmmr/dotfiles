@@ -110,6 +110,7 @@ Implementation non-negotiables:
 - No dependency adds without an explicit ask.
 - No shotgun edits: if the diff starts spreading, cut an adapter/seam instead.
 - Do not finalize a wave artifact before the proof signal passes.
+- After finishing a `$tk` task, if the current working context maps to a specific `bd` issue, update that issue state by following `$beads` (status, notes, ChangeLog comment, and close/blocked reason as applicable).
 - If a patch/diff is required by instructions, include it under **Patch** after **Proof** in default mode.
 - In strict-output worker mode, keep TK sections internal and emit only the required external artifact contract.
 
