@@ -17,13 +17,15 @@ Use Double Diamond to avoid converging too early: separate "are we solving the r
 
 ## Issue Tracking
 
-If the `BEADS_DIR` environment variable is present, this project adopts `bd` based issue management.
+If the `BEADS_DIR` environment variable is present, or if the repository root contains a `.beads` directory, this project adopts `bd` based issue management.
 Before performing any issue-related operations, execute:
 
 `echo $BEADS_DIR`
 
 If the command returns a valid path, follow the beads workflow defined in the `$beads` skill and use `bd` for issue management.
-If no path is returned, do not use beads for issue tracking.
+If no path is returned, check whether the repository root contains a `.beads` directory.
+If either condition is satisfied, treat the current context as beads-managed and use `bd` for issue tracking.
+If neither condition is satisfied, do not use beads for issue tracking.
 
 ## Continuous Beads Updates During Execution
 
