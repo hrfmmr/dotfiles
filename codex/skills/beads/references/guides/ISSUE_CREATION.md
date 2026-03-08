@@ -6,6 +6,7 @@ Guidance on when and how to create bd issues for maximum effectiveness.
 
 - [When to Ask First vs Create Directly](#when-to-ask)
 - [Issue Quality](#quality)
+- [Validation Frontiers](#validation-frontiers)
 - [Making Issues Resumable](#resumable)
 - [Design vs Acceptance Criteria](#design-vs-acceptance)
 
@@ -40,6 +41,49 @@ Use clear, specific titles and include sufficient context in descriptions to res
 - Definition of done
 - Testing requirements
 - Success metrics
+
+## Validation Frontiers {#validation-frontiers}
+
+When completion still depends on proof in a different environment, create that
+proof as its own issue instead of silently assuming it will happen later.
+
+### Create explicit follow-up issues for:
+- Real-credential smoke tests
+- External service delivery checks
+- CI or scheduled-job validation runs
+- Human/manual review cycles
+- Any gap where mocked tests passed but production-like execution has not run
+
+### Why this matters
+
+Code-complete is not the same as task-complete. If acceptance says "verify in
+the target system", "confirm in CI", or "run with real secrets", then the
+remaining work is not implementation only. It is a separate validation frontier
+that should stay visible in bd.
+
+### Pattern
+
+Create one issue per validation frontier and keep the parent open until those
+issues close.
+
+```bash
+bd create "Run local smoke test with real credentials" --parent epic-1 \
+  --acceptance "A local run succeeds against the target system and records the proof."
+
+bd create "Validate end-to-end automation path in CI" --parent epic-1 \
+  --acceptance "One CI run proves the end-to-end workflow or captures a concrete failure."
+```
+
+### Closure test
+
+Before closing, ask:
+
+1. Did we only prove this with mocks or dry runs?
+2. Does acceptance still require a real environment, credential, or manual step?
+3. If yes, is there an open bd issue tracking that remaining proof?
+
+If question 1 or 2 is yes and question 3 is no, create the missing issue before
+closing anything.
 
 ## Making Issues Resumable (Complex Technical Work) {#resumable}
 
