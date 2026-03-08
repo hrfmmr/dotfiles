@@ -117,11 +117,35 @@ Prechecks before work:
 If beads is unavailable, stop and recommend:
 - `bd doctor --fix`
 
+## Execution Checkout (Required)
+
+Before task selection or worker fanout, resolve the durable bd issue that owns the execution checkout and prepare it according to `$wt`.
+
+Resolution rules:
+- if `plan_label=<label>` is provided (or resolved from `BD_PLAN_LABEL`), resolve the issue that represents that scoped plan and use that issue for branch/worktree ownership
+- if `parent_epic=<id>` is provided, use that issue for branch/worktree ownership
+- when resolving a label-scoped owner, prefer the epic or other long-lived issue carrying the label over an individual child task
+- if the label-scoped owner is ambiguous, ask one short question before creating anything
+
+Checkout rules:
+- create or reuse the branch/worktree mapping by following `$wt`
+- when scope is `plan_label=<label>`, create or reuse the branch/worktree for the resolved label-scoped owner issue before task selection
+- prefer branch name `wt/<issue-id>-<slug>` and worktree path `__worktrees__/<issue-id>-<slug>`
+- prefer `bd worktree create` over raw `git worktree`
+- reuse an existing branch/worktree for the same issue instead of creating duplicates
+- persist the branch/worktree mapping back to the owning issue according to `$wt`
+
+Execution rules:
+- after the checkout is prepared, switch execution context to the resolved worktree directory
+- spawn workers with that worktree as their working directory
+- apply patches, run validation, and perform review-related local commands from inside that worktree
+- if the worktree cannot be resolved or prepared safely, stop before implementation
+
 ## Preflight Record (Required)
 
 Emit one line before worker fanout:
 
-`orch_preflight orch_run_id=... scope_mode=label|parent plan_label=... parent_epic=... selected_adapter=local selection_reason=fixed_local_profile requested_workers=... local_cap=1 ids=... overrides=max_tasks=1,parallel_tasks=1,adapter=local`
+`orch_preflight orch_run_id=... scope_mode=label|parent plan_label=... parent_epic=... worktree_issue=... branch=... worktree_path=... selected_adapter=local selection_reason=fixed_local_profile requested_workers=... local_cap=1 ids=... overrides=max_tasks=1,parallel_tasks=1,adapter=local`
 
 ## Task Selection Policy (Required)
 
@@ -351,8 +375,8 @@ When `integrate=false`:
 - return synthesis artifacts only
 
 When `integrate=true`:
-1. apply patch
-2. run validation commands
+1. apply patch inside the resolved worktree
+2. run validation commands inside the resolved worktree
 3. require review approval when `review_required_for_close=true`
 4. persist status transitions:
    - set `in_progress` at start if needed
@@ -412,6 +436,7 @@ sequenceDiagram
 
     U->>O: Run mesh
     O->>BD: Preflight (where/status), resolve scope
+    O->>BD: Resolve worktree owner issue and create/reuse checkout via $wt
     O->>BD: Select one runnable task
     O->>BD: Set in_progress (if needed)
 
@@ -477,6 +502,7 @@ Operational fallback:
 
 Return:
 - selected task and final state
+- worktree owner issue, branch, and worktree path
 - consensus cycles and vote tally
 - validation commands and outcomes
 - issue mutations performed
@@ -499,6 +525,9 @@ Return:
 # find scoped runnable tasks
 bd ready --label <plan_label> --type task --json
 bd ready --parent <parent_epic> --type task --json  # fallback
+
+# create or reuse execution checkout
+bd worktree create "__worktrees__/<issue-id>-<slug>" --branch "wt/<issue-id>-<slug>"
 
 # claim/start (primary)
 bd update <id> --claim --json
