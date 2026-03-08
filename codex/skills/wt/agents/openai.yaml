@@ -1,0 +1,3 @@
+interface:
+  display_name: "WT"
+  short_description: "Create bd-linked git worktrees"
