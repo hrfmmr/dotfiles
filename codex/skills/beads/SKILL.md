@@ -25,6 +25,8 @@ Run a durable beads workflow in Codex using AGENTS.md guidance, `codex exec`, an
 ## Execution Protocol
 
 - Discovery: create follow-up work and link with `discovered-from`.
+- Ideation logging rule: when a turn expands alternatives, trade-offs, or exploratory Q&A for a bd-scoped topic, append a durable summary to the relevant issue before ending the turn. Capture at least `Background`, `Problem`, `Options`, `Review`, `Recommendation`, and any material Q&A that changed the framing.
+- Default discussion logging rule: unless the user explicitly asks not to, treat substantive background/problem/solution dialogue as issue context that should be preserved in notes or comments rather than left only in chat history.
 - Validation frontier rule: when proof still depends on real credentials, external services, CI runs, manual review, or any other non-mocked execution, treat that proof as unfinished work. Create explicit child tasks for each remaining validation frontier (for example local smoke test, CI workflow validation, manual review) instead of closing the parent graph on code-only evidence.
 - Troubleshooting incident rule: when any error or unexpected operational problem appears during work, create a derived bd sub-issue even if it is incidental to the main task.
 - Troubleshooting issue shape: create it under the active issue when possible, add the `troubleshooting` label, and preserve provenance with `discovered-from` when it does not conflict with an existing parent-child edge.
