@@ -119,6 +119,13 @@ GRILL ME: HUMAN INPUT REQUIRED
 - Keep questions minimal and sequential.
 - After clarification output is produced, hard-stop.
 
+## bd issue reflection
+- If the current working context maps to a specific `bd` issue and clarification reaches Snapshot plus a finalized clarification plan, append that clarification plan to the corresponding issue immediately.
+- Treat this as a durable execution-log update, not a scope rewrite by default; prefer `bd comments add <issue-id>` unless the user explicitly asked to rewrite issue fields.
+- If beads is active in a git worktree and `bd` commands misbehave there, switch the `bd` write to the main repository checkout that owns the shared `.beads` database, then continue.
+- Append only after open questions are exhausted; do not write partial or speculative plans to the issue.
+
 ## Deliverable format
 - While open questions remain: ask for answers (use `request_user_input` if available; otherwise use the Human input block) and do not summarize or plan.
 - When open questions are exhausted: output Snapshot, then a structured clarification plan (no implementation).
+- If `bd` issue reflection applies, append the clarification plan to that issue before hard-stopping.
