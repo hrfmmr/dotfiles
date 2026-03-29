@@ -2,7 +2,7 @@
 name: desk
 description: >
   Async agent orchestration driven by Obsidian task notes. Delegates the full task lifecycle — intake, planning, execution, completion — to sub-agents, using Obsidian notes as the sole human interface.
-  Use when user says "$desk", "desk", "create task", "start task", "resume work", or wants to orchestrate implementation/research/ad-hoc tasks via Obsidian task notes with async human-agent dialogue.
+  Use when user says "$desk", "desk", "create task", "start task", "resume work", "$desk ps", "$desk run", or wants to orchestrate implementation/research/ad-hoc tasks via Obsidian task notes with async human-agent dialogue or inspect/resume background task execution.
 ---
 
 # Desk
@@ -25,6 +25,8 @@ Remain a thin control plane; delegate concrete work to existing skills ($wt / $g
 | `$desk` | Scan daily-note (yyyy-mm-dd.md) for `[[task note]]` links + detect notes with status in_progress/human_response_required. Present candidates; human selects to resume. |
 | `$desk <task-note-name>` | Resume or init the specified task directly. |
 | `$desk new` | Create a new task. |
+| `$desk ps [--all\|--inactive]` | List desk-managed tasks with task status, milestone progress summary, runtime state, assigned sub-agent, and heartbeat. Default shows non-done tasks; `--inactive` narrows to tasks without an active sub-agent lease. |
+| `$desk run <task-note-name> [--force]` | Explicitly ensure the specified task has an active sub-agent now. Use for inactive/stale tasks. `--force` marks an existing runtime lease stale and re-assigns the task. |
 
 ## Task Types
 
@@ -50,8 +52,33 @@ current_status_summary: "" # required (all types)
 pull_request_url: ""       # impl: optional
 figma_url: ""              # optional (all types)
 task_type: ""              # required: impl | research | adhoc
+runtime_status: ""         # optional: idle | running | waiting_human | done | stale
+runtime_subagent_id: ""    # optional: currently assigned sub-agent id
+runtime_subagent_role: ""  # optional: planner | executor | reviewer | finisher
+runtime_heartbeat_at: ""   # optional: ISO8601 UTC timestamp of latest agent checkpoint
 ---
 ```
+
+### `current_status_summary` Contract
+
+- Write the current critical-path progress in the task's milestone context.
+- Describe what meaningful unit of work is underway, blocked, or just completed.
+- Do not use orchestration mechanics as the summary body.
+- Good:
+  - `未コミット差分の意図確認を進めつつ、重要参考リンクのターゲット検証を実行中。`
+  - `Milestone 2/4 完了。roundup の派生要約は通り、E2E の再確認待ち。`
+- Bad:
+  - `background sub-agent を再開`
+  - `hook をセットアップした`
+
+### Runtime Lease Contract
+
+- Treat the runtime fields as the desk control-plane truth for "is a sub-agent actively assigned?".
+- `runtime_status: running` means a sub-agent currently owns the task.
+- `runtime_status: waiting_human` means the task is blocked on note input, even if no agent is actively computing.
+- `runtime_status: stale` means the prior lease is no longer trusted and `$desk run ... --force` may reclaim it.
+- Update `runtime_heartbeat_at` on spawn, before/after major checkpoints, and whenever ownership changes.
+- When a sub-agent exits cleanly, clear `runtime_subagent_id`, set `runtime_subagent_role` appropriately or empty it, and set `runtime_status` to `idle`, `waiting_human`, or `done`.
 
 ### Status Transitions
 
@@ -97,7 +124,7 @@ not_started → plan_ready → planning → in_progress → human_response_requi
 
 ## Phase 1: Planning
 
-Spawn a sub-agent with the working tree as cwd to refine the plan.
+Spawn a sub-agent with the working tree as cwd to refine the plan. Before spawn, set `runtime_status: running`, `runtime_subagent_role: planner`, `runtime_subagent_id`, and `runtime_heartbeat_at`.
 
 1. Write questions using the Q-ID scheme into the Planning section (see `references/async-dialogue-protocol.md`).
 2. Insert async response guide into the note and fire a `terminal-notifier` notification.
@@ -109,7 +136,7 @@ Spawn a sub-agent with the working tree as cwd to refine the plan.
 
 ## Phase 2: Execution
 
-Sub-agent runs the following loop within the working tree.
+Sub-agent runs the following loop within the working tree. Before spawn, set `runtime_status: running`, `runtime_subagent_role: executor`, `runtime_subagent_id`, and `runtime_heartbeat_at`.
 
 ```
 loop until done:
@@ -128,6 +155,7 @@ After each successful `/commit`:
 
 On each status transition:
 - Update task note frontmatter `status` and `current_status_summary`.
+- Update runtime lease fields if ownership or wait-state changed.
 - Update `milestone_status::` in the Milestones table.
 
 ### Human Input Required
@@ -148,9 +176,10 @@ input:: pending
 ```
 
 2. Transition to `status: human_response_required`. Update frontmatter `current_status_summary`.
-3. Fire `terminal-notifier` with obsidian:// URL.
-4. If parallelizable sub-issues exist, continue work on those.
-5. On signal file detection, read the response and resume. Transition back to `status: in_progress`.
+3. Set `runtime_status: waiting_human`, keep or clear `runtime_subagent_id` based on whether parallel work continues, and refresh `runtime_heartbeat_at`.
+4. Fire `terminal-notifier` with obsidian:// URL.
+5. If parallelizable sub-issues exist, continue work on those.
+6. On signal file detection, read the response and resume. Transition back to `status: in_progress`, restoring `runtime_status: running`.
 
 ### Sub-issue Discovery
 
@@ -162,11 +191,35 @@ When a derived sub-issue surfaces during execution:
 ## Phase 3: Completion
 
 1. After all milestones are complete, append a final human-check `Turn-N` to the Dialogue section.
-2. Transition to `status: in_review`. Fire notification.
+2. Transition to `status: in_review`. Set `runtime_status: waiting_human`, clear `runtime_subagent_id`, refresh `runtime_heartbeat_at`, and fire notification.
 3. On human approval:
    - impl tasks: Create PR via `$join` if needed. Update frontmatter `pull_request_url`.
    - Close the bd epic issue.
-4. Transition to `status: done`.
+4. Transition to `status: done`, set `runtime_status: done`, clear `runtime_subagent_id`, and refresh `runtime_heartbeat_at`.
+
+## Runtime Visibility
+
+### `$desk ps`
+
+- Scan task notes with `status` plus runtime fields and print a concise table:
+  `task_note | status | current_status_summary | runtime_status | runtime_subagent_id | runtime_heartbeat_at`
+- Default to notes where `status != done`.
+- With `--inactive`, return only tasks whose `status` suggests work remains but whose runtime lease is absent or stale.
+- Mark a task `inactive` when:
+  - `status` is in `{plan_ready, planning, in_progress, human_response_required, in_review}` and
+  - `runtime_status` is empty, `idle`, or `stale`.
+
+### `$desk run`
+
+- Use `$desk run <task-note-name>` when a task should have an active sub-agent now.
+- Choose the spawned role from the task note state:
+  - `plan_ready` or `planning` → planner
+  - `in_progress` → executor
+  - `human_response_required` with fresh unresolved input → do not spawn; report blocked
+  - `human_response_required` with resolved input → executor
+  - `in_review` → finisher only after the required human check is satisfied
+- If the task already has `runtime_status: running`, report the existing lease instead of spawning a duplicate.
+- `--force` is the explicit override for reclaiming a stale or suspect lease. First set `runtime_status: stale`, then spawn the new assignee and overwrite the runtime fields.
 
 ## Signal Mechanism
 
@@ -197,6 +250,7 @@ Procedure for resuming work after session death.
 1. On `$desk` invocation, collect:
    - `[[task note]]` links from daily-note (yyyy-mm-dd.md)
    - `*.md` files at vault root with frontmatter `status` in {`in_progress`, `human_response_required`, `plan_ready`, `planning`}
+   - classify each note as `active`, `waiting_human`, or `inactive` from the runtime lease fields
 2. Present candidates, prioritizing daily-note links.
 3. After human selection, read the task note's frontmatter + Milestones + latest Dialogue Turn.
 4. If a bd issue exists, fetch latest state via `bd show <issue-id>`.
@@ -260,4 +314,5 @@ SORT file.mtime DESC
 - Dual writes to task notes and bd issues are by design (different purposes: human-facing view vs agent-recoverable log).
 - bd issue body/notes must be self-contained enough for cold resume after session death.
 - Concurrent agent assignment to all in_progress tasks is permitted. Accept write-contention risk on shared BEADS_DIR.
+- Prefer milestone-progress wording in `current_status_summary`; runtime mechanics belong in the runtime lease fields.
 - Root epic closure always requires a human check gate.
