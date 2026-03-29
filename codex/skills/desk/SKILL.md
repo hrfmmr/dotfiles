@@ -1,59 +1,59 @@
 ---
 name: desk
 description: >
-  Obsidian タスクノート駆動の非同期 agent orchestration skill。タスク起票・計画・実行・完了の全ライフサイクルを、obsidian ノートを唯一の human interface として sub-agent に委譲する。
-  Use when user says "$desk", "desk", "タスク起票", "タスク開始", "作業再開", or wants to orchestrate implementation/research/ad-hoc tasks via obsidian task notes with async human-agent dialogue.
+  Async agent orchestration driven by Obsidian task notes. Delegates the full task lifecycle — intake, planning, execution, completion — to sub-agents, using Obsidian notes as the sole human interface.
+  Use when user says "$desk", "desk", "create task", "start task", "resume work", or wants to orchestrate implementation/research/ad-hoc tasks via Obsidian task notes with async human-agent dialogue.
 ---
 
 # Desk
 
 ## Overview
 
-Obsidian タスクノートを唯一の human interface として、sub-agent に作業を非同期委譲する orchestration layer。
-自身は薄い制御層に留まり、作業具体は既存スキル（$wt / $grill-me / $tk / $review / $commit / $join / $beads）に委譲する。
+Orchestration layer that delegates work to sub-agents asynchronously, using Obsidian task notes as the sole human interface.
+Remain a thin control plane; delegate concrete work to existing skills ($wt / $grill-me / $tk / $review / $commit / $join / $beads).
 
 ## Prerequisites
 
-- cwd が Obsidian vault root であること（任意の vault で動作する）
-- obsidian-git プラグインが有効（auto-commit 間隔 ≈ 3 分）
-- 実装/調査タスクでは対象 repo root の `.envrc` に `BEADS_DIR` が定義済みであること
+- cwd is an Obsidian vault root (works with any vault).
+- obsidian-git plugin enabled (auto-commit interval ≈ 3 min).
+- For impl/research tasks, `BEADS_DIR` must be defined in the target repo's `.envrc`.
 
 ## Invocation
 
-| pattern | 動作 |
-|---------|------|
-| `$desk` | daily-note (yyyy-mm-dd.md) の `[[タスクノート]]` リンク + in_progress/human_response_required なノートを検出し、選択肢を提示。人間が明示選択して resume。 |
-| `$desk <タスクノート名>` | 指定タスクを直接 resume または init。 |
-| `$desk new` | 新規タスクを起票。 |
+| pattern | behavior |
+|---------|----------|
+| `$desk` | Scan daily-note (yyyy-mm-dd.md) for `[[task note]]` links + detect notes with status in_progress/human_response_required. Present candidates; human selects to resume. |
+| `$desk <task-note-name>` | Resume or init the specified task directly. |
+| `$desk new` | Create a new task. |
 
 ## Task Types
 
 | type | target repo | worktree | bd issue | PR |
 |------|-------------|----------|----------|----|
-| 実装 | required | required | required | optional |
-| 調査 | required | required | required | — |
-| 非定型 | — | — | — | — |
+| impl | required | required | required | optional |
+| research | required | required | required | — |
+| adhoc | — | — | — | — |
 
 ## Frontmatter Spec
 
-タスクノートの YAML frontmatter。タスク種別で required/optional が変わる。
+YAML frontmatter for task notes. Required/optional varies by task type.
 
 ```yaml
 ---
-source_issue_link: ""      # 実装/調査: required, 非定型: optional
-target_repo: ""            # 実装/調査: required
-git_working_tree: ""       # 実装/調査: required
-beads_dir: ""              # 実装/調査: required
-bd_issue_id: ""            # 実装/調査: required
-status: "not_started"      # required (全種別)
-current_status_summary: "" # required (全種別)
-pull_request_url: ""       # 実装: optional
-figma_url: ""              # optional (全種別)
+source_issue_link: ""      # impl/research: required, adhoc: optional
+target_repo: ""            # impl/research: required
+git_working_tree: ""       # impl/research: required
+beads_dir: ""              # impl/research: required
+bd_issue_id: ""            # impl/research: required
+status: "not_started"      # required (all types)
+current_status_summary: "" # required (all types)
+pull_request_url: ""       # impl: optional
+figma_url: ""              # optional (all types)
 task_type: ""              # required: impl | research | adhoc
 ---
 ```
 
-### Status 遷移
+### Status Transitions
 
 ```
 not_started → plan_ready → planning → in_progress → human_response_required ⇄ in_progress → in_review → done
@@ -61,30 +61,30 @@ not_started → plan_ready → planning → in_progress → human_response_requi
 
 ## Phase 0: Init (`$desk new`)
 
-1. **Signal hook チェック**: `scripts/setup-hook.sh "$PWD"` を実行。hook 未設置なら y/N 確認で自動インストール。スキップされた場合は警告を表示し続行（signal 検知が動作しない旨を伝える）。
-2. 人間に `source_issue_link` と `task_type` を確認する。
-3. `task_type` に応じて:
-   - **impl/research**: `target_repo` を確認 → `.envrc` から `BEADS_DIR` を解決 → `$wt` で worktree 作成（path/branch 候補を提案し承認を得る）→ `$beads` で bd epic issue を作成。
-   - **adhoc**: worktree/bd issue 不要。frontmatter の該当フィールドを空のまま残す。
-4. タスクノートを vault root に作成（frontmatter 埋め + 空の Planning / Milestones / Dialogue セクション）。
-5. `status: plan_ready` に遷移。
+1. **Signal hook check**: Run `scripts/setup-hook.sh "$PWD"`. If hook is missing, prompt y/N for auto-install. On skip, warn that signal detection is inoperative and continue.
+2. Confirm `source_issue_link` and `task_type` with the human.
+3. Branch by `task_type`:
+   - **impl/research**: Confirm `target_repo` → resolve `BEADS_DIR` from `.envrc` → create worktree via `$wt` (propose path/branch candidates, obtain approval) → create bd epic issue via `$beads`.
+   - **adhoc**: No worktree or bd issue required. Leave corresponding frontmatter fields empty.
+4. Create the task note at vault root (populate frontmatter + empty Planning / Milestones / Dialogue sections).
+5. Transition to `status: plan_ready`.
 
-### タスクノート初期構造
+### Initial Task Note Structure
 
 ```markdown
 ---
 (frontmatter)
 ---
 
-# <タスク名>
+# <Task Name>
 
 ## Planning
 
 ### Snapshot
-<!-- grill-me snapshot が確定後ここに書き出される -->
+<!-- Written after grill-me snapshot is finalized -->
 
 ### Plan
-<!-- 確定した実行計画 -->
+<!-- Finalized execution plan -->
 
 ## Milestones
 
@@ -92,24 +92,24 @@ not_started → plan_ready → planning → in_progress → human_response_requi
 |------------|-----------|-------------------|
 
 ## Dialogue
-<!-- Turn-N 見出しが追記される -->
+<!-- Turn-N headings appended here -->
 ```
 
 ## Phase 1: Planning
 
-Sub-agent を spawn し、working tree を cwd として計画を詰める。
+Spawn a sub-agent with the working tree as cwd to refine the plan.
 
-1. タスクノートの Planning セクションに Q-ID 体系で問いを書き出す（`references/async-dialogue-protocol.md` 参照）。
-2. 非同期回答ガイドをノート内に記載し、`terminal-notifier` で通知を発火する。
-3. 回答検知は **signal file 方式**（後述）。検知後、`status:: done` の問いから深掘りを再開。派生問いは `Q-n-m` で追加。
-4. Open questions が出尽くしたら、Snapshot（raw）を Planning > Snapshot セクションに書き出す。bd issue にも同期。
-5. 確定プランを Planning > Plan セクションに書き出す。
-6. Milestones テーブルに大まかなクリティカルパスを Dataview inline field 付きで記入。
-7. `status: in_progress` に遷移。
+1. Write questions using the Q-ID scheme into the Planning section (see `references/async-dialogue-protocol.md`).
+2. Insert async response guide into the note and fire a `terminal-notifier` notification.
+3. Detect responses via **signal file mechanism** (below). On detection, resume deep-dive from questions marked `status:: done`. Add follow-up questions as `Q-n-m`.
+4. Once all open questions are exhausted, write the raw Snapshot to Planning > Snapshot. Sync to bd issue.
+5. Write the finalized plan to Planning > Plan.
+6. Populate the Milestones table with a rough critical path using Dataview inline fields.
+7. Transition to `status: in_progress`.
 
 ## Phase 2: Execution
 
-Sub-agent が working tree 内で以下のループを回す。
+Sub-agent runs the following loop within the working tree.
 
 ```
 loop until done:
@@ -120,103 +120,103 @@ loop until done:
   → signal check (see below)
 ```
 
-### Checkpoint contract
+### Checkpoint Contract
 
-各 `/commit` 成功後:
-- `bd edit <issue-id> --append-notes "<commit-hash>: <変更要約>"` で bd issue に追記。
-- `bd dolt commit` → `bd dolt push`。
+After each successful `/commit`:
+- Append to bd issue: `bd edit <issue-id> --append-notes "<commit-hash>: <change summary>"`.
+- Persist: `bd dolt commit` → `bd dolt push`.
 
-各ステータス遷移時:
-- タスクノート frontmatter の `status` と `current_status_summary` を更新。
-- Milestones テーブルの `milestone_status::` を更新。
+On each status transition:
+- Update task note frontmatter `status` and `current_status_summary`.
+- Update `milestone_status::` in the Milestones table.
 
-### Human input required
+### Human Input Required
 
-作業中に human input が必要になった場合:
+When human input is needed during execution:
 
-1. タスクノートの Dialogue セクションに `Turn-N` 見出しを追加。
+1. Append a `Turn-N` heading to the Dialogue section.
 
 ```markdown
 ### Turn-1
 input:: pending
 
-**Context**: <背景>
-**Question**: <判断を求める問い>
-**Options**: <選択肢があれば>
+**Context**: <why this decision is needed>
+**Question**: <specific question requiring judgment>
+**Options**: <enumerate choices if applicable>
 
-> ここに回答を記入。記入後 `input:: pending` を `input:: done` に変更。
+> Write your response here. Change `input:: pending` to `input:: done` when finished.
 ```
 
-2. `status: human_response_required` に遷移。frontmatter `current_status_summary` を更新。
-3. `terminal-notifier` で obsidian:// URL 付き通知を発火。
-4. 他に並行で進められる sub-issue があればそちらを進行。
-5. signal file 検知で回答を読み取り、作業再開。`status: in_progress` に復帰。
+2. Transition to `status: human_response_required`. Update frontmatter `current_status_summary`.
+3. Fire `terminal-notifier` with obsidian:// URL.
+4. If parallelizable sub-issues exist, continue work on those.
+5. On signal file detection, read the response and resume. Transition back to `status: in_progress`.
 
-### Sub-issue discovery
+### Sub-issue Discovery
 
-実行中に派生 sub-issue が発見された場合:
-- `bd create "<title>" --parent <epic-id>` で sub-issue を作成。
-- Milestones テーブルに行を追加。
-- sub-issue 下にコンテキストをログしながら対処。
+When a derived sub-issue surfaces during execution:
+- Create via `bd create "<title>" --parent <epic-id>`.
+- Add a row to the Milestones table.
+- Address the sub-issue, logging context in its bd issue.
 
 ## Phase 3: Completion
 
-1. 全 milestone 完了後、タスクノート Dialogue セクションに final human check の `Turn-N` を追加。
-2. `status: in_review` に遷移。通知発火。
-3. 人間の承認を得たら:
-   - 実装タスク: 必要に応じて `$join` で PR 作成。frontmatter `pull_request_url` を更新。
-   - bd epic issue を close。
-4. `status: done` に遷移。
+1. After all milestones are complete, append a final human-check `Turn-N` to the Dialogue section.
+2. Transition to `status: in_review`. Fire notification.
+3. On human approval:
+   - impl tasks: Create PR via `$join` if needed. Update frontmatter `pull_request_url`.
+   - Close the bd epic issue.
+4. Transition to `status: done`.
 
 ## Signal Mechanism
 
-### obsidian-git post-commit hook
+### obsidian-git post-commit Hook
 
-obsidian-git の auto-commit (≈3分間隔) を利用したイベント駆動。
+Event-driven detection leveraging obsidian-git auto-commit (≈ 3 min interval).
 
 ```
-auto-commit 発火
-  → .git/hooks/post-commit 実行
+auto-commit fires
+  → .git/hooks/post-commit executes
     → scripts/check-signals.sh
-      → 変更ファイルが入力待ちタスクノートに該当するか判定
-        → 該当 & inline field `input:: done` を検知
-          → .desk/signals/<task-name>.ready を作成
-          → terminal-notifier で通知
+      → Determine if changed files match a task note awaiting input
+        → Match found & inline field `input:: done` detected
+          → Create .desk/signals/<task-name>.ready
+          → Fire terminal-notifier
 ```
 
-### Agent 側の検知
+### Agent-side Detection
 
-Agent は作業サイクルの自然な区切り（各 `/commit` 後）に `.desk/signals/` をチェックする。
-`.ready` ファイルを検知したら、対象タスクノートを読み直して回答を取得し、signal file を削除する。
+The agent checks `.desk/signals/` at natural work-cycle boundaries (after each `/commit`).
+On detecting a `.ready` file, re-read the target task note to retrieve the response, then delete the signal file.
 
 ## Cold Resume Protocol
 
-セッション死亡後の作業再開手順。
+Procedure for resuming work after session death.
 
-0. **Signal hook チェック**: `scripts/setup-hook.sh "$PWD"` を実行。未設置なら y/N 確認でインストール。
-1. `$desk` 呼び出し時、以下を収集:
-   - daily-note (yyyy-mm-dd.md) 内の `[[タスクノート]]` リンク
-   - vault root の `*.md` から frontmatter `status` が `in_progress` / `human_response_required` / `plan_ready` / `planning` のノートを検出
-2. daily-note のリンクを優先候補として選択肢を提示。
-3. 人間が選択後、タスクノートの frontmatter + Milestones + 直近の Dialogue Turn を読み込み。
-4. bd issue が存在する場合、`bd show <issue-id>` で最新状態を取得。
-5. コンテキストを復元し、`current_status_summary` に基づいて該当 Phase から再開。
+0. **Signal hook check**: Run `scripts/setup-hook.sh "$PWD"`. If missing, prompt y/N for install.
+1. On `$desk` invocation, collect:
+   - `[[task note]]` links from daily-note (yyyy-mm-dd.md)
+   - `*.md` files at vault root with frontmatter `status` in {`in_progress`, `human_response_required`, `plan_ready`, `planning`}
+2. Present candidates, prioritizing daily-note links.
+3. After human selection, read the task note's frontmatter + Milestones + latest Dialogue Turn.
+4. If a bd issue exists, fetch latest state via `bd show <issue-id>`.
+5. Restore context and resume from the appropriate Phase based on `current_status_summary`.
 
 ## Notification
 
 ```bash
 VAULT_NAME=$(basename "$PWD")
 terminal-notifier \
-  -title "desk: <タスク名>" \
-  -message "<状況サマリー>" \
-  -open "obsidian://open?vault=${VAULT_NAME}&file=<タスクノート名>&heading=<target_heading>"
+  -title "desk: <task-name>" \
+  -message "<status summary>" \
+  -open "obsidian://open?vault=${VAULT_NAME}&file=<task-note-name>&heading=<target_heading>"
 ```
 
 ## Dataview Integration
 
-### 入力待ち一覧ビュー
+### Pending Input View
 
-タスクノート横断で `input:: pending` を集約するクエリ:
+Cross-note query aggregating `input:: pending`:
 
 ```dataview
 TABLE WITHOUT ID
@@ -228,7 +228,7 @@ WHERE input = "pending"
 SORT file.mtime DESC
 ```
 
-### アクティブタスク一覧
+### Active Tasks
 
 ```dataview
 TABLE WITHOUT ID
@@ -245,19 +245,19 @@ SORT file.mtime DESC
 
 | phase | delegated skill | purpose |
 |-------|----------------|---------|
-| Init | `$wt` | worktree 作成 |
-| Init | `$beads` | bd epic issue 作成 |
-| Planning | `$grill-me` (async adapted) | Q&A による要件明確化 |
+| Init | `$wt` | worktree creation |
+| Init | `$beads` | bd epic issue creation |
+| Planning | `$grill-me` (async adapted) | requirement clarification via Q&A |
 | Execution | `$tk` | minimal-diff incision |
 | Execution | `$review` | approval gate |
 | Execution | `$commit` | micro-commit |
-| Completion | `$join` | PR 作成 |
+| Completion | `$join` | PR creation |
 | All phases | `$beads` | bd issue CRUD & sync |
 
 ## Guardrails
 
-- 元セッションへの同期 interrupt 禁止。human 対話は全てタスクノート Turn-N 経由の非同期。
-- タスクノートと bd issue の二重書き込みは意図的設計（目的が異なる: 人間用 view vs agent 復元用 log）。
-- bd issue body/notes はセッション死亡後の cold resume に十分な自己完結性を持たせる。
-- 全 in_progress タスクに並行 agent を割り当て可。同一 BEADS_DIR への並行 write 競合リスクは許容。
-- root epic close には必ず human check gate を含める。
+- No synchronous interrupts to the originating session. All human dialogue is async via task note Turn-N.
+- Dual writes to task notes and bd issues are by design (different purposes: human-facing view vs agent-recoverable log).
+- bd issue body/notes must be self-contained enough for cold resume after session death.
+- Concurrent agent assignment to all in_progress tasks is permitted. Accept write-contention risk on shared BEADS_DIR.
+- Root epic closure always requires a human check gate.

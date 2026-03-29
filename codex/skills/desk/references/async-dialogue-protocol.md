@@ -1,106 +1,106 @@
 # Async Dialogue Protocol
 
-## Q-ID 体系
+## Q-ID Scheme
 
-Planning フェーズおよび Turn-N 内での問いかけに使用する ID 体系。
-retrospective skill の対話中の成果物ルールを踏襲。
+ID scheme for questions during the Planning phase and within Turn-N entries.
+Follows the artifact rules established in the retrospective skill's dialogue protocol.
 
-### ID 命名規則
+### ID Naming Convention
 
-- root 問い: `Q-1`, `Q-2`, `Q-3`, ...
-- 派生問い: `Q-1-1`, `Q-1-2`, `Q-2-1`, ...（branch 構造で親子関係を表現）
-- 見出しレベルはすべてフラット（同一レベル）。Obsidian outline で全体像を一望可能にする。
+- Root questions: `Q-1`, `Q-2`, `Q-3`, ...
+- Derived questions: `Q-1-1`, `Q-1-2`, `Q-2-1`, ... (branch structure expressing parent-child relationships)
+- All headings are flat (same level) to enable full overview via Obsidian outline.
 
-### 状態管理
+### State Management
 
-Dataview inline field で管理:
-- `status:: unanswered` — 未回答
-- `status:: done` — 回答済み
+Managed via Dataview inline fields:
+- `status:: unanswered` — awaiting response
+- `status:: done` — answered
 
-### ノート内レイアウト（Planning セクション）
+### Note Layout (Planning Section)
 
 ```markdown
 ## Planning
 
-> [!info] 非同期回答ガイド
-> 各問いに対して回答欄に自由に記入できます。
-> 回答を書き終えたら `status:: unanswered` を `status:: done` に変更してください。
-> 全て（または一部）の回答を書いたら、自動検知されます（obsidian-git auto-commit → signal 検知）。
+> [!info] Async Response Guide
+> Write your responses freely in each answer block.
+> After writing, change `status:: unanswered` to `status:: done`.
+> Once some or all answers are written, auto-detection kicks in (obsidian-git auto-commit → signal detection).
 
-### Q-1: <問いのタイトル>
+### Q-1: <question title>
 status:: unanswered
 
-> ここに回答を記入
+> Write your response here
 
-### Q-2: <問いのタイトル>
+### Q-2: <question title>
 status:: unanswered
 
-> ここに回答を記入
+> Write your response here
 
 ### Snapshot
-<!-- grill-me snapshot が確定後ここに書き出される -->
+<!-- Written after grill-me snapshot is finalized -->
 
 ### Plan
-<!-- 確定した実行計画 -->
+<!-- Finalized execution plan -->
 ```
 
-### 対話ラウンドごとの更新
+### Per-round Updates
 
-1. `status:: done` の問いから回答を読み取り、Insight を追記:
+1. Read responses from questions marked `status:: done` and append Insight:
 
 ```markdown
-### Q-1: <問いのタイトル>
+### Q-1: <question title>
 status:: done
 
-> <ユーザーの回答>
+> <user's response>
 
-**Insight**: <浮かび上がった示唆>
+**Insight**: <derived implications>
 ```
 
-2. 派生問いが生まれたら追加:
+2. Add derived questions as they emerge:
 
 ```markdown
-### Q-1-1: <派生した問いのタイトル>
+### Q-1-1: <derived question title>
 status:: unanswered
 
-> ここに回答を記入
+> Write your response here
 ```
 
-3. bd issue にも同期:
+3. Sync to bd issue:
 ```bash
-bd edit <issue-id> --append-notes "Q-1: A=<回答要約> / Insight=<示唆>"
-bd edit <issue-id> --append-notes "New question: Q-1-1: <タイトル>"
+bd edit <issue-id> --append-notes "Q-1: A=<answer summary> / Insight=<implications>"
+bd edit <issue-id> --append-notes "New question: Q-1-1: <title>"
 ```
 
-## Turn-N Protocol（Execution フェーズ）
+## Turn-N Protocol (Execution Phase)
 
-実行中に human input が必要になった場合のプロトコル。
+Protocol for requesting human input during execution.
 
-### フォーマット
+### Format
 
 ```markdown
 ### Turn-N
 input:: pending
 
-**Context**: <背景説明 — なぜこの判断が必要か>
-**Question**: <具体的な問い>
-**Options**: <選択肢があれば列挙。なければ省略>
+**Context**: <why this decision is needed>
+**Question**: <specific question>
+**Options**: <enumerate choices if applicable; omit otherwise>
 
-> ここに回答を記入。記入後 `input:: pending` を `input:: done` に変更。
+> Write your response here. Change `input:: pending` to `input:: done` when finished.
 ```
 
-### Agent 側の振る舞い
+### Agent Behavior
 
-1. Turn-N を書き出したら `status: human_response_required` に遷移。
-2. `terminal-notifier` で通知。
-3. 他の並行可能な sub-issue があればそちらを進行。
-4. signal file (`.desk/signals/<task-name>.ready`) を作業区切りでチェック。
-5. 検知後、Turn-N の `input:: done` を確認し、回答を読み取って作業再開。
-6. signal file を削除。`status: in_progress` に復帰。
+1. After writing Turn-N, transition to `status: human_response_required`.
+2. Fire `terminal-notifier`.
+3. If parallelizable sub-issues exist, continue work on those.
+4. Check for signal file (`.desk/signals/<task-name>.ready`) at work-cycle boundaries.
+5. On detection, verify `input:: done` in Turn-N, read the response, and resume.
+6. Delete the signal file. Transition back to `status: in_progress`.
 
-### 複数 Turn の場合
+### Multiple Turns
 
-Turn は連番で追記。直近の未解決 Turn を優先的に処理する。
+Turns are appended sequentially. Prioritize the most recent unresolved Turn.
 
 ```markdown
 ### Turn-1
