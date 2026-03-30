@@ -1,16 +1,29 @@
 ---
 name: desk
 description: >
-  Async agent orchestration driven by Obsidian task notes. Delegates the full task lifecycle — intake, planning, execution, completion — to sub-agents, using Obsidian notes as the sole human interface.
-  Use when user says "$desk", "desk", "create task", "start task", "resume work", "$desk ps", "$desk run", or wants to orchestrate implementation/research/ad-hoc tasks via Obsidian task notes with async human-agent dialogue or inspect/resume background task execution.
+  Stateless task protocol driven by Obsidian task notes. Defines state transitions and cold resume procedures for the full task lifecycle — intake, planning, execution, completion. Each agent session is an independent, stateless worker that restores context from the task note and bd issue, executes, then terminates.
+  Use when user says "$desk", "desk", "create task", "start task", "resume work", "$desk ps", "$desk run", or wants to manage implementation/research/ad-hoc tasks via Obsidian task notes with async human-agent dialogue or inspect/resume task execution.
 ---
 
 # Desk
 
 ## Overview
 
-Orchestration layer that delegates work to sub-agents asynchronously, using Obsidian task notes as the sole human interface.
-Remain a thin control plane; delegate concrete work to existing skills ($wt / $grill-me / $tk / $review / $commit / $join / $beads).
+Stateless task protocol that defines state transitions and cold resume procedures, using Obsidian task notes as the sole human interface.
+Each agent session is an independent worker: restore context from task note + bd issue → execute → terminate.
+Delegate concrete work to existing skills ($wt / $grill-me / $tk / $review / $commit / $join / $beads).
+
+### Architecture
+
+| component | role |
+|-----------|------|
+| Task note | State machine store (frontmatter=state, Dialogue=I/O channel) |
+| bd issue | Agent-recoverable log for cold resume |
+| desk skill | State transition rules + cold resume protocol |
+| post-commit hook | Event-driven signal generation |
+| Stop Hook | Auto-resume trigger on root session idle |
+| `.desk/runtime/` | External observability (lock files + logs) |
+| Each agent session | Stateless worker (restore → execute → terminate) |
 
 ## Prerequisites
 
@@ -136,15 +149,24 @@ Spawn a sub-agent with the working tree as cwd to refine the plan. Before spawn,
 
 ## Phase 2: Execution
 
-Sub-agent runs the following loop within the working tree. Before spawn, set `runtime_status: running`, `runtime_subagent_role: executor`, `runtime_subagent_id`, and `runtime_heartbeat_at`.
+Each executor session is a **stateless worker**: restore context → execute a unit of work → checkpoint → terminate.
+Multiple executor sessions may run sequentially on the same task (cold resume chain).
+
+Before spawn, the invoking `$desk run` must:
+1. Create `.desk/runtime/<task-name>.lock` (see Lock File Protocol below).
+2. Set frontmatter: `runtime_status: running`, `runtime_subagent_role: executor`, `runtime_subagent_id: pid:<PID>`, `runtime_heartbeat_at`.
+
+### Executor Work Cycle (single session)
 
 ```
-loop until done:
-  $tk (reasonable incision)
+restore context (frontmatter + latest Turn + bd show)
+  → $tk (reasonable incision)
   → $review (approval gate)
   → $commit
-  → checkpoint (see below)
-  → signal check (see below)
+  → checkpoint
+  → if human input needed: write Turn-N, terminate
+  → if more work remains and context budget allows: loop
+  → else: terminate (next session picks up)
 ```
 
 ### Checkpoint Contract
@@ -160,12 +182,12 @@ On each status transition:
 
 ### Human Input Required
 
-When human input is needed during execution:
+When human input is needed during execution, the agent writes Turn-N and **terminates** (does not wait).
 
-1. Append a `Turn-N` heading to the Dialogue section.
+1. Append a `Turn-N` heading to the Dialogue section. The `input:: pending` inline field is **mandatory** — signal detection depends on it.
 
 ```markdown
-### Turn-1
+### Turn-N
 input:: pending
 
 **Context**: <why this decision is needed>
@@ -176,10 +198,12 @@ input:: pending
 ```
 
 2. Transition to `status: human_response_required`. Update frontmatter `current_status_summary`.
-3. Set `runtime_status: waiting_human`, keep or clear `runtime_subagent_id` based on whether parallel work continues, and refresh `runtime_heartbeat_at`.
-4. Fire `terminal-notifier` with obsidian:// URL.
-5. If parallelizable sub-issues exist, continue work on those.
-6. On signal file detection, read the response and resume. Transition back to `status: in_progress`, restoring `runtime_status: running`.
+3. Set `runtime_status: waiting_human`, clear `runtime_subagent_id`, refresh `runtime_heartbeat_at`.
+4. Delete `.desk/runtime/<task-name>.lock`.
+5. Fire `terminal-notifier` with obsidian:// URL.
+6. **Terminate**. The agent session ends here.
+
+Resume happens via cold resume (see Signal Mechanism + Stop Hook Auto-Resume below).
 
 ### Sub-issue Discovery
 
@@ -201,29 +225,45 @@ When a derived sub-issue surfaces during execution:
 
 ### `$desk ps`
 
-- Scan task notes with `status` plus runtime fields and print a concise table:
-  `task_note | status | current_status_summary | runtime_status | runtime_subagent_id | runtime_heartbeat_at`
-- Default to notes where `status != done`.
-- With `--inactive`, return only tasks whose `status` suggests work remains but whose runtime lease is absent or stale.
-- Mark a task `inactive` when:
-  - `status` is in `{plan_ready, planning, in_progress, human_response_required, in_review}` and
-  - `runtime_status` is empty, `idle`, or `stale`.
+Run `scripts/desk_ps.sh <vault-root>` to display the unified status table:
+
+```
+task                       | status                  | agent     | heartbeat | alive?
+---------------------------|-------------------------|-----------|-----------|-------
+ios-kenko ヘルスケア連携UI  | human_response_required | —         | 2h        | —
+ios-kenko Sourcery退役      | in_progress             | pid:12345 | 3m        | ✓
+```
+
+- Default: notes where `status != done`.
+- `--inactive`: only tasks whose status suggests work remains but runtime lease is absent or stale.
+- `--all`: include done tasks.
 
 ### `$desk run`
 
-- Use `$desk run <task-note-name>` when a task should have an active sub-agent now.
-- Choose the spawned role from the task note state:
-  - `plan_ready` or `planning` → planner
-  - `in_progress` → executor
-  - `human_response_required` with fresh unresolved input → do not spawn; report blocked
-  - `human_response_required` with resolved input → executor
-  - `in_review` → finisher only after the required human check is satisfied
-- If the task already has `runtime_status: running`, report the existing lease instead of spawning a duplicate.
-- `--force` is the explicit override for reclaiming a stale or suspect lease. First set `runtime_status: stale`, then spawn the new assignee and overwrite the runtime fields.
+1. Read task note frontmatter → choose spawned role:
+   - `plan_ready` or `planning` → planner
+   - `in_progress` → executor
+   - `human_response_required` with `input:: done` in latest Turn → executor (cold resume)
+   - `human_response_required` with `input:: pending` → do not spawn; report blocked
+   - `in_review` → finisher only after the required human check is satisfied
+2. Guard: if `.desk/runtime/<task>.lock` exists and PID is alive → report existing lease, do not spawn. (`--force` overrides: delete stale lock, proceed.)
+3. **Pre-spawn**: create `.desk/runtime/<task>.lock` with PID, timestamp, role.
+4. **Spawn** Agent tool with `run_in_background: true` and cold resume context (see below).
+5. **Post-spawn**: delete consumed `.desk/signals/<task>.ready` if present.
+6. On agent completion: delete `.desk/runtime/<task>.lock`, update frontmatter.
+
+### Cold Resume Context (executor spawn prompt)
+
+Include exactly:
+- Task note frontmatter (full)
+- Latest Dialogue Turn (most recent `Turn-N` section)
+- `bd show <bd_issue_id>` output
+- Working tree path and branch
+- Instruction to follow Turn-N protocol with mandatory `input:: pending` inline field
 
 ## Signal Mechanism
 
-### obsidian-git post-commit Hook
+### Layer 1: obsidian-git post-commit Hook (signal generation)
 
 Event-driven detection leveraging obsidian-git auto-commit (≈ 3 min interval).
 
@@ -237,24 +277,64 @@ auto-commit fires
           → Fire terminal-notifier
 ```
 
-### Agent-side Detection
+### Layer 2: Stop Hook Auto-Resume (signal consumption)
 
-The agent checks `.desk/signals/` at natural work-cycle boundaries (after each `/commit`).
-On detecting a `.ready` file, re-read the target task note to retrieve the response, then delete the signal file.
+Claude Code `hooks.Stop` fires when the root session goes idle. `scripts/desk_stop_hook.sh` runs and:
+
+1. Checks `.desk/signals/*.ready` — if found (FIFO, oldest first), returns `{"decision":"block","reason":"$desk run <task>"}`.
+2. Checks `.desk/runtime/*.lock` for dead PIDs (`kill -0`) — if found, returns `{"decision":"block","reason":"$desk run <task> --force"}`.
+3. Checks heartbeat staleness (>15 min with `runtime_status: running`) — fires `terminal-notifier` (does NOT block).
+4. If nothing found, returns `{"decision":"allow"}`.
+
+Execution time must be <1 second (no fswatch wait). Install via project settings:
+
+```json
+{
+  "hooks": {
+    "Stop": [{"hooks": [{"type": "command", "command": "bash <skill-dir>/scripts/desk_stop_hook.sh <vault-root>", "timeout": 10}]}]
+  }
+}
+```
+
+### Dedup: signal consumed → `.ready` file deleted before spawn. Lock + PID check prevents double spawn.
+
+## Lock File Protocol
+
+### `.desk/runtime/<task-name>.lock`
+
+Created by `$desk run` **before** Agent tool invocation. Deleted by executor on clean exit or by `$desk run --force` on stale reclaim.
+
+```
+pid=<PID of claude CLI session>
+started_at=<ISO8601 UTC>
+role=<planner|executor|reviewer|finisher>
+```
+
+### `.desk/runtime/<task-name>.log`
+
+Agent stdout/stderr. Useful for post-mortem debugging.
+
+### Health check matrix
+
+| lock exists | PID alive | heartbeat fresh | verdict |
+|-------------|-----------|-----------------|---------|
+| yes | yes | yes | ✓ running |
+| yes | no | — | ✗ stale (auto-reclaim via Stop Hook) |
+| no | — | — | — idle |
+| yes | yes | no (>15 min) | ? hung (notify only) |
 
 ## Cold Resume Protocol
 
-Procedure for resuming work after session death.
+Cold resume is the **canonical** way agents resume work. Every `$desk run` is a cold resume.
 
 0. **Signal hook check**: Run `scripts/setup-hook.sh "$PWD"`. If missing, prompt y/N for install.
-1. On `$desk` invocation, collect:
+1. On `$desk` invocation, run `scripts/desk_ps.sh "$PWD"` to show current state. Also collect:
    - `[[task note]]` links from daily-note (yyyy-mm-dd.md)
-   - `*.md` files at vault root with frontmatter `status` in {`in_progress`, `human_response_required`, `plan_ready`, `planning`}
-   - classify each note as `active`, `waiting_human`, or `inactive` from the runtime lease fields
-2. Present candidates, prioritizing daily-note links.
-3. After human selection, read the task note's frontmatter + Milestones + latest Dialogue Turn.
-4. If a bd issue exists, fetch latest state via `bd show <issue-id>`.
-5. Restore context and resume from the appropriate Phase based on `current_status_summary`.
+   - Consume any `.desk/signals/*.ready` files (mark as actionable)
+2. Present candidates, prioritizing signal-ready tasks, then daily-note links.
+3. After human selection (or auto-selection via Stop Hook), execute `$desk run <task>`.
+4. `$desk run` reads: task note frontmatter + latest Dialogue Turn + `bd show <issue-id>`.
+5. Spawn new agent session with this context. Agent restores from the appropriate Phase based on `status` + `current_status_summary`.
 
 ## Notification
 
@@ -310,9 +390,12 @@ SORT file.mtime DESC
 
 ## Guardrails
 
-- No synchronous interrupts to the originating session. All human dialogue is async via task note Turn-N.
-- Dual writes to task notes and bd issues are by design (different purposes: human-facing view vs agent-recoverable log).
+- **Stateless workers**: Each agent session terminates after its work unit. No agent waits or polls.
+- **Turn-N `input:: pending` is mandatory**: Signal detection depends on this inline field. Omitting it breaks the resume chain.
+- All human dialogue is async via task note Turn-N. No synchronous interrupts.
+- Dual writes to task notes and bd issues are by design (human-facing view vs agent-recoverable log).
 - bd issue body/notes must be self-contained enough for cold resume after session death.
 - Concurrent agent assignment to all in_progress tasks is permitted. Accept write-contention risk on shared BEADS_DIR.
 - Prefer milestone-progress wording in `current_status_summary`; runtime mechanics belong in the runtime lease fields.
 - Root epic closure always requires a human check gate.
+- Lock files in `.desk/runtime/` are the external truth for agent liveness. Frontmatter `runtime_status` is self-reported.
