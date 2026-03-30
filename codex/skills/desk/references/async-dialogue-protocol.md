@@ -92,11 +92,16 @@ input:: pending
 ### Agent Behavior
 
 1. After writing Turn-N, transition to `status: human_response_required`.
-2. Fire `terminal-notifier`.
-3. If parallelizable sub-issues exist, continue work on those.
-4. Check for signal file (`.desk/signals/<task-name>.ready`) at work-cycle boundaries.
-5. On detection, verify `input:: done` in Turn-N, read the response, and resume.
-6. Delete the signal file. Transition back to `status: in_progress`.
+2. Set `runtime_status: waiting_human`, clear `runtime_subagent_id`.
+3. Delete `.desk/runtime/<task-name>.lock`.
+4. Fire `terminal-notifier`.
+5. **Terminate the agent session.**
+
+Resume is handled by cold resume:
+- Human changes `input:: pending` → `input:: done`.
+- obsidian-git auto-commit → post-commit hook → `.desk/signals/<task>.ready`.
+- Stop Hook detects signal on next root session idle → `decision: block` → `$desk run <task>`.
+- New executor session reads Turn-N response and continues.
 
 ### Multiple Turns
 
