@@ -39,7 +39,7 @@ Delegate concrete work to existing skills ($wt / $grill-me / $tk / $review / $co
 | `$desk <task-note-name>` | Resume or init the specified task directly. |
 | `$desk new` | Create a new task. |
 | `$desk ps [--all\|--inactive]` | List desk-managed tasks with task status, milestone progress summary, runtime state, assigned sub-agent, and heartbeat. Default shows non-done tasks; `--inactive` narrows to tasks without an active sub-agent lease. |
-| `$desk run <task-note-name> [--force]` | Explicitly ensure the specified task has an active sub-agent now. Use for inactive/stale tasks. `--force` marks an existing runtime lease stale and re-assigns the task. |
+| `$desk run <task-note-name> [--force] [--no-plan]` | Explicitly ensure the specified task has an active sub-agent now. Use for inactive/stale tasks. `--force` marks an existing runtime lease stale and re-assigns the task. `--no-plan` skips plan-first approval and transitions directly to executor (use when bd issue already contains explicit steps). |
 
 ## Task Types
 
@@ -97,6 +97,9 @@ runtime_heartbeat_at: ""   # optional: ISO8601 UTC timestamp of latest agent che
 
 ```
 not_started → plan_ready → planning → in_progress → human_response_required ⇄ in_progress → in_review → done
+                 │                                        ↑
+                 └─ (plan-first) → human_response_required ┘  (Turn-N with execution plan, approved via input:: done)
+                 └─ (--no-plan)  → in_progress directly
 ```
 
 ## Phase 0: Init (`$desk new`)
@@ -135,9 +138,46 @@ not_started → plan_ready → planning → in_progress → human_response_requi
 <!-- Turn-N headings appended here -->
 ```
 
-## Phase 1: Planning
+## Plan-First Flow (default for initial `$desk run` on `plan_ready` tasks)
 
-Spawn a sub-agent with the working tree as cwd to refine the plan. Before spawn, set `runtime_status: running`, `runtime_subagent_role: planner`, `runtime_subagent_id`, and `runtime_heartbeat_at`.
+Lightweight plan approval gate. A planner sub-agent reads the worktree and bd issue, then writes a 3-5 line execution plan into a Dialogue Turn for human approval. Use Phase 1 instead for large tasks requiring deep requirement clarification.
+
+### Trigger
+
+`$desk run <task>` when `status == plan_ready` and `--no-plan` is **not** set.
+
+### Steps
+
+1. **Pre-spawn**: set `runtime_status: running`, `runtime_subagent_role: planner`, `runtime_subagent_id`, `runtime_heartbeat_at`. Create lock file.
+2. **Spawn planner sub-agent** (background, cwd = working tree). The planner:
+   a. Read bd issue description, task note frontmatter, and relevant code in the worktree.
+   b. Write a Turn-N to the Dialogue section with a 3-5 line execution plan as a numbered list.
+   c. Set `input:: pending` on the Turn. The plan Turn format:
+   ```markdown
+   ### Turn-N
+   input:: pending
+
+   **Execution Plan**:
+   1. <step>
+   2. <step>
+   3. <step>
+
+   > Approve, modify, or reject. Change `input:: pending` to `input:: done` when finished.
+   ```
+   d. Update frontmatter: `status: human_response_required`, update `current_status_summary` with plan gist.
+   e. Set `runtime_status: waiting_human`, clear `runtime_subagent_id`, refresh `runtime_heartbeat_at`.
+   f. Delete lock file. Fire `terminal-notifier`. Terminate.
+3. **On approval** (`input:: done` detected via signal mechanism): next `$desk run` reads the approved Turn, spawns executor with the plan in the cold resume context.
+
+### `--no-plan` bypass
+
+When `$desk run <task> --no-plan` is invoked on a `plan_ready` task:
+- Skip planner spawn. Transition `status` directly to `in_progress`.
+- Spawn executor immediately. The executor derives its work from bd issue description and task note context.
+
+## Phase 1: Planning (deep — for large tasks)
+
+Spawn a sub-agent with the working tree as cwd to refine the plan via extended Q&A. Before spawn, set `runtime_status: running`, `runtime_subagent_role: planner`, `runtime_subagent_id`, and `runtime_heartbeat_at`. Use this instead of Plan-First when the task requires multi-round requirement clarification ($grill-me).
 
 1. Write questions using the Q-ID scheme into the Planning section (see `references/async-dialogue-protocol.md`).
 2. Insert async response guide into the note and fire a `terminal-notifier` notification.
@@ -241,7 +281,9 @@ ios-kenko Sourcery退役      | in_progress             | pid:12345 | 3m        
 ### `$desk run`
 
 1. Read task note frontmatter → choose spawned role:
-   - `plan_ready` or `planning` → planner
+   - `plan_ready` + `--no-plan` → executor (skip plan-first, transition directly to `in_progress`)
+   - `plan_ready` (no flag) → planner (plan-first flow: write execution plan Turn, await approval)
+   - `planning` → planner (Phase 1 deep planning)
    - `in_progress` → executor
    - `human_response_required` with `input:: done` in latest Turn → executor (cold resume)
    - `human_response_required` with `input:: pending` → do not spawn; report blocked
@@ -257,6 +299,7 @@ ios-kenko Sourcery退役      | in_progress             | pid:12345 | 3m        
 Include exactly:
 - Task note frontmatter (full)
 - Latest Dialogue Turn (most recent `Turn-N` section)
+- If the latest Turn contains an approved execution plan (from plan-first flow), include the instruction: "Follow the approved execution plan in Turn-N"
 - `bd show <bd_issue_id>` output
 - Working tree path and branch
 - Instruction to follow Turn-N protocol with mandatory `input:: pending` inline field
@@ -381,7 +424,8 @@ SORT file.mtime DESC
 |-------|----------------|---------|
 | Init | `$wt` | worktree creation |
 | Init | `$beads` | bd epic issue creation |
-| Planning | `$grill-me` (async adapted) | requirement clarification via Q&A |
+| Plan-First | (built-in) | lightweight execution plan + approval gate |
+| Planning (deep) | `$grill-me` (async adapted) | requirement clarification via Q&A |
 | Execution | `$tk` | minimal-diff incision |
 | Execution | `$review` | approval gate |
 | Execution | `$commit` | micro-commit |
