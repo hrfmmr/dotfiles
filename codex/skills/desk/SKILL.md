@@ -68,7 +68,7 @@ task_type: ""              # required: impl | research | adhoc
 runtime_status: ""         # optional: idle | running | waiting_human | done | stale
 runtime_subagent_id: ""    # optional: currently assigned sub-agent id
 runtime_subagent_role: ""  # optional: planner | executor | reviewer | finisher
-runtime_heartbeat_at: ""   # optional: ISO8601 UTC timestamp of latest agent checkpoint
+runtime_heartbeat_at: ""   # optional: ISO8601 JST (Asia/Tokyo, +09:00) timestamp of latest agent checkpoint
 ---
 ```
 
