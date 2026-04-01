@@ -256,12 +256,13 @@ When a derived sub-issue surfaces during execution:
 
 ## Phase 3: Completion
 
-1. After all milestones are complete, append a final human-check `Turn-N` to the Dialogue section.
+1. After all milestones are complete, append a final human-check `Turn-N` to the Dialogue section. This Turn MUST use `input:: pending` — the Status-Turn Consistency Invariant (see Guardrails) prohibits `done` while any Turn awaits input.
 2. Transition to `status: in_review`. Set `runtime_status: waiting_human`, clear `runtime_subagent_id`, refresh `runtime_heartbeat_at`, and fire notification.
-3. On human approval:
+3. **Pre-done validation** (on human approval): Before transitioning to `done`, verify that the latest Turn-N has `input:: done` and does NOT contain an unresolved **Question**. If the human's response requests additional work, transition back to `in_progress` (not `done`).
+4. On human approval (latest Turn confirmed resolved):
    - impl tasks: Create PR via `$join` if needed. Update frontmatter `pull_request_url`.
    - Close the bd epic issue.
-4. Transition to `status: done`, set `runtime_status: done`, clear `runtime_subagent_id`, and refresh `runtime_heartbeat_at`.
+5. Transition to `status: done`, set `runtime_status: done`, clear `runtime_subagent_id`, and refresh `runtime_heartbeat_at`.
 
 ## Runtime Visibility
 
@@ -437,6 +438,7 @@ SORT file.mtime DESC
 
 ## Guardrails
 
+- **Status-Turn Consistency Invariant**: If the latest Turn-N contains a **Question** (regardless of `input::` value), `status` MUST NOT be `done`. Allowed statuses when a Turn has an unresolved Question: `human_response_required` (during execution) or `in_review` (Phase 3 final check). The `done` transition requires: (a) the latest Turn has `input:: done`, AND (b) the human's response does not request additional work. If the response requests further action, transition to `in_progress` instead.
 - **Stateless workers**: Each agent session terminates after its work unit. No agent waits or polls.
 - **Turn-N `input:: pending` is mandatory**: Signal detection depends on this inline field. Omitting it breaks the resume chain.
 - **Turn-N `agent_instruction::` is always present**: Keep the field even when blank so humans can add note-side follow-up instructions without changing the template shape.
