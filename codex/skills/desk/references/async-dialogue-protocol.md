@@ -81,12 +81,13 @@ Protocol for requesting human input during execution.
 ```markdown
 ### Turn-N
 input:: pending
+agent_instruction::
 
 **Context**: <why this decision is needed>
 **Question**: <specific question>
 **Options**: <enumerate choices if applicable; omit otherwise>
 
-> Write your response here. Change `input:: pending` to `input:: done` when finished.
+> Write your response here. If you want the next agent session to follow an extra instruction, write it in `agent_instruction::`. Change `input:: pending` to `input:: done` when finished.
 ```
 
 ### Agent Behavior
@@ -99,9 +100,10 @@ input:: pending
 
 Resume is handled by cold resume:
 - Human changes `input:: pending` → `input:: done`.
+- Human may optionally write an extra note-side instruction into `agent_instruction::`.
 - obsidian-git auto-commit → post-commit hook → `.desk/signals/<task>.ready`.
 - Stop Hook detects signal on next root session idle → `decision: block` → `$desk run <task>`.
-- New executor session reads Turn-N response and continues.
+- New executor session reads Turn-N response, including `agent_instruction::` when non-empty, and continues.
 
 ### Multiple Turns
 
@@ -110,9 +112,11 @@ Turns are appended sequentially. Prioritize the most recent unresolved Turn.
 ```markdown
 ### Turn-1
 input:: done
+agent_instruction::
 ...
 
 ### Turn-2
 input:: pending
+agent_instruction::
 ...
 ```

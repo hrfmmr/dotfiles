@@ -152,17 +152,18 @@ Lightweight plan approval gate. A planner sub-agent reads the worktree and bd is
 2. **Spawn planner sub-agent** (background, cwd = working tree). The planner:
    a. Read bd issue description, task note frontmatter, and relevant code in the worktree.
    b. Write a Turn-N to the Dialogue section with a 3-5 line execution plan as a numbered list.
-   c. Set `input:: pending` on the Turn. The plan Turn format:
+   c. Set `input:: pending` on the Turn and include an always-present `agent_instruction::` field. The plan Turn format:
    ```markdown
    ### Turn-N
    input:: pending
+   agent_instruction::
 
    **Execution Plan**:
    1. <step>
    2. <step>
    3. <step>
 
-   > Approve, modify, or reject. Change `input:: pending` to `input:: done` when finished.
+   > Approve, modify, or reject. If you have an extra instruction for the next agent session, write it in `agent_instruction::` before changing `input:: pending` to `input:: done`.
    ```
    d. Update frontmatter: `status: human_response_required`, update `current_status_summary` with plan gist.
    e. Set `runtime_status: waiting_human`, clear `runtime_subagent_id`, refresh `runtime_heartbeat_at`.
@@ -224,17 +225,18 @@ On each status transition:
 
 When human input is needed during execution, the agent writes Turn-N and **terminates** (does not wait).
 
-1. Append a `Turn-N` heading to the Dialogue section. The `input:: pending` inline field is **mandatory** — signal detection depends on it.
+1. Append a `Turn-N` heading to the Dialogue section. The `input:: pending` inline field is **mandatory** — signal detection depends on it. Also include an always-present `agent_instruction::` field so humans can attach an extra instruction for the next session.
 
 ```markdown
 ### Turn-N
 input:: pending
+agent_instruction::
 
 **Context**: <why this decision is needed>
 **Question**: <specific question requiring judgment>
 **Options**: <enumerate choices if applicable>
 
-> Write your response here. Change `input:: pending` to `input:: done` when finished.
+> Write your response here. If you want the next agent session to follow an extra instruction, write it in `agent_instruction::`. Change `input:: pending` to `input:: done` when finished.
 ```
 
 2. Transition to `status: human_response_required`. Update frontmatter `current_status_summary`.
@@ -298,11 +300,12 @@ ios-kenko Sourcery退役      | in_progress             | pid:12345 | 3m        
 
 Include exactly:
 - Task note frontmatter (full)
-- Latest Dialogue Turn (most recent `Turn-N` section)
+- Latest Dialogue Turn (most recent `Turn-N` section, including `agent_instruction::` when present)
 - If the latest Turn contains an approved execution plan (from plan-first flow), include the instruction: "Follow the approved execution plan in Turn-N"
+- If the latest Turn contains a non-empty `agent_instruction::`, include the instruction: "Also follow `agent_instruction::` from Turn-N unless it conflicts with explicit task scope."
 - `bd show <bd_issue_id>` output
 - Working tree path and branch
-- Instruction to follow Turn-N protocol with mandatory `input:: pending` inline field
+- Instruction to follow Turn-N protocol with mandatory `input:: pending` inline field and always-present `agent_instruction::`
 
 ## Signal Mechanism
 
@@ -436,6 +439,7 @@ SORT file.mtime DESC
 
 - **Stateless workers**: Each agent session terminates after its work unit. No agent waits or polls.
 - **Turn-N `input:: pending` is mandatory**: Signal detection depends on this inline field. Omitting it breaks the resume chain.
+- **Turn-N `agent_instruction::` is always present**: Keep the field even when blank so humans can add note-side follow-up instructions without changing the template shape.
 - All human dialogue is async via task note Turn-N. No synchronous interrupts.
 - Dual writes to task notes and bd issues are by design (human-facing view vs agent-recoverable log).
 - bd issue body/notes must be self-contained enough for cold resume after session death.
