@@ -201,13 +201,16 @@ Before spawn, the invoking `$desk run` must:
 
 ```
 restore context (frontmatter + latest Turn + bd show)
-  → $tk (reasonable incision)
-  → $review (approval gate)
-  → $commit
-  → checkpoint
-  → if human input needed: write Turn-N, terminate
-  → if more work remains and context budget allows: loop
-  → else: terminate (next session picks up)
+  loop:
+    → $tk (reasonable incision)
+    → $review (approval gate)
+    → $commit
+    → checkpoint
+    → if human input needed: exit loop
+    → if more work remains and context budget allows: continue loop
+    → else: exit loop
+  write Exit Turn (MANDATORY — see Exit Turn Contract)
+  terminate
 ```
 
 ### Checkpoint Contract
@@ -221,31 +224,55 @@ On each status transition:
 - Update runtime lease fields if ownership or wait-state changed.
 - Update `milestone_status::` in the Milestones table.
 
-### Human Input Required
+### Exit Turn Contract
 
-When human input is needed during execution, the agent writes Turn-N and **terminates** (does not wait).
+Every executor session MUST append a Turn-N to the Dialogue section before terminating. **No silent exits.** This Turn is the human-visible record and the cold resume anchor for the next session.
 
-1. Append a `Turn-N` heading to the Dialogue section. The `input:: pending` inline field is **mandatory** — signal detection depends on it. Also include an always-present `agent_instruction::` field so humans can attach an extra instruction for the next session.
+Two exit patterns:
+
+#### Pattern A: Blocking exit (human judgment needed)
+
+Use when the next step requires human decision, verification, or approval (including CI verification, merge approval, design review).
 
 ```markdown
 ### Turn-N
 input:: pending
 agent_instruction::
 
-**Context**: <why this decision is needed>
+**Context**: <what was done and why this decision is needed>
 **Question**: <specific question requiring judgment>
 **Options**: <enumerate choices if applicable>
 
 > Write your response here. If you want the next agent session to follow an extra instruction, write it in `agent_instruction::`. Change `input:: pending` to `input:: done` when finished.
 ```
 
-2. Transition to `status: human_response_required`. Update frontmatter `current_status_summary`.
-3. Set `runtime_status: waiting_human`, clear `runtime_subagent_id`, refresh `runtime_heartbeat_at`.
-4. Delete `.desk/runtime/<task-name>.lock`.
-5. Fire `terminal-notifier` with obsidian:// URL.
-6. **Terminate**. The agent session ends here.
+1. Transition to `status: human_response_required`. Update frontmatter `current_status_summary`.
+2. Set `runtime_status: waiting_human`, clear `runtime_subagent_id`, refresh `runtime_heartbeat_at`.
+3. Delete `.desk/runtime/<task-name>.lock`.
+4. Fire `terminal-notifier` with obsidian:// URL.
+5. **Terminate**.
 
 Resume happens via cold resume (see Signal Mechanism + Stop Hook Auto-Resume below).
+
+#### Pattern B: Non-blocking exit (autonomous continuation)
+
+Use when the session exhausts its context budget but remaining work is clearly defined and needs no human judgment. The next `$desk run` picks up from this Turn.
+
+```markdown
+### Turn-N
+input:: done
+agent_instruction::
+
+**Completed**: <summary of commits and changes>
+**Next**: <what the next session should do>
+```
+
+1. Keep `status: in_progress`. Update frontmatter `current_status_summary`.
+2. Set `runtime_status: idle`, clear `runtime_subagent_id`, refresh `runtime_heartbeat_at`.
+3. Delete `.desk/runtime/<task-name>.lock`.
+4. **Terminate**.
+
+**When in doubt, use Pattern A.** Human verification of external events (CI, deploy, review) is always Pattern A.
 
 ### Sub-issue Discovery
 
@@ -439,6 +466,7 @@ SORT file.mtime DESC
 ## Guardrails
 
 - **Status-Turn Consistency Invariant**: If the latest Turn-N contains a **Question** (regardless of `input::` value), `status` MUST NOT be `done`. Allowed statuses when a Turn has an unresolved Question: `human_response_required` (during execution) or `in_review` (Phase 3 final check). The `done` transition requires: (a) the latest Turn has `input:: done`, AND (b) the human's response does not request additional work. If the response requests further action, transition to `in_progress` instead.
+- **No silent executor exit**: Every executor session MUST write an Exit Turn before terminating (see Exit Turn Contract). An executor that commits work but terminates without a Turn violates this rule — the task note becomes an incomplete record and the cold resume chain breaks.
 - **Stateless workers**: Each agent session terminates after its work unit. No agent waits or polls.
 - **Turn-N `input:: pending` is mandatory**: Signal detection depends on this inline field. Omitting it breaks the resume chain.
 - **Turn-N `agent_instruction::` is always present**: Keep the field even when blank so humans can add note-side follow-up instructions without changing the template shape.
