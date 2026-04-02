@@ -281,6 +281,15 @@ When a derived sub-issue surfaces during execution:
 - Add a row to the Milestones table.
 - Address the sub-issue, logging context in its bd issue.
 
+### Derived Notes
+
+When execution produces a substantial artifact (design doc, investigation report, decision record):
+
+1. Create a new note in the vault root with a descriptive name.
+2. **Tag inheritance**: Copy all `#prj-*` tags from the parent task note's first line into the derived note's first line. This ensures vault-wide project filtering remains consistent.
+3. Link it from the task note (inline link in the relevant Turn-N).
+4. If `bd_issue_id` is set, reference it in the bd issue notes.
+
 ## Phase 3: Completion
 
 1. After all milestones are complete, append a final human-check `Turn-N` to the Dialogue section. This Turn MUST use `input:: pending` — the Status-Turn Consistency Invariant (see Guardrails) prohibits `done` while any Turn awaits input.
@@ -414,11 +423,16 @@ Cold resume is the **canonical** way agents resume work. Every `$desk run` is a 
 
 ```bash
 VAULT_NAME=$(basename "$PWD")
+NOW=$(date '+%Y-%m-%d %H:%M:%S')
 terminal-notifier \
   -title "desk: <task-name>" \
-  -message "<status summary>" \
-  -open "obsidian://open?vault=${VAULT_NAME}&file=<task-note-name>&heading=<target_heading>"
+  -message "[${NOW}] Turn-N: <status summary>" \
+  -open "obsidian://adv-uri?vault=${VAULT_NAME}&filepath=<task-note-name>&heading=Turn-N"
 ```
+
+- `-message` must include a `[yyyy-MM-dd HH:MM:SS]` timestamp and the target `Turn-N`.
+- `-open` uses `obsidian://adv-uri` (Advanced URI plugin) with `heading=Turn-N` to jump directly to the target Turn section. The heading value must omit the `#` prefix (e.g., `Turn-3` not `# Turn-3`).
+- Requires the [Advanced URI](https://github.com/Vinzent03/obsidian-advanced-uri) plugin. The native `obsidian://open` does not support heading navigation.
 
 ## Dataview Integration
 
