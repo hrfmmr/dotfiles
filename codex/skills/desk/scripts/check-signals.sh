@@ -29,8 +29,10 @@ while IFS= read -r file; do
   fi
 
   # input:: done が新たに含まれるか確認（直近の diff で追加された行）
+  # NOTE: パターンは行頭の input:: のみマッチ。blockquote (>) やバッククォート内の
+  # approval guide テキスト（例: `input:: pending` to `input:: done`）を除外する。
   diff_output=$(git -C "$VAULT_ROOT" diff HEAD~1 HEAD -- "$file" 2>/dev/null || true)
-  if echo "$diff_output" | grep -q '^+.*input::.*done'; then
+  if echo "$diff_output" | grep -q '^+input::[[:space:]]*done'; then
     task_name=$(basename "$file" .md)
     signal_file="${SIGNALS_DIR}/${task_name}.ready"
 
