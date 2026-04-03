@@ -64,7 +64,7 @@ for lock_file in "${RUNTIME_DIR}"/*.lock; do
       task_name=$(basename "$lock_file" .lock)
       if command -v terminal-notifier &>/dev/null; then
         vault_name=$(basename "$VAULT_ROOT")
-        encoded_file=$(python3 -c "import urllib.parse; print(urllib.parse.quote('${task_name}'))" 2>/dev/null || echo "$task_name")
+        encoded_file=$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1], safe=''))" "$task_name" 2>/dev/null || python3 -c "import urllib.parse; print(urllib.parse.quote('''${task_name}''', safe=''))" 2>/dev/null || echo "$task_name")
         terminal-notifier \
           -title "desk: ${task_name}" \
           -message "Agent (pid:${pid}) no heartbeat for ${elapsed}s. Consider: \$desk run ${task_name} --force" \

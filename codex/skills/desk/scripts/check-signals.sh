@@ -39,7 +39,7 @@ while IFS= read -r file; do
 
       # terminal-notifier で通知
       if command -v terminal-notifier &>/dev/null; then
-        encoded_file=$(python3 -c "import urllib.parse; print(urllib.parse.quote('${file%.md}'))")
+        encoded_file=$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1], safe=''))" "${file%.md}")
         vault_name=$(basename "$VAULT_ROOT")
         terminal-notifier \
           -title "desk: ${task_name}" \
