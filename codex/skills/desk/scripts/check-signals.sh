@@ -34,18 +34,17 @@ while IFS= read -r file; do
     task_name=$(basename "$file" .md)
     signal_file="${SIGNALS_DIR}/${task_name}.ready"
 
-    if [[ ! -f "$signal_file" ]]; then
-      echo "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > "$signal_file"
+    # Update timestamp (re-signal even if .ready already exists from a prior unconsumed round)
+    echo "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > "$signal_file"
 
-      # terminal-notifier で通知
-      if command -v terminal-notifier &>/dev/null; then
-        encoded_file=$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1], safe=''))" "${file%.md}")
-        vault_name=$(basename "$VAULT_ROOT")
-        terminal-notifier \
-          -title "desk: ${task_name}" \
-          -message "Input received — ready to resume" \
-          -open "obsidian://open?vault=${vault_name}&file=${encoded_file}"
-      fi
+    # terminal-notifier で通知
+    if command -v terminal-notifier &>/dev/null; then
+      encoded_file=$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1], safe=''))" "${file%.md}")
+      vault_name=$(basename "$VAULT_ROOT")
+      terminal-notifier \
+        -title "desk: ${task_name}" \
+        -message "Input received — ready to resume" \
+        -open "obsidian://open?vault=${vault_name}&file=${encoded_file}"
     fi
   fi
 done <<< "$changed_files"

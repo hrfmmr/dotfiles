@@ -29,6 +29,13 @@ Delegate concrete work to existing skills ($wt / $grill-me / $tk / $review / $co
 
 - cwd is an Obsidian vault root (works with any vault).
 - obsidian-git plugin enabled (auto-commit interval ≈ 3 min).
+- [Advanced URI](https://github.com/Vinzent03/obsidian-advanced-uri) plugin enabled (for heading-level deep links in notifications).
+- **Signal hooks installed** (both are required for async auto-resume):
+  1. **post-commit hook**: `scripts/setup-hook.sh <vault-root>` — generates `.desk/signals/*.ready` on `input:: done`.
+  2. **Stop Hook**: `hooks.Stop` in `<vault-root>/.claude/settings.json` — consumes signals on root session idle. Run `scripts/setup-hook.sh <vault-root>` to install both, or manually add:
+     ```json
+     {"hooks":{"Stop":[{"hooks":[{"type":"command","command":"bash <skill-dir>/scripts/desk_stop_hook.sh <vault-root>","timeout":10}]}]}}
+     ```
 - For impl/research tasks, `BEADS_DIR` must be defined in the target repo's `.envrc`.
 
 ## Invocation
