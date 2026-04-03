@@ -374,7 +374,7 @@ Claude Code `hooks.Stop` fires when the root session goes idle. `scripts/desk_st
 1. Checks `.desk/signals/*.ready` — if found (FIFO, oldest first), returns `{"decision":"block","reason":"$desk run <task>"}`.
 2. Checks `.desk/runtime/*.lock` for dead PIDs (`kill -0`) — if found, returns `{"decision":"block","reason":"$desk run <task> --force"}`.
 3. Checks heartbeat staleness (>15 min with `runtime_status: running`) — fires `terminal-notifier` (does NOT block).
-4. If nothing found, returns `{"decision":"allow"}`.
+4. If nothing found, returns `{"decision":"approve"}`.
 
 Execution time must be <1 second (no fswatch wait). Install via project settings:
 

@@ -6,7 +6,7 @@
 #   2. .desk/runtime/*.lock with dead PID (agent crashed)
 #   3. Heartbeat staleness > 15 min (agent hung, notify only)
 #
-# Returns JSON: {"decision":"block","reason":"..."} or {"decision":"allow"}
+# Returns JSON: {"decision":"block","reason":"..."} or {"decision":"approve"}
 # Execution target: <1 second (no fswatch wait)
 #
 # Usage: desk_stop_hook.sh <vault_root>
@@ -31,7 +31,7 @@ if [[ -n "$ready_file" ]]; then
     pid=$(grep '^pid=' "$lock_file" 2>/dev/null | cut -d= -f2)
     if [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null; then
       # Agent already running, skip
-      echo '{"decision":"allow"}'
+      echo '{"decision":"approve"}'
       exit 0
     fi
   fi
@@ -75,4 +75,4 @@ for lock_file in "${RUNTIME_DIR}"/*.lock; do
 done
 
 # --- Nothing found ---
-echo '{"decision":"allow"}'
+echo '{"decision":"approve"}'
