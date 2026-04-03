@@ -30,7 +30,7 @@ sequenceDiagram
 
     Note over R,Hook: Root session goes idle
     Hook->>Hook: Check signals + locks → allow
-    Hook-->>R: {"decision":"allow"}
+    Hook-->>R: {"decision":"approve"}
 ```
 
 ## 2. Human Input Required → Cold Resume
@@ -132,7 +132,7 @@ sequenceDiagram
     Note over R,Hook: Root session goes idle
     Hook->>Hook: Check locks → pid alive but heartbeat stale
     Hook->>H: terminal-notifier ⚠️ "Agent hung?"
-    Hook-->>R: {"decision":"allow"}
+    Hook-->>R: {"decision":"approve"}
     Note over R: Does NOT auto-recover (human decides)
 
     H->>R: $desk run <task> --force
