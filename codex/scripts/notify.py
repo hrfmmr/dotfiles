@@ -7,7 +7,7 @@ import subprocess
 import sys
 
 
-def tail_chars(value: str, length: int = 35) -> str:
+def tail_chars(value: str, length: int = 30) -> str:
     if len(value) <= length:
         return value
     return "..." + value[-length:]
@@ -45,8 +45,8 @@ def main() -> int:
     session_name = f"codex-{session_suffix}"
     tmux_server_name = resolve_tmux_server_name(session_name) or "unknown"
 
-    title = f"Codex: {tail_chars(cwd, 35)}"
-    message = f"tmux: {tmux_server_name} | {session_name}\n{last_message}"
+    title = "Codex"
+    message = f"{cwd}\nEcho: {last_message}"
     subprocess.check_output(
         [
             "terminal-notifier",
