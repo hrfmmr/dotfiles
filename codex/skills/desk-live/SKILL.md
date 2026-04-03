@@ -69,11 +69,12 @@ For each user message:
 
    Omit only: tool-call boilerplate, retry noise, permission prompts, and formatting scaffolding. When in doubt, include it.
 
-3. If `bd_issue_id` is set, append a **compact reproducible log** to the bd issue via `bd comment`. This is NOT a one-liner — it should be a concise but substantively complete record from which the essential response history can be reconstructed:
+3. **GATE — bd comment (background).** If `bd_issue_id` is set, fire `bd comment` **in the same response as the Turn-N write**, using `run_in_background: true` on the Bash tool so it never blocks the user. This is a hard gate paired with Turn-N: if you wrote a Turn-N, you must also fire the bd comment. Do not defer, batch, or skip.
    ```bash
-   bd comment <bd_issue_id> "Turn-N: <structured summary — findings, decisions, actions, artifacts — compact but reproducible>"
+   # run_in_background: true
+   BEADS_DIR=<bd_beads_dir> bd comment <bd_issue_id> "Turn-N: <structured summary — findings, decisions, actions, artifacts — compact but reproducible>"
    ```
-   Omit verbose prose but preserve: key data points, decision rationale, created/modified identifiers (bead IDs, file paths, commit SHAs), and state transitions.
+   Content rules: concise but substantively complete — preserve key data points, decision rationale, created/modified identifiers (bead IDs, file paths, commit SHAs), and state transitions. Omit verbose prose.
 4. Update frontmatter `runtime_heartbeat_at` every ~5 Turns (not every Turn — avoid noise).
 5. If a meaningful status transition occurs (e.g., planning completes → `in_progress`), update `status` and `current_status_summary` immediately.
 6. Continue to next user input.
