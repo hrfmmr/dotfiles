@@ -8,7 +8,16 @@
 [alias]
 	co = checkout
 	st = status
-	ci = commit
+    ci = "!f(){ \
+      if [ $# -eq 0 ]; then \
+        git diff --cached \
+          | codex exec \
+              \"Read the staged diff from stdin and output ONLY a concise git commit message (no explanation).\" \
+          | git commit -F -; \
+      else \
+        git commit \"$@\"; \
+      fi; \
+    }; f"
 	br = branch
 	df = diff
 	dfc = diff --cached
