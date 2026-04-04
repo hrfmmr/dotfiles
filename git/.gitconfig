@@ -12,7 +12,7 @@
       if [ $# -eq 0 ]; then \
         git diff --cached \
           | codex exec \
-              \"Read the staged diff from stdin and output ONLY a concise git commit message (no explanation).\" \
+              \"Read the staged diff from stdin and output ONLY a concise git commit message (no explanation). Respect the project's commit message conventions and recent history when choosing the message format and prefix.\" \
           | git commit -F -; \
       else \
         git commit \"$@\"; \
