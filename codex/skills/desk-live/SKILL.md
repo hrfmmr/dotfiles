@@ -63,6 +63,7 @@ For each user message:
    - Decisions made and their rationale
    - Actions taken (commands run, files edited, beads created, etc.)
    - Artifacts produced (snapshots, plans, code diffs, etc.)
+   - Prefer task-critical substance over orchestration chatter. Omit repeated signal, lock, retry, or housekeeping details unless they change task state, block progress, or justify a decision.
 
    **Skill-specific rules:**
    - **$grill-me / interactive Q&A**: Log every question asked and every answer received **without omission**. Each Q&A pair must be recorded verbatim (question text + selected option or free-form answer). Do not summarize multiple questions into a single line.
