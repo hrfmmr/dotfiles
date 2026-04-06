@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# desk_stop_hook.sh — Claude Code Stop Hook for desk auto-resume
+# desk_stop_hook.sh — Claude Code / Codex Stop Hook for desk auto-resume
 #
 # Runs when root session goes idle. Checks for:
 #   1. .desk/signals/*.ready (human input completed)
@@ -10,7 +10,7 @@
 # Execution target: <1 second (no fswatch wait)
 #
 # Usage: desk_stop_hook.sh <vault_root>
-# Install in .claude/settings.json:
+# Install in .claude/settings.json or .codex/hooks.json:
 #   hooks.Stop[0].hooks[0].command = "bash <path>/desk_stop_hook.sh <vault>"
 
 set -euo pipefail

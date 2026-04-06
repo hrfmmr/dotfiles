@@ -21,7 +21,7 @@ Delegate concrete work to existing skills ($wt / $grill-me / $tk / $review / $co
 | bd issue | Agent-recoverable log for cold resume |
 | desk skill | State transition rules + cold resume protocol |
 | post-commit hook | Event-driven signal generation |
-| Stop Hook | Auto-resume trigger on root session idle |
+| Stop Hook | Auto-resume trigger on root session idle in Claude Code / Codex |
 | `.desk/runtime/` | External observability (lock files + logs) |
 | Each agent session | Stateless worker (restore → execute → terminate) |
 
@@ -32,7 +32,10 @@ Delegate concrete work to existing skills ($wt / $grill-me / $tk / $review / $co
 - [Advanced URI](https://github.com/Vinzent03/obsidian-advanced-uri) plugin enabled (for heading-level deep links in notifications).
 - **Signal hooks installed** (both are required for async auto-resume):
   1. **post-commit hook**: `scripts/setup-hook.sh <vault-root>` — generates `.desk/signals/*.ready` on `input:: done`.
-  2. **Stop Hook**: `hooks.Stop` in `<vault-root>/.claude/settings.json` — consumes signals on root session idle. Run `scripts/setup-hook.sh <vault-root>` to install both, or manually add:
+  2. **Stop Hook**:
+     - Claude Code: `hooks.Stop` in `<vault-root>/.claude/settings.json`
+     - Codex: `hooks.Stop` in `<vault-root>/.codex/hooks.json` (requires `[features] codex_hooks = true` in `~/.codex/config.toml`)
+     Run `scripts/setup-hook.sh <vault-root>` to install both, or manually add this JSON to either config file:
      ```json
      {"hooks":{"Stop":[{"hooks":[{"type":"command","command":"bash <skill-dir>/scripts/desk_stop_hook.sh <vault-root>","timeout":10}]}]}}
      ```
@@ -369,14 +372,14 @@ auto-commit fires
 
 ### Layer 2: Stop Hook Auto-Resume (signal consumption)
 
-Claude Code `hooks.Stop` fires when the root session goes idle. `scripts/desk_stop_hook.sh` runs and:
+Claude Code / Codex `hooks.Stop` fires when the root session goes idle. `scripts/desk_stop_hook.sh` runs and:
 
 1. Checks `.desk/signals/*.ready` — if found (FIFO, oldest first), returns `{"decision":"block","reason":"$desk run <task>"}`.
 2. Checks `.desk/runtime/*.lock` for dead PIDs (`kill -0`) — if found, returns `{"decision":"block","reason":"$desk run <task> --force"}`.
 3. Checks heartbeat staleness (>15 min with `runtime_status: running`) — fires `terminal-notifier` (does NOT block).
 4. If nothing found, returns `{"decision":"approve"}`.
 
-Execution time must be <1 second (no fswatch wait). Install via project settings:
+Execution time must be <1 second (no fswatch wait). Install via `<vault-root>/.claude/settings.json` or `<vault-root>/.codex/hooks.json`:
 
 ```json
 {
@@ -385,6 +388,8 @@ Execution time must be <1 second (no fswatch wait). Install via project settings
   }
 }
 ```
+
+Codex requires `[features] codex_hooks = true` in `~/.codex/config.toml`.
 
 ### Dedup: signal consumed → `.ready` file deleted before spawn. Lock + PID check prevents double spawn.
 
