@@ -35,6 +35,9 @@ select-word-style default
 zstyle ':zle:*' word-chars " /=;@:{},|"
 zstyle ':zle:*' word-style unspecified
 
+ZSH_CONFIG_DIR="${${(%):-%N}:A:h}"
+source "$ZSH_CONFIG_DIR/functions/shell.zsh"
+
 # hooks
 autoload -Uz add-zsh-hook
 autoload -Uz chpwd_recent_dirs cdr 
@@ -43,10 +46,6 @@ add-zsh-hook precmd reflect_current_dir
 zstyle ':chpwd:*' recent-dirs-max 500
 zstyle ':chpwd:*' recent-dirs-default true
 zstyle ':chpwd:*' recent-dirs-pushd true
-
-function reflect_current_dir() {
-    echo -ne "\033]0;$(pwd | rev | awk -F \/ '{print $1}'| rev)\007"
-}
 
 #
 # * History
@@ -81,38 +80,6 @@ bindkey "^p" history-beginning-search-backward-end
 #
 # rendering current Git branch in RPROMPT
 autoload VCS_INFO_get_data_git; VCS_INFO_get_data_git 2> /dev/null
-function rprompt-git-current-branch {
-        local name st color gitdir action
-        if [[ "$PWD" =~ '/\.git(/.*)?$' ]]; then
-                return
-        fi
-
-        name=`git rev-parse --abbrev-ref=loose HEAD 2> /dev/null`
-        if [[ -z $name ]]; then
-                return
-        fi
-
-        gitdir=`git rev-parse --git-dir 2> /dev/null`
-        action=`VCS_INFO_git_getaction "$gitdir"` && action="($action)"
-
-	if [[ -e "$gitdir/rprompt-nostatus" ]]; then
-		echo "$name$action "
-		return
-	fi
-
-        st=`git status 2> /dev/null`
-	if [[ -n `echo "$st" | grep "^nothing to"` ]]; then
-		color=%F{green}
-	elif [[ -n `echo "$st" | grep "^nothing added"` ]]; then
-		color=%F{yellow}
-	elif [[ -n `echo "$st" | grep "^# Untracked"` ]]; then
-                color=%B%F{red}
-        else
-                color=%F{red}
-        fi
-
-        echo "$color$name$action%f%b "
-}
 setopt prompt_subst
 RPROMPT='[`rprompt-git-current-branch`]'
 
@@ -145,44 +112,9 @@ alias lzd='lazydocker'
 alias tf='terraform'
 alias py='poetry'
 alias ecs='ecspresso'
-
-function git-checkout() {
-    g checkout B;
-    zle reset-prompt
-}
-zle -N git-checkout
-bindkey '^g^o' git-checkout
-
-function git-pull() {
-    g pull origin B;
-    zle reset-prompt
-}
-zle -N git-pull
-bindkey '^g^p' git-pull
-
-function git-rebase() {
-    g rebase B;
-    zle reset-prompt
-}
-zle -N git-rebase
-bindkey '^g^r' git-rebase
-
-function mkcd() {
-	mkdir $1;
-	cd $1;
-}
-
-function ptr() {
-    pt -0 -l "$1" | xargs -0 perl -pi.bak -e "s/$1/$2/g";
-}
-
-function rgr() {
-    rg -0 -l "$1" | xargs -0 perl -pi.bak -e "s/$1/$2/g";
-}
-
-function restore_bak() {
-    find . -type f -exec rename -fv 's/\.bak$//' {} \;
-}
+for zsh_function_file in git.zsh navigation.zsh github.zsh devtools.zsh media.zsh; do
+    source "$ZSH_CONFIG_DIR/functions/$zsh_function_file"
+done
 
 #
 # * Plugins
@@ -221,124 +153,6 @@ export FZF_ALT_C_COMMAND='fd --type d --hidden --follow --exclude ".git" ""'
 export FZF_DEFAULT_OPTS="--reverse --inline-info"
 [ -n "$NVIM_LISTEN_ADDRESS" ] && FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --no-height"
 
-# find recent executed command
-function fzf-execute-history() {
-    local item
-    item=$(builtin history -n -r 1 | fzf --query="$LBUFFER")
-
-    if [[ -z "$item" ]]; then
-        return 1
-    fi
-
-    BUFFER="$item"
-    CURSOR=$#BUFFER
-    zle reset-prompt
-}
-zle -N fzf-execute-history
-bindkey '^x^b' fzf-execute-history
-
-# find recent moved directory 
-function fzf-cdr() {
-    local item
-    item=$(cdr -l | sed 's/^[^ ]\{1,\} \{1,\}//' | fzf)
-
-    if [[ -z "$item" ]]; then
-        return 1
-    fi
-
-    BUFFER="cd -- $item"
-    CURSOR=$#BUFFER
-    zle accept-line
-}
-
-function fzf-z-search() {
-    local res=$(z | sort -rn | cut -c 12- | fzf)
-    if [ -n "$res" ]; then
-        BUFFER+="cd $res"
-        zle accept-line
-    else
-        return 1
-    fi
-}
-zle -N fzf-cdr
-bindkey '^x^d' fzf-cdr
-# zle -N fzf-z-search
-# bindkey '^x^d' fzf-z-search
-
-# find ghq directory
-function ghq-fzf() {
-  local selected_dir=$(ghq list | fzf --query="$LBUFFER")
-
-  if [ -n "$selected_dir" ]; then
-    BUFFER="cd $(ghq root)/${selected_dir}"
-    zle accept-line
-  fi
-
-  zle reset-prompt
-}
-
-zle -N ghq-fzf
-bindkey "^x^h" ghq-fzf
-
-# find git worktree directory
-function worktree-fzf() {
-  local selected_dir=$(git worktree list | awk '{print $1}' | fzf --query="$LBUFFER")
-
-  if [ -n "$selected_dir" ]; then
-    BUFFER="cd ${selected_dir}"
-    zle accept-line
-  fi
-
-  zle reset-prompt
-}
-zle -N worktree-fzf
-bindkey "^g^w" worktree-fzf
-
-# checkout new branch related to an github issue
-function checkout-ghissue-fzf() {
-  local selected_issue=$(hub issue --format='%sC %i %t labels:%l milestone:%Mt | %as  %Nc%n' | fzf --query="$LBUFFER")
-
-  if [ -n "$selected_issue" ]; then
-    issue=$(awk '{print $1}' <<< "$selected_issue" | sed -E 's/^#([0-9]+)/\1/')
-    BUFFER="git checkout -b feature/${issue}"
-    zle accept-line
-  fi
-
-  zle reset-prompt
-}
-zle -N checkout-ghissue-fzf
-bindkey "^g^b" checkout-ghissue-fzf
-
-# browse github issue
-function browse-ghissue-fzf() {
-  local selected_issue=$(hub issue --format='%sC %i %t labels:%l milestone:%Mt | %as  %Nc%n' | fzf --query="$LBUFFER")
-
-  if [ -n "$selected_issue" ]; then
-    issue=$(awk '{print $1}' <<< "$selected_issue" | sed -E 's/^#([0-9]+)/\1/')
-    BUFFER="hub browse -- issues/${issue}"
-    zle accept-line
-  fi
-
-  zle reset-prompt
-}
-zle -N browse-ghissue-fzf
-bindkey "^g^i" browse-ghissue-fzf
-
-# browse github pull request
-function browse-ghpr-fzf() {
-  local selected_pr=$(hub pr list --format='%sC %i %t labels:%l milestone:%Mt | author:@%au  %Nc%n' | fzf --query="$LBUFFER")
-
-  if [ -n "$selected_pr" ]; then
-    pr=$(awk '{print $1}' <<< "$selected_pr" | sed -E 's/^#([0-9]+)/\1/')
-    BUFFER="hub browse -- pull/${pr}"
-    zle accept-line
-  fi
-
-  zle reset-prompt
-}
-zle -N browse-ghpr-fzf
-bindkey "^g^l" browse-ghpr-fzf
-
 #
 # * yarn
 #
@@ -347,104 +161,6 @@ if hash yarn 2>/dev/null; then export PATH="$PATH:`yarn global bin`"; fi
 #
 # * pet
 #
-function pet-select() {
-  BUFFER=$(pet search --query "$LBUFFER")
-  CURSOR=$#BUFFER
-  zle redisplay
-}
-zle -N pet-select
-stty -ixon
-bindkey '^x^p' pet-select
-
-#
-# mpv
-#
-function mpv-music() {
-    local PLAYLISTDIR=~/Library/Mobile\ Documents/iCloud~md~obsidian/Documents/ObsidianVault/yt-playlist
-    local playlist=$(ls $PLAYLISTDIR/*.m3u | fzf-tmux -d --reverse --no-sort +m --prompt="Playlist > ")
-    if [ $# = 0 ]; then
-		mpv \
-            --quiet \
-            --no-video \
-            --ytdl-format="worstvideo+bestaudio" \
-            --shuffle \
-            --playlist="$playlist" \
-            --loop-playlist
-    elif [ $# = 1 ]; then
-		mpv \
-            --no-video \
-            --ytdl-format="worstvideo+bestaudio" \
-            --quiet \
-            $1 \
-		cd -
-    else
-		echo 'usage: mpv-music [youtube-url]'
-    fi
-}
-
-function mpv-video() {
-    local PLAYLISTDIR=~/Library/Mobile\ Documents/iCloud~md~obsidian/Documents/ObsidianVault/yt-playlist
-    local playlist=$(ls $PLAYLISTDIR/*.m3u | fzf-tmux -d --reverse --no-sort +m --prompt="Playlist > ")
-	if [ $# = 0 ]; then
-		mpv \
-            --quiet \
-            --ytdl-format="[height<=480]+bestaudio" \
-            --shuffle \
-            --playlist="$playlist" \
-            --loop-playlist
-    elif [ $# = 1 ]; then
-		mpv \
-            --quiet \
-            --ytdl-format="[height<=480]+bestaudio" \
-            $1 \
-		cd -
-    else
-		echo 'usage: mpv-video [youtube-url]'
-    fi
-}
-
-function mpv-quit() {
-    pkill -SIGUSR1 -f mpv
-}
-
-#
-# ffmpeg
-#
-function video2gif() {
-    local gif=$(echo "$1" | sed -e 's/\.[^.]*$/.gif/')
-    ffmpeg -i $1 -vf scale=320:-1 -r 10 "$gif"
-}
-
-#
-# flutter
-#
-
-# Launch flutter emulator
-function flutter-emulator-launch() {
-  local selected_emulator=$(flutter emulators | grep • | fzf --query="$LBUFFER")
-
-  if [ -n "$selected_emulator" ]; then
-    BUFFER="flutter emulators --launch ${selected_emulator}"
-    zle accept-line
-  fi
-
-  zle reset-prompt
-}
-zle -N flutter-emulator-launch
-bindkey "^f^l" flutter-emulator-launch
-
-#
-# mitmproxy
-#
-function launch-mitmproxy() {
-    sudo networksetup -setwebproxy Wi-Fi localhost 8080
-    sudo networksetup -setsecurewebproxy Wi-Fi localhost 8080
-    sudo networksetup -setwebproxystate Wi-Fi on
-    sudo networksetup -setsecurewebproxystate Wi-Fi on
-    mitmproxy
-    sudo networksetup -setwebproxystate Wi-Fi off
-    sudo networksetup -setsecurewebproxystate Wi-Fi off
-}
 
 #
 # zplug
