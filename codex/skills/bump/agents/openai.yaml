@@ -1,0 +1,3 @@
+interface:
+  display_name: "Bump"
+  short_description: "Async follow-up for marked note spans"
