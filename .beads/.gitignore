@@ -19,6 +19,12 @@ redirect
 # These files are machine-specific and should not be shared across clones
 .sync.lock
 export-state/
+push-state.json
+.beads-credential-key
+
+# Local audit/runtime artifacts
+interactions.jsonl
+dolt-monitor.pid.lock
 
 # Ephemeral store (SQLite - wisps/molecules, intentionally not versioned)
 ephemeral.sqlite3
