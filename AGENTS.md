@@ -9,7 +9,7 @@ bd ready              # Find available work
 bd show <id>          # View issue details
 bd update <id> --claim  # Claim work atomically
 bd close <id>         # Complete work
-bd sync               # Sync with git
+bd dolt push          # Push issue state to the configured Dolt remote
 ```
 
 ## Non-Interactive Shell Commands
@@ -40,6 +40,15 @@ cp -rf source dest          # NOT: cp -r source dest
 ## Issue Tracking with bd (beads)
 
 **IMPORTANT**: This project uses **bd (beads)** for ALL issue tracking. Do NOT use markdown TODOs, task lists, or other tracking methods.
+
+### Repo-Local Policy
+
+This repo keeps a repo-local `.beads/` directory for shared bootstrap and configuration, but the authoritative issue state lives in the configured `bd dolt` remote for this checkout.
+
+- Treat `bd dolt push` as the source-of-truth sync step for issue tracking.
+- Commit `.beads/` changes only when intentionally changing shared repo policy/bootstrap.
+- Do NOT stage or commit local/runtime `.beads/` artifacts such as `interactions.jsonl`, monitor/lock files, or credential/cache files.
+- If hooks need to be refreshed locally, run `bd hooks install` instead of hand-editing generated hook shims.
 
 ### Why bd?
 
@@ -101,13 +110,13 @@ bd close bd-42 --reason "Completed" --json
    - `bd create "Found bug" --description="Details about what was found" -p 1 --deps discovered-from:<parent-id>`
 5. **Complete**: `bd close <id> --reason "Done"`
 
-### Auto-Sync
+### Remote Sync
 
-bd automatically syncs with git:
+Issue state sync for this repo happens through Dolt, not through code-repo commits:
 
-- Exports to `.beads/issues.jsonl` after changes (5s debounce)
-- Imports from JSONL when newer (e.g., after `git pull`)
-- No manual export/import needed!
+- Run `bd dolt push` after meaningful issue mutations and before ending the session.
+- If `bd dolt push` is rejected, reconcile Dolt history first; do not create a git-only commit just to carry `.beads` audit/runtime files.
+- Keep git commits for this repo focused on code changes and intentional shared `.beads` bootstrap/config changes only.
 
 ### Important Rules
 
@@ -133,7 +142,7 @@ For more details, see README.md and docs/QUICKSTART.md.
 4. **PUSH TO REMOTE** - This is MANDATORY:
    ```bash
    git pull --rebase
-   bd sync
+   bd dolt push
    git push
    git status  # MUST show "up to date with origin"
    ```
