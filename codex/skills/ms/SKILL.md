@@ -1,70 +1,71 @@
 ---
 name: ms
-description: Codex スキルを作成/更新/リファクタする。SKILL.md,scripts/references/assets を含む。スキル設計/雛形作成/編集/検証/改善や、作成・更新・トリガー・メタデータに関する依頼で使用。
+description: Create, update, or refactor Codex skills, including `SKILL.md` plus `scripts/`, `references/`, and `assets/` when justified. Use when defining a new skill, tightening triggers or metadata, restructuring skill resources, or validating a skill change before shipping it.
 ---
 
 # ms
 
 ## Overview
 
-最小差分で Codex スキルを作成・更新する。外部レジストリは使わず、スキルフォルダ内で完結させ、スキルをスリムに保つ。
+Create or revise Codex skills with the smallest defensible diff.
+Keep the implementation self-contained inside the skill directory, avoid external registries, and preserve a lean operational surface.
 
-## Hard constraints
+## Hard Constraints
 
-- 最小差分: 要件を満たすために必要な変更だけを行う。
-- 追加ドキュメント禁止: README/INSTALL/CHANGELOG 形式のファイルは追加しない。
+- Minimal diff: change only what is required to satisfy the request.
+- No auxiliary docs: do not add `README`, `INSTALL`, or `CHANGELOG` style files.
 - Frontmatter:
-  - 既定: `name` と `description` のみ。
-  - システムスキル更新時は、許可されている既存キー（例: `metadata`, `license`, `allowed-tools`）を保持。
-  - `name` はハイフン区切り（<=64 文字）でフォルダ名と一致させる。
-  - `description` はトリガー面。"when to use" のヒントを含める。角括弧は使わない。<=1024 文字。
-- SKILL.md 本文:
-  - 命令形で書く。
-  - 500 行以内。詳細は `references/` に退避。
-  - トリガーは本文に書かず、frontmatter `description` に書く。
-- 完了前に必ず `quick_validate.py` を実行する。
-  - 推奨（グローバルインストール不要）:
+  - Default to `name` and `description` only.
+  - When updating a system skill, preserve any already-allowed keys such as `metadata`, `license`, or `allowed-tools`.
+  - Keep `name` hyphenated, within 64 characters, and identical to the folder name.
+  - Treat `description` as the trigger surface. Include "when to use" cues, avoid square brackets, and stay within 1024 characters.
+- `SKILL.md` body:
+  - Write in the imperative.
+  - Stay within 500 lines; move detail into `references/` when necessary.
+  - Keep trigger language out of the body; put it in frontmatter `description`.
+- Always run `quick_validate.py` before finishing.
+  - Recommended without a global install:
     - `uv run --with pyyaml -- python3 ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py <path/to/skill>`
-  - 注意: skill-creator スクリプトは PyYAML が必要（`import yaml`）。
+  - Note: the `skill-creator` scripts require PyYAML (`import yaml`).
 
 ## Workflow Decision Tree
 
-- 既存の該当スキルがある: Update Workflow。
-- 該当スキルがない: Create Workflow。
-- 名前/場所/トリガーが不明: 1〜3 の質問で確認してから進める。
+- If the target skill already exists, use the Update Workflow.
+- If no relevant skill exists, use the Create Workflow.
+- If the name, location, or trigger surface is unclear, ask 1-3 focused questions before proceeding.
 
 ## Create Workflow
 
-1. 重複排除: 意図を既にカバーするスキルがないか探す。近似の新規作成より更新を優先。
-2. Discover/Define: 具体的なユーザープロンプトを 2〜3 集め、以下を作る:
-   - 問題文（1 行）
-   - 成功基準（どうなれば成功か）
-3. 再利用アセット計画: `scripts/` / `references/` / `assets/` が必要か判断し、必要最低限だけ作る。
-4. 初期化（雛形）:
+1. De-duplicate. Search for an existing skill that already covers the intent; prefer extending a near match over creating a redundant skill.
+2. Discover and define. Collect 2-3 concrete user prompts and derive:
+   - a one-line problem statement
+   - success criteria that make completion testable
+3. Plan reusable assets. Decide whether `scripts/`, `references/`, or `assets/` are actually needed and create only the minimum set.
+4. Initialize the scaffold:
    - `uv run --with pyyaml -- python3 ~/.codex/skills/.system/skill-creator/scripts/init_skill.py <skill-name> --path ~/.codex/skills`
-   - `--resources scripts,references,assets` は必要な場合のみ付ける。
-   - すぐ UI メタデータが必要なら `--interface key=value` を付ける（複数指定可）。
-5. `SKILL.md` を執筆:
-   - frontmatter `description` に具体的なトリガー（ファイル種別/ツール/タスク/キーフレーズ）を含める。
-   - 本文は手順・決定木・`references/` への導線を中心に構成する。
-6. 検証:
+   - Add `--resources scripts,references,assets` only when those directories are justified.
+   - Add `--interface key=value` only when immediate UI metadata is required; repeat as needed.
+5. Write `SKILL.md`:
+   - Put concrete triggers in frontmatter `description`, including file types, tools, tasks, or key phrases when useful.
+   - Center the body on procedures, decision logic, and routes into `references/`.
+6. Validate:
    - `uv run --with pyyaml -- python3 ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py ~/.codex/skills/<skill-name>`
-7. ユーザーと反復: トリガーを絞り、重複を削り、再利用可能な処理は `scripts/` に昇格。
+7. Iterate with the user. Tighten triggers, remove overlap, and promote reusable logic into `scripts/` when repetition becomes real.
 
 ## Update Workflow (In Place)
 
-1. 対象スキルのフォルダを `~/.codex/skills`（またはシステムスキルなら `~/.codex/skills/.system`）で特定。
-2. 現在の `SKILL.md` とリソースを読み、必要な最小変更を特定。
-3. その場で編集:
-   - トリガーが変わるなら frontmatter `description` を更新。
-   - ワークフロー/タスク/参照は最小差分で調整（整形の無駄な変更はしない）。
-   - リソースフォルダの追加/削除は実際に再利用が生まれる場合のみ。
-4. `uv run --with pyyaml -- python3 ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py <path/to/skill>` で検証。
-5. 変更点と次のステップを要約。
+1. Locate the target skill under `~/.codex/skills`, or under `~/.codex/skills/.system` for system skills.
+2. Read the current `SKILL.md` and any skill-local resources, then isolate the minimum necessary change.
+3. Edit in place:
+   - Update frontmatter `description` if the trigger surface changes.
+   - Adjust workflow steps, tasks, and references with a minimal diff; avoid formatting-only churn.
+   - Add or remove resource directories only when they create actual reuse.
+4. Validate with:
+   - `uv run --with pyyaml -- python3 ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py <path/to/skill>`
+5. Summarize the delta and the next step.
 
 ## Trigger Examples
 
-- 「OpenAPI 仕様を管理して SDK を生成するスキルを作って」
-- 「このスキルの SKILL.md をリファクタして references/ にスキーマを追加して」
-- 「SKILL.md を 500 行以内に収め、詳細は references/ に移して」
-
+- "Create a skill that manages an OpenAPI spec and generates SDKs."
+- "Refactor this skill's `SKILL.md` and add a schema under `references/`."
+- "Keep `SKILL.md` under 500 lines and move the detail into `references/`."
