@@ -1,3 +1,12 @@
+# ============ local overlay ==============
+if [ -d "$HOME/.zsh.local.d" ]; then
+    for _zsh_local_file in "$HOME"/.zsh.local.d/*.zsh(N); do
+        source "$_zsh_local_file"
+    done
+    unset _zsh_local_file
+fi
+# ============ local overlay ==============
+
 #
 # * Options
 #
