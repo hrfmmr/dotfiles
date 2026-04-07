@@ -36,9 +36,9 @@ Only treat a note fragment as a bump request when a `.o0:` token is present:
 Examples:
 
 ```markdown
-.o0:ここを噛み砕いて
-.o0: ここを噛み砕いて
-    - .o0: この部分をもう少し詳しく
+.o0:break this down for me
+.o0: explain this in simpler terms
+    - .o0: go a little deeper on this part
 ```
 
 Position rules:
