@@ -21,6 +21,11 @@ return {
 					},
 				},
 				sorting_strategy = "ascending",
+				preview = {
+					-- Neovim 0.12 can currently trip Telescope preview treesitter highlighting.
+					-- Keep editor treesitter enabled and only disable it for preview buffers.
+					treesitter = false,
+				},
 			},
 			extensions = {
 				fzf = {
