@@ -20,15 +20,95 @@ SIGNALS_DIR="${VAULT_ROOT}/.desk/signals"
 RUNTIME_DIR="${VAULT_ROOT}/.desk/runtime"
 HEARTBEAT_THRESHOLD_SEC=900  # 15 minutes
 
+read_lock_field() {
+  local lock_file="$1"
+  local key="$2"
+  grep -m1 "^${key}=" "$lock_file" 2>/dev/null | cut -d= -f2- || true
+}
+
+to_epoch() {
+  local ts="$1"
+  [[ -n "$ts" ]] || return 1
+
+  date -j -f "%Y-%m-%dT%H:%M:%SZ" "$ts" +%s 2>/dev/null && return 0
+  date -j -f "%Y-%m-%dT%H:%M:%S%z" "$ts" +%s 2>/dev/null && return 0
+  date -j -f "%Y-%m-%dT%H:%M:%S%:z" "$ts" +%s 2>/dev/null && return 0
+  date -d "$ts" +%s 2>/dev/null && return 0
+
+  return 1
+}
+
+find_task_note() {
+  local task_name="$1"
+  local exact_path="${VAULT_ROOT}/${task_name}.md"
+  if [[ -f "$exact_path" ]]; then
+    printf '%s\n' "$exact_path"
+    return 0
+  fi
+
+  find "$VAULT_ROOT" -maxdepth 1 -type f -name '*.md' -print 2>/dev/null \
+    | awk -v target="${task_name}.md" '
+        BEGIN { IGNORECASE = 1 }
+        {
+          n = split($0, parts, "/")
+          if (tolower(parts[n]) == tolower(target)) {
+            print $0
+            exit
+          }
+        }
+      '
+}
+
+read_latest_input_state() {
+  local note_file="$1"
+  awk '
+    /^input::/ { state = $2 }
+    END {
+      if (state != "") {
+        print state
+      }
+    }
+  ' "$note_file" 2>/dev/null
+}
+
+read_task_status() {
+  local note_file="$1"
+  awk '
+    /^status:[[:space:]]*/ {
+      value = $0
+      sub(/^status:[[:space:]]*/, "", value)
+      gsub(/"/, "", value)
+      print value
+      exit
+    }
+  ' "$note_file" 2>/dev/null
+}
+
 # --- Path 1: Check for ready signals (human input completed) ---
 ready_file=$(find "$SIGNALS_DIR" -name '*.ready' -type f 2>/dev/null | sort | head -1)
 if [[ -n "$ready_file" ]]; then
   task_name=$(basename "$ready_file" .ready)
+  task_note=$(find_task_note "$task_name" || true)
+
+  # Drop stale signals that no longer correspond to a resumable task state.
+  if [[ -z "$task_note" ]]; then
+    rm -f "$ready_file"
+    echo '{"decision":"approve"}'
+    exit 0
+  fi
+
+  task_status=$(read_task_status "$task_note")
+  latest_input=$(read_latest_input_state "$task_note")
+  if [[ "$task_status" != "human_response_required" && "$task_status" != "planning" ]] || [[ "$latest_input" != "done" ]]; then
+    rm -f "$ready_file"
+    echo '{"decision":"approve"}'
+    exit 0
+  fi
 
   # Dedup: skip if agent is already running for this task
   lock_file="${RUNTIME_DIR}/${task_name}.lock"
   if [[ -f "$lock_file" ]]; then
-    pid=$(grep '^pid=' "$lock_file" 2>/dev/null | cut -d= -f2)
+    pid=$(read_lock_field "$lock_file" "pid")
     if [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null; then
       # Agent already running, skip
       echo '{"decision":"approve"}'
@@ -43,7 +123,7 @@ fi
 # --- Path 2: Check for dead locks (agent crashed) ---
 for lock_file in "${RUNTIME_DIR}"/*.lock; do
   [[ -f "$lock_file" ]] || continue
-  pid=$(grep '^pid=' "$lock_file" 2>/dev/null | cut -d= -f2)
+  pid=$(read_lock_field "$lock_file" "pid")
   if [[ -n "$pid" ]] && ! kill -0 "$pid" 2>/dev/null; then
     task_name=$(basename "$lock_file" .lock)
     echo "{\"decision\":\"block\",\"reason\":\"desk stale: ${task_name} agent (pid:${pid}) is dead. Run: \$desk run ${task_name} --force\"}"
@@ -55,10 +135,10 @@ done
 now_epoch=$(date +%s)
 for lock_file in "${RUNTIME_DIR}"/*.lock; do
   [[ -f "$lock_file" ]] || continue
-  pid=$(grep '^pid=' "$lock_file" 2>/dev/null | cut -d= -f2)
-  started_at=$(grep '^started_at=' "$lock_file" 2>/dev/null | cut -d= -f2)
+  pid=$(read_lock_field "$lock_file" "pid")
+  started_at=$(read_lock_field "$lock_file" "started_at")
   if [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null && [[ -n "$started_at" ]]; then
-    started_epoch=$(date -j -f "%Y-%m-%dT%H:%M:%SZ" "$started_at" +%s 2>/dev/null || echo 0)
+    started_epoch=$(to_epoch "$started_at" || echo 0)
     elapsed=$(( now_epoch - started_epoch ))
     if (( elapsed > HEARTBEAT_THRESHOLD_SEC )); then
       task_name=$(basename "$lock_file" .lock)
