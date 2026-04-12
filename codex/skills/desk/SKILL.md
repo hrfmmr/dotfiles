@@ -297,7 +297,7 @@ When execution produces a substantial artifact (design doc, investigation report
 
 1. Create a new note in the vault root with a descriptive name.
 2. **Tag inheritance**: Copy all `#prj-*` tags from the parent task note's first line into the derived note's first line. This ensures vault-wide project filtering remains consistent.
-3. Link it from the task note (inline link in the relevant Turn-N).
+3. Link it from the task note using Obsidian wikilink syntax only (for example `[[Derived Note]]`) in the relevant Turn-N. Do not use markdown file links for derived-note references.
 4. If `bd_issue_id` is set, reference it in the bd issue notes.
 
 ## Phase 3: Completion
