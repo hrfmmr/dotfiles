@@ -49,7 +49,7 @@ Run a critical third-party review and return a strict decision artifact.
 2. Gather the target context once and pass the same scope to every lane.
 3. Fan out lane reviews in parallel when possible.
 4. Normalize, deduplicate, and rank findings centrally.
-5. Emit one final artifact; in `pr-comment` mode, post inline review comments only after aggregation succeeds.
+5. Emit one final artifact; in `pr-comment` mode, reconcile matching AI-authored inline comments so each canonical finding converges to at most one live thread before posting any new comments.
 
 ### Review Lanes
 Launch these lanes by default:
@@ -77,6 +77,8 @@ Lane contract rules:
 - Wait for all lane results before producing the final artifact, unless a lane hard-fails and fallback retry is exhausted.
 - Normalize all lane findings into the required final schema.
 - Deduplicate materially identical findings across lanes; keep the highest severity and strictest label variant, and merge evidence when useful.
+- For `pr-comment`, run one more anchor-level consolidation pass before posting. If multiple lane findings describe the same underlying issue on the same `file:line`, merge them into one canonical finding/comment payload.
+- When merging same-anchor findings, keep the highest severity and strictest label, preserve one stable `finding_id`, and fold distinct evidence or minimal-fix details into the single posted body without repeating the same point.
 - Preserve stable `finding_id` values when the same underlying issue persists across repeated review cycles.
 - Sort final findings by severity (`Critical > High > Medium > Low`), then `finding_id`.
 - Set final `decision=request_changes` if any aggregated finding has `label=MUST_FIX`; otherwise set `decision=approve`.
@@ -111,11 +113,15 @@ Code context:
 
 Template rules:
 - Post one inline comment per aggregated finding; do not post a top-level summary comment to the PR.
+- Before posting, fetch existing PR inline comments authored by the orchestrator or prior AI review runs and match them by changed file, changed diff line, and materially same issue.
+- If one matching AI-authored inline comment already exists, update that comment in place with the consolidated body instead of creating a new thread.
+- If multiple matching AI-authored inline comments already exist, keep one canonical thread, update it with the consolidated body, and delete the redundant duplicates after the update succeeds.
 - Anchor each comment to the changed file and changed diff line that best matches the finding.
 - Sort posted findings by severity (`Critical > High > Medium > Low`), then `finding_id`.
 - If `findings` is empty, post no PR review comments.
 - The first line of every posted comment must explicitly state that it is an AI agent review comment.
 - Keep each inline comment focused on the anchored finding only; the overall `decision` and `summary` stay in the returned artifact.
+- Never leave more than one live inline review thread for the same canonical finding on the same diff line.
 - If a finding cannot be anchored to a changed diff line with confidence, do not post it as a PR comment; keep it only in the returned artifact for caller handling.
 
 Each finding must include:
