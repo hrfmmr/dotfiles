@@ -1,6 +1,6 @@
 ---
 name: crawl
-description: Collect links from a daily note's `## News` / `## Picks` sections or from an explicitly named note, then create concise `Clippings/` article notes plus only the concept notes required to extend an Obsidian vault. Use when converting curated news links into compact research notes or growing a knowledge graph from web content.
+description: Collect links from a daily note's `## News` / `## Picks` sections or from an explicitly named note, then create concise `Clippings/` article notes plus only the concept notes required to extend an Obsidian vault. Use when converting curated news links into compact research notes, enriching existing clipping notes with a compact summary header, or growing a knowledge graph from web content.
 ---
 
 # crawl
@@ -20,6 +20,7 @@ The goal is to track technical developments without over-researching and to stea
 - Use `#ai-generated` only to mark AI-authored additions inside pre-existing notes.
 - Tag article notes derived from x.com posts with `#x-post`.
 - Follow the existing `obsidian` skill's Wikilink discipline: link only the highest-value relationships.
+- When enriching an existing clipping note, update only the opening summary block and keep the downstream body intact unless a tiny structural fix is required to avoid duplicate headings.
 
 ## Input Modes
 
@@ -36,6 +37,24 @@ The goal is to track technical developments without over-researching and to stea
 - Do not start processing before confirmation.
 - If `## News` or `## Picks` already exists, rank those sections first.
 
+## Execution Modes
+
+### 1. Default Create-or-Extend Mode
+
+- Discover links, retrieve the source, and create the clipping note when it does not already exist.
+- If the clipping note already exists, prefer leaving it alone unless the request clearly asks for enrichment or the note is obviously incomplete.
+
+### 2. Summarize-Only Mode
+
+- Treat an explicit shell-facing flag such as `--summarize` as summarize-only mode.
+- In this mode, target only already-created clipping notes that correspond to the selected daily-note topics.
+- Resolve the target clipping note by checking, in order:
+  1. an existing child Wikilink under the topic entry
+  2. a direct match in `Clippings/` by title or plausible title variant
+  3. an existing clipping note whose `source` matches the topic's primary URL
+- If no existing clipping note can be resolved, skip that topic in summarize-only mode; do not create a new clipping note as fallback.
+- Leave the daily note unchanged in summarize-only mode unless the daily note already contains a failure log that needs a minimal correction.
+
 ## Link Discovery
 
 - Extract Markdown links, bare URLs, and supporting links nested under bullet items.
@@ -50,6 +69,11 @@ The goal is to track technical developments without over-researching and to stea
 4. If retrieval still fails, abandon that link.
 5. When abandoning a link, leave only a failure log in the daily note.
 
+When summarize-only mode is active:
+
+- Retrieve only what is needed to write the compact opening summary block for the existing clipping note.
+- Reuse the clipping note's existing metadata when it is already sufficient; do not spend extra effort rehydrating fields that are unrelated to the summary block.
+
 Minimal failure log:
 
 ```md
@@ -60,9 +84,10 @@ Minimal failure log:
 ## Article Note Workflow
 
 1. Check whether an article note already exists under `Clippings/`, including plausible title variants.
-2. If no note exists, create a new one under `Clippings/`.
-3. Match the page title whenever practical; shorten it only if it is unreasonably long.
-4. Include at least the following:
+2. In default mode, if no note exists, create a new one under `Clippings/`.
+3. In summarize-only mode, if no note exists, skip the topic instead of creating a new note.
+4. Match the page title whenever practical; shorten it only if it is unreasonably long.
+5. New article notes should include at least the following:
 
 ```md
 ---
@@ -98,9 +123,33 @@ tags:
 - List supporting links as `refs` when present
 ```
 
-5. Prefer concepts, tools, technologies, and service names as keywords.
-6. Keep `What` and `Why` compact. A few bullets and a brief summary are enough.
-7. Do not paste long summaries or excessive excerpts from the source.
+6. For summarize-only updates to an existing clipping note, insert or replace only the opening block directly after the frontmatter and any existing agent tag block.
+7. Use the following summarize-only opening shape:
+
+```md
+#ai-generated
+
+## Summary
+Sentence 1
+Sentence 2
+Sentence 3
+Sentence 4
+Sentence 5
+
+## Logical Structure
+- Main thesis
+  - Supporting point
+  - Supporting point
+- Secondary thread
+  - Evidence, contrast, or appendix
+```
+
+8. In summarize-only mode, keep the summary to exactly five sentences and use them to capture the core backdrop, evaluation, claim, and appendix-level nuance without bloating the note.
+9. In summarize-only mode, add a dedicated outline heading near the top so the whole logic of the source can be scanned quickly.
+10. Prefer concepts, tools, technologies, and service names as keywords.
+11. Keep `What` and `Why` compact. A few bullets and a brief summary are enough.
+12. Do not paste long summaries or excessive excerpts from the source.
+13. Do not rewrite the existing `Keywords`, `What`, `Why`, `Notes`, or lower body sections when summarize-only mode is sufficient.
 
 ## Concept Note Workflow
 
@@ -149,17 +198,21 @@ Append example for an existing note:
 1. When starting from a daily note and creating a new article note, add a Wikilink to that article note directly under the original topic entry.
 2. Use a child bullet for the addition and preserve existing supporting links or notes with the smallest possible diff.
 3. If a topic is skipped and no article note is created, add no Wikilink beyond the failure log.
+4. In summarize-only mode, do not add another child Wikilink for a topic that is already clipped.
 
 ## Output Quality Bar
 
 - Each processed link should become understandable within a few dozen seconds of reading.
 - Reading only the article note should make both the subject and its relevance clear.
 - Do not turn concept notes into encyclopedias. Preserve only the minimum that makes the next reread efficient.
+- A summarize-only update should let the reader grasp the article's thesis and skeleton from the opening block alone.
 
 ## Stop Conditions
 
 - The source cannot be retrieved.
 - The core claim cannot be identified.
 - Existing notes are already sufficient and a new note would add noise.
+- Summarize-only mode cannot resolve the target clipping note.
+- The existing clipping note already has a good five-sentence summary and a clear logic-outline block near the top.
 
 In those cases, do not force completion. Leave only the smallest useful failure log or skip rationale.
