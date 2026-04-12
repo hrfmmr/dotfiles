@@ -22,6 +22,22 @@ Run a durable beads workflow in Codex using AGENTS.md guidance, `codex exec`, an
 4. Inspect target work with `bd show <id>`.
 5. Claim work with `bd update <id> --claim`.
 
+## Issue ID Hierarchy
+
+When creating issues manually (not via `bd create` auto-ID), use a hierarchical integer suffix `<prefix>.M.N.O`:
+
+| Level | Format | Meaning | Example |
+|-------|--------|---------|---------|
+| Epic | `<prefix>.M` | Top-level work stream | `5km.7` |
+| Task | `<prefix>.M.N` | Deliverable unit within an epic | `5km.7.1` |
+| Sub-task | `<prefix>.M.N.O` | Atomic step within a task | `5km.7.1.1` |
+
+Rules:
+- Increment N within the same epic, O within the same task.
+- When using `bd create --parent`, mirror the parent's suffix and append the next integer.
+- The prefix portion (e.g., `5km`, `healthcare-infra-g8b`) comes from the bd database or project convention; the `.M.N.O` suffix is the hierarchy.
+- Keep depth at 3 levels maximum. If deeper nesting is needed, create a new epic instead.
+
 ## Execution Protocol
 
 - Discovery: create follow-up work and link with `discovered-from`.
