@@ -15,6 +15,7 @@ The goal is to track technical developments without over-researching and to stea
 - Do not over-invest. Capture the source accurately and add only the minimum concept scaffolding needed for future recall.
 - Always create article notes under `Clippings/`.
 - Create or extend concept notes at the vault root.
+- Be strictly faithful to the source content; do not introduce external knowledge, personal biases, or unmentioned technical details (e.g., specific tool usage or statistics not in the text) into the summary or logical structure.
 - When operating from a daily note, add a Wikilink from the original topic entry to the article note created from it.
 - Tag newly created agent-authored notes with `#ai-agent-note`.
 - Use `#ai-generated` only to mark AI-authored additions inside pre-existing notes.
@@ -123,33 +124,34 @@ tags:
 - List supporting links as `refs` when present
 ```
 
-6. For summarize-only updates to an existing clipping note, insert or replace only the opening block directly after the frontmatter and any existing agent tag block.
+6. For summarize-only updates to an existing clipping note, insert or replace only the opening block directly after the frontmatter and any existing agent tag block. The opening block includes the summary, logical structure, and the `# body` boundary.
 7. Use the following summarize-only opening shape:
 
 ```md
 #ai-generated
 
 ## Summary
-Sentence 1
-Sentence 2
-Sentence 3
-Sentence 4
-Sentence 5
+(Exactly 5 sentences)
 
 ## Logical Structure
-- Main thesis
-  - Supporting point
-  - Supporting point
-- Secondary thread
-  - Evidence, contrast, or appendix
+- **Core Thesis**: (One-line core claim and its logical necessity)
+- **Issue Map & Interpretation**:
+  - **[Issue 1: Topic Name]** -> **Author's Stance:** (Author's evaluation/interpretation/warning)
+    - (Sub-point 1: Reasoning or specific data/evidence from the article)
+    - (Sub-point 2: Secondary points or conditions)
+  - **[Issue 2: Topic Name]** -> **Author's Stance:** ...
+- **Synthesis**: (Overall summary of how points integrate and the final conclusion)
+
+---
+# body
 ```
 
-8. In summarize-only mode, keep the summary to exactly five sentences and use them to capture the core backdrop, evaluation, claim, and appendix-level nuance without bloating the note.
-9. In summarize-only mode, add a dedicated outline heading near the top so the whole logic of the source can be scanned quickly.
+8. In summarize-only mode, the `## Summary` must be exactly five sentences capturing the core backdrop, evaluation, claim, and nuance without bloating the note.
+9. In summarize-only mode, the `## Logical Structure` must use the hierarchical format (Issue Map & Interpretation) to show the depth of the argument and the author's stance on each major point. Ensure that every level of the hierarchy is grounded in the source text.
 10. Prefer concepts, tools, technologies, and service names as keywords.
 11. Keep `What` and `Why` compact. A few bullets and a brief summary are enough.
 12. Do not paste long summaries or excessive excerpts from the source.
-13. Do not rewrite the existing `Keywords`, `What`, `Why`, `Notes`, or lower body sections when summarize-only mode is sufficient.
+13. Do not rewrite the existing `# body` section or its subordinate sections (`Keywords`, `What`, `Why`, `Notes`) when summarize-only mode is sufficient. Treat everything after the `# body` heading as the preserved original content.
 
 ## Concept Note Workflow
 
