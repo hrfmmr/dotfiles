@@ -175,9 +175,10 @@ Lightweight plan approval gate. A planner sub-agent reads the worktree and bd is
 
    > Approve, modify, or reject. If you have an extra instruction for the next agent session, write it in `agent_instruction::` before changing `input:: pending` to `input:: done`.
    ```
-   d. Update frontmatter: `status: human_response_required`, update `current_status_summary` with plan gist.
-   e. Set `runtime_status: waiting_human`, clear `runtime_subagent_id`, refresh `runtime_heartbeat_at`.
-   f. Delete lock file. Fire `terminal-notifier`. Terminate.
+   d. **bd sync** (Turn-N ↔ bd Sync Invariant): `bd note <bd_issue_id> "[Turn-N] <plan summary>"` + `bd dolt commit`.
+   e. Update frontmatter: `status: human_response_required`, update `current_status_summary` with plan gist.
+   f. Set `runtime_status: waiting_human`, clear `runtime_subagent_id`, refresh `runtime_heartbeat_at`.
+   g. Delete lock file. Fire `terminal-notifier`. Terminate.
 3. **On approval** (`input:: done` detected via signal mechanism): next `$desk run` reads the approved Turn, spawns executor with the plan in the cold resume context.
 
 ### `--no-plan` bypass
@@ -223,11 +224,35 @@ restore context (frontmatter + latest Turn + bd show)
   terminate
 ```
 
+### Turn-N ↔ bd Sync Invariant
+
+**Every Turn-N write to the task note MUST be paired with a `bd note` append to the corresponding bd issue.** This is a hard invariant — no Turn-N may exist in the Dialogue section without a matching bd note entry. The sync is the agent's responsibility at the point of Turn write, not deferred to a later phase.
+
+**When**: Immediately after writing/appending any Turn-N content to the task note (plan Turn, exit Turn, intermediate Turn, critique summary, etc.).
+
+**What to sync**: A compact summary of the Turn content, prefixed with the Turn identifier. Format:
+```
+[Turn-N] <one-line summary of what the Turn contains>
+<optional 2-3 bullet points for key decisions/findings>
+```
+
+**How**:
+```bash
+BEADS_DIR=<beads_dir> bd note <bd_issue_id> --stdin <<'EOF'
+[Turn-N] <summary>
+EOF
+BEADS_DIR=<beads_dir> bd dolt commit
+```
+
+**Applies to all agents**: planner, executor, reviewer, finisher — any role that writes a Turn.
+
+**Background execution OK**: The bd sync may run in background (`run_in_background: true` for Agent, or `&` in bash) since it is append-only and does not block subsequent task note operations. But it MUST be initiated before the agent terminates.
+
 ### Checkpoint Contract
 
 After each successful `/commit`:
-- Append to bd issue: `bd edit <issue-id> --append-notes "<commit-hash>: <change summary>"`.
-- Persist: `bd dolt commit` → `bd dolt push`.
+- Append to bd issue: `bd note <issue-id> "<commit-hash>: <change summary>"`.
+- Persist: `bd dolt commit`.
 
 On each status transition:
 - Update task note frontmatter `status` and `current_status_summary`.
@@ -256,11 +281,12 @@ agent_instruction::
 > Write your response here. If you want the next agent session to follow an extra instruction, write it in `agent_instruction::`. Change `input:: pending` to `input:: done` when finished.
 ```
 
-1. Transition to `status: human_response_required`. Update frontmatter `current_status_summary`.
-2. Set `runtime_status: waiting_human`, clear `runtime_subagent_id`, refresh `runtime_heartbeat_at`.
-3. Delete `.desk/runtime/<task-name>.lock`.
-4. Fire `terminal-notifier` with obsidian:// URL.
-5. **Terminate**.
+1. **bd sync** (Turn-N ↔ bd Sync Invariant): `bd note <bd_issue_id> "[Turn-N] <context summary>"` + `bd dolt commit`.
+2. Transition to `status: human_response_required`. Update frontmatter `current_status_summary`.
+3. Set `runtime_status: waiting_human`, clear `runtime_subagent_id`, refresh `runtime_heartbeat_at`.
+4. Delete `.desk/runtime/<task-name>.lock`.
+5. Fire `terminal-notifier` with obsidian:// URL.
+6. **Terminate**.
 
 Resume happens via cold resume (see Signal Mechanism + Stop Hook Auto-Resume below).
 
@@ -277,10 +303,11 @@ agent_instruction::
 **Next**: <what the next session should do>
 ```
 
-1. Keep `status: in_progress`. Update frontmatter `current_status_summary`.
-2. Set `runtime_status: idle`, clear `runtime_subagent_id`, refresh `runtime_heartbeat_at`.
-3. Delete `.desk/runtime/<task-name>.lock`.
-4. **Terminate**.
+1. **bd sync** (Turn-N ↔ bd Sync Invariant): `bd note <bd_issue_id> "[Turn-N] <completed summary + next>"` + `bd dolt commit`.
+2. Keep `status: in_progress`. Update frontmatter `current_status_summary`.
+3. Set `runtime_status: idle`, clear `runtime_subagent_id`, refresh `runtime_heartbeat_at`.
+4. Delete `.desk/runtime/<task-name>.lock`.
+5. **Terminate**.
 
 **When in doubt, use Pattern A.** Human verification of external events (CI, deploy, review) is always Pattern A.
 
@@ -288,6 +315,7 @@ agent_instruction::
 
 When a derived sub-issue surfaces during execution:
 - Create via `bd create "<title>" --parent <epic-id>`.
+- Create a dedicated branch task note for the sub-issue.
 - Add a row to the Milestones table.
 - Address the sub-issue, logging context in its bd issue.
 
@@ -299,6 +327,33 @@ When execution produces a substantial artifact (design doc, investigation report
 2. **Tag inheritance**: Copy all `#prj-*` tags from the parent task note's first line into the derived note's first line. This ensures vault-wide project filtering remains consistent.
 3. Link it from the task note using Obsidian wikilink syntax only (for example `[[Derived Note]]`) in the relevant Turn-N. Do not use markdown file links for derived-note references.
 4. If `bd_issue_id` is set, reference it in the bd issue notes.
+
+### Turn-N Artifact Callouts
+
+When a Turn produces a linkable artifact, append a dedicated callout block **inside the Turn-N** (after the Agent narrative, before the next Turn heading). This makes artifacts scannable on cold resume.
+
+**Derived note** — learning note, investigation report, design doc:
+```markdown
+> [!note] 派生ノート
+> [[📝Derived Note Name]]
+```
+
+**PR** — pull request created or updated:
+```markdown
+> [!abstract] PR
+> [#123 PR title](https://github.com/org/repo/pull/123)
+```
+
+**Branch task note** — sub-issue or delegated investigation:
+```markdown
+> [!info] Branch
+> [[🔧Branch Task Note Name]]
+```
+
+Rules:
+- One callout per artifact. A single Turn may contain multiple callouts.
+- Place callouts at the **end** of the Agent section, after the narrative text.
+- Use the exact callout type (`note` / `abstract` / `info`) for consistency across desk and desk-live.
 
 ## Phase 3: Completion
 
@@ -500,6 +555,7 @@ SORT file.mtime DESC
 - **Turn-N `input:: pending` is mandatory**: Signal detection depends on this inline field. Omitting it breaks the resume chain.
 - **Turn-N `agent_instruction::` is always present**: Keep the field even when blank so humans can add note-side follow-up instructions without changing the template shape.
 - All human dialogue is async via task note Turn-N. No synchronous interrupts.
+- **Turn-N ↔ bd Sync Invariant**: Every Turn-N write MUST be paired with a `bd note` append. No Turn may exist without a matching bd note. This applies to all agent roles (planner, executor, reviewer, finisher). Background execution is acceptable but initiation before agent termination is mandatory. See the Turn-N ↔ bd Sync Invariant section for details.
 - Dual writes to task notes and bd issues are by design (human-facing view vs agent-recoverable log).
 - bd issue body/notes must be self-contained enough for cold resume after session death.
 - Concurrent agent assignment to all in_progress tasks is permitted. Accept write-contention risk on shared BEADS_DIR.
