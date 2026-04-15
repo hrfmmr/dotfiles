@@ -121,6 +121,33 @@ If discussion produces a substantial artifact (design doc, investigation report,
 3. Link it from the task note (inline link in the relevant Turn-N).
 4. If `bd_issue_id` is set, reference it in the bd issue notes.
 
+### Turn-N Artifact Callouts
+
+When a Turn produces a linkable artifact, append a dedicated callout block **inside the Turn-N** (after the Agent narrative, before the next Turn heading). This makes artifacts scannable on cold resume.
+
+**Derived note** — learning note, investigation report, design doc:
+```markdown
+> [!note] Derived Note
+> [[📝Derived Note Name]]
+```
+
+**PR** — pull request created or updated:
+```markdown
+> [!abstract] PR
+> [#123 PR title](https://github.com/org/repo/pull/123)
+```
+
+**Branch task note** — sub-issue or delegated investigation:
+```markdown
+> [!info] Branch
+> [[🔧Branch Task Note Name]]
+```
+
+Rules:
+- One callout per artifact. A single Turn may contain multiple callouts.
+- Place callouts at the **end** of the Agent section, after the narrative text.
+- Use the exact callout type (`note` / `abstract` / `info`) for consistency across desk and desk-live.
+
 ## Guardrails
 
 - **No sub-agent spawn**: desk-live runs entirely in the root session.
