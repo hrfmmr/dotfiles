@@ -406,6 +406,7 @@ Include exactly:
 - If the latest Turn contains an approved execution plan (from plan-first flow), include the instruction: "Follow the approved execution plan in Turn-N"
 - If the latest Turn contains a non-empty `agent_instruction::`, include the instruction: "Also follow `agent_instruction::` from Turn-N unless it conflicts with explicit task scope."
 - `bd show <bd_issue_id>` output
+- Any `[root]`-prefixed bd notes from the current session (human decisions/clarifications made in root dialogue)
 - Working tree path and branch
 - Instruction to follow Turn-N protocol with mandatory `input:: pending` inline field and always-present `agent_instruction::`
 
@@ -556,6 +557,7 @@ SORT file.mtime DESC
 - **Turn-N `agent_instruction::` is always present**: Keep the field even when blank so humans can add note-side follow-up instructions without changing the template shape.
 - All human dialogue is async via task note Turn-N. No synchronous interrupts.
 - **Turn-N ↔ bd Sync Invariant**: Every Turn-N write MUST be paired with a `bd note` append. No Turn may exist without a matching bd note. This applies to all agent roles (planner, executor, reviewer, finisher). Background execution is acceptable but initiation before agent termination is mandatory. See the Turn-N ↔ bd Sync Invariant section for details.
+- **Root Session bd Sync Invariant**: When the root desk session (the session that runs `$desk run` or `$desk`) receives task-relevant context from the human — design decisions, clarifications, approval rationale, external review results — it MUST sync a summary to the bd issue via `bd note <bd_issue_id> "[root] <summary>"` + `bd dolt commit` **before** spawning a sub-agent or ending the session. This ensures executor cold resume context includes human decisions that occurred outside Turn-N dialogue.
 - Dual writes to task notes and bd issues are by design (human-facing view vs agent-recoverable log).
 - bd issue body/notes must be self-contained enough for cold resume after session death.
 - Concurrent agent assignment to all in_progress tasks is permitted. Accept write-contention risk on shared BEADS_DIR.
