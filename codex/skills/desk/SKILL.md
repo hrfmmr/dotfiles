@@ -2,7 +2,7 @@
 name: desk
 description: >
   Stateless task protocol driven by Obsidian task notes. Defines state transitions and cold resume procedures for the full task lifecycle — intake, planning, execution, completion. Each agent session is an independent, stateless worker that restores context from the task note and bd issue, executes, then terminates.
-  Use when user says "$desk", "desk", "create task", "start task", "resume work", "$desk ps", "$desk run", or wants to manage implementation/research/ad-hoc tasks via Obsidian task notes with async human-agent dialogue or inspect/resume task execution.
+  Use when user says "$desk", "desk", "create task", "start task", "resume work", "$desk ps", "$desk run", "$desk --flush", or wants to manage implementation/research/ad-hoc tasks via Obsidian task notes with async human-agent dialogue or inspect/resume task execution.
 ---
 
 # Desk
@@ -50,6 +50,7 @@ Delegate concrete work to existing skills ($wt / $grill-me / $tk / $review / $co
 | `$desk new` | Create a new task. |
 | `$desk ps [--all\|--inactive]` | List desk-managed tasks with task status, milestone progress summary, runtime state, assigned sub-agent, and heartbeat. Default shows non-done tasks; `--inactive` narrows to tasks without an active sub-agent lease. |
 | `$desk run <task-note-name> [--force] [--no-plan]` | Explicitly ensure the specified task has an active sub-agent now. Use for inactive/stale tasks. `--force` marks an existing runtime lease stale and re-assigns the task. `--no-plan` skips plan-first approval and transitions directly to executor (use when bd issue already contains explicit steps). |
+| `$desk --flush` | Catch-up sync: scan current session for unlogged discussion context, write a Turn-N summarizing decisions/findings/actions since the last Turn, and append a `bd comment` to the corresponding bd issue. Run as a background Agent. Use when Turn-N updates have been deferred or when the user explicitly requests a log flush. |
 
 ## Task Types
 
@@ -552,11 +553,12 @@ SORT file.mtime DESC
 
 - **Status-Turn Consistency Invariant**: If the latest Turn-N contains a **Question** (regardless of `input::` value), `status` MUST NOT be `done`. Allowed statuses when a Turn has an unresolved Question: `human_response_required` (during execution) or `in_review` (Phase 3 final check). The `done` transition requires: (a) the latest Turn has `input:: done`, AND (b) the human's response does not request additional work. If the response requests further action, transition to `in_progress` instead.
 - **No silent executor exit**: Every executor session MUST write an Exit Turn before terminating (see Exit Turn Contract). An executor that commits work but terminates without a Turn violates this rule — the task note becomes an incomplete record and the cold resume chain breaks.
+- **Off-topic exchange exception**: If a human message concerns session mechanics, protocol semantics, skill invocation, or other meta-concerns unrelated to the task's subject matter, do NOT write a Turn-N or fire a bd sync for that exchange. Turn-N exists to record task-substantive progress; logging protocol Q&A or tooling tangents pollutes the cold-resume record. This applies to both desk-live interactive turns and desk async dialogue. Note: errors, blockers, or unexpected failures encountered during task execution are task-substantive events — always record these in Turn-N and bd sync even if the triggering conversation was meta in nature.
 - **Stateless workers**: Each agent session terminates after its work unit. No agent waits or polls.
 - **Turn-N `input:: pending` is mandatory**: Signal detection depends on this inline field. Omitting it breaks the resume chain.
 - **Turn-N `agent_instruction::` is always present**: Keep the field even when blank so humans can add note-side follow-up instructions without changing the template shape.
 - All human dialogue is async via task note Turn-N. No synchronous interrupts.
-- **Turn-N ↔ bd Sync Invariant**: Every Turn-N write MUST be paired with a `bd note` append. No Turn may exist without a matching bd note. This applies to all agent roles (planner, executor, reviewer, finisher). Background execution is acceptable but initiation before agent termination is mandatory. See the Turn-N ↔ bd Sync Invariant section for details.
+- **Turn-N ↔ bd Sync Invariant**: Every Turn-N write MUST be paired with a `bd note` append. No Turn may exist without a matching bd note. This applies to all agent roles (planner, executor, reviewer, finisher). Background execution is acceptable but initiation before agent termination is mandatory. See the Turn-N ↔ bd Sync Invariant section for details. **⚠ MOST COMMONLY VIOLATED INVARIANT**: In practice, agents write Turn-N but forget the bd sync. Treat the pair as one atomic operation — never yield or terminate after a Turn-N write without verifying the bd sync was initiated.
 - **Root Session bd Sync Invariant**: When the root desk session (the session that runs `$desk run` or `$desk`) receives task-relevant context from the human — design decisions, clarifications, approval rationale, external review results — it MUST sync a summary to the bd issue via `bd note <bd_issue_id> "[root] <summary>"` + `bd dolt commit` **before** spawning a sub-agent or ending the session. This ensures executor cold resume context includes human decisions that occurred outside Turn-N dialogue.
 - Dual writes to task notes and bd issues are by design (human-facing view vs agent-recoverable log).
 - bd issue body/notes must be self-contained enough for cold resume after session death.

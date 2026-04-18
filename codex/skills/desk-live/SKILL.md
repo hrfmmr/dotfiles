@@ -2,7 +2,7 @@
 name: desk-live
 description: >
   Synchronous interactive mode for desk task notes. Root session holds the task and dialogues with the user in real-time, appending each round-trip as a Turn-N to the task note and bd issue.
-  Use when user says "$desk-live", "desk-live", "interactive mode for task", or wants rapid synchronous dialogue on a desk-managed task note (planning Q&A, adhoc discussion) instead of the default async sub-agent cycle.
+  Use when user says "$desk-live", "desk-live", "$desk-live --flush", "interactive mode for task", or wants rapid synchronous dialogue on a desk-managed task note (planning Q&A, adhoc discussion) instead of the default async sub-agent cycle.
 ---
 
 # Desk Live
@@ -19,6 +19,7 @@ Prerequisite: the target task note must already exist (created via `$desk new` o
 |---------|----------|
 | `` $desk-live `<task-note-name>` `` | Start interactive session on the specified task. Note name follows the same backtick-quoting convention as `$desk run`. |
 | `$desk-live` | No argument: scan for active task notes (status != done/not_started), present candidates, and let the user select. Prioritize tasks with `runtime_status: waiting_human` or recent `runtime_heartbeat_at`. |
+| `$desk-live --flush` | Catch-up sync within an active desk-live session: scan conversation history since the last Turn-N for unlogged discussion context (design decisions, findings, actions), write a comprehensive Turn-N summarizing all unlogged content, and fire a `bd comment` in the background. Use when Turn-N updates have been deferred across multiple rounds or when the user explicitly requests a log flush. The flush Turn should capture all substantive exchanges — not just the latest one. |
 
 ## Session Lifecycle
 
@@ -42,7 +43,9 @@ Prerequisite: the target task note must already exist (created via `$desk new` o
 For each user message:
 
 1. Process the user's input (research, answer, discuss, execute — whatever the task requires).
-2. **GATE — Append Turn-N before yielding to user.** This is a hard requirement, not optional. Write Turn-N to the task note Dialogue section **in the same assistant response** that answers the user — never defer to "later" or "batch":
+2. **GATE — Append Turn-N before yielding to user.** This is a hard requirement, not optional. Write Turn-N to the task note Dialogue section **in the same assistant response** that answers the user — never defer to "later" or "batch".
+
+   **Off-topic exception**: If the user's message is about session mechanics, protocol semantics, skill invocation, or other meta-concerns unrelated to the task's subject matter, do NOT write a Turn-N or fire a bd comment. Respond directly and continue. Turn-N exists to record task-substantive progress; logging protocol Q&A or tooling tangents pollutes the cold-resume record. Note: errors, blockers, or unexpected failures encountered during task execution are task-substantive events — always record these in Turn-N and bd comment even if the triggering conversation was meta in nature.
    ```markdown
    ### Turn-N
    input:: done
@@ -71,6 +74,8 @@ For each user message:
    Omit only: tool-call boilerplate, retry noise, permission prompts, and formatting scaffolding. When in doubt, include it.
 
 3. **GATE — bd comment (background).** If `bd_issue_id` is set, fire `bd comment` **in the same response as the Turn-N write**, using `run_in_background: true` on the Bash tool so it never blocks the user. This is a hard gate paired with Turn-N: if you wrote a Turn-N, you must also fire the bd comment. Do not defer, batch, or skip.
+
+   > **⚠ MOST COMMONLY VIOLATED GATE**: In practice, Turn-N is written but the bd comment is forgotten. This is the #1 protocol violation observed across sessions. Treat the bd comment as an inseparable part of the Turn-N write — they are one atomic operation, not two independent steps. If you catch yourself about to yield to the user after writing a Turn-N, STOP and verify you fired the bd comment first.
    ```bash
    # run_in_background: true
    BEADS_DIR=<bd_beads_dir> bd comment <bd_issue_id> "Turn-N: <structured summary — findings, decisions, actions, artifacts — compact but reproducible>"
@@ -153,6 +158,6 @@ Rules:
 - **No sub-agent spawn**: desk-live runs entirely in the root session.
 - **No signal mechanism**: interactive mode does not use `.desk/signals/` — dialogue is synchronous.
 - **Compatible Turns**: Turn-N format must remain readable by desk's async cold resume.
-- **Turn-N is a hard gate**: every user turn MUST produce exactly one Turn-N append before the assistant yields. Skipping or batching multiple turns into one retroactive write is a protocol violation.
+- **Turn-N is a hard gate**: every *task-substantive* user turn MUST produce exactly one Turn-N append before the assistant yields. Skipping or batching multiple turns into one retroactive write is a protocol violation. Off-topic exchanges (protocol Q&A, session mechanics, skill meta-discussion) are exempt — see Loop §2 off-topic exception.
 - **Lock discipline**: always create lock on open, delete on close. If the session crashes, desk's Stop Hook will detect the stale lock.
 - **Skill delegation**: desk-live may invoke any skill that desk executors use (`$tk`, `$commit`, `$beads`, etc.) directly in the root session. The **caller** (desk-live loop) owns Turn-N writes — delegated skills never write Turns.
