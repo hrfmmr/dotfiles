@@ -36,7 +36,7 @@ Determine the mode from arguments or user instructions.
 
 #### 3a. standard mode
 
-- Filename: `{Topic Name} とは.md` (for Japanese topics) or `{Topic} とは.md`
+- Filename: `{Topic Name}.md`
 - Location: vault root
 - First line: Inherit `#prj-*` tags from the parent task note (when in a desk-live session). Omit if no such tags exist.
 
@@ -71,7 +71,7 @@ Structure template:
 
 #### 3b. discuss mode
 
-- Filename: `{Topic Name} 対話で学ぶ全体像.md`
+- Filename: `{Topic Name} Dialogue-Based Overview.md`
 - Location: vault root
 - First line: Inherit `#prj-*` tags from the parent note.
 
@@ -80,41 +80,91 @@ Structure template:
 ```markdown
 {#prj-* tags (if any)}
 
-# {Topic Name} 対話で学ぶ全体像
+# {Topic Name}: Dialogue-Based Overview
 
-> [!info]
-> A note that explains all concepts from [[{Parent Note Name}]] through a teacher-student dialogue in one comprehensive flow.
+parent: [[{Parent Note Name}]]
 
----
+> This dialogue explains the content of [[{Parent Note Name}]] as a teacher-student conversation.
 
-## Chapter 1: {Motivation / Problem to Solve}
-
-**Student**: {Naive question}
-
-**Teacher**: {Breaks down the background of the problem}
-
----
-
-## Chapter N: {Topic for Each Concept}
-
-{Progressive deep-dive through dialogue}
+> [!info] How to Read This Document
+> **Purpose**: {one-line description of what this tutorial covers}
+>
+> **Audience**: {target audience}
+>
+> **Prerequisites**: {prerequisites with Wikilinks}
+>
+> **Metaphor**: {metaphor used throughout, if any}
 
 ---
 
-## Summary: Map of the Big Picture
+## Topic Map for This Dialogue
 
-{mermaid diagram for a bird's-eye view of relationships between concepts}
+This dialogue covers N topics in the following order: {flow description}.
 
-**Student**: {Summary of what was learned}
+{mermaid graph TB showing all chapter topics linked in dependency order}
 
-**Teacher**: {One-sentence distillation of the essence}
+| # | Topic | Question Answered |
+|---|------|-------------------|
+| **①** | **{Topic}** | {Question this chapter answers} |
+| **②** | ... | ... |
+
+> {One-line reading guide, e.g., reading from top to bottom builds understanding from "why" to "what" to "how to protect it."}
+
+---
+
+## ① {Motivation / Problem to Solve}
+
+> [!quote] 🧑‍🎓 Student
+> {Naive question}
+
+> [!abstract] 👨‍🏫 Teacher
+> {Breaks down the background of the problem}
+
+{mermaid diagram if applicable}
+
+> {One-line summary caption after the diagram}
+
+> [!quote] 🧑‍🎓 Student
+> {Student restates in own words}
+
+---
+
+## ② {Topic for Each Concept}
+
+{Progressive deep-dive through dialogue, using the same callout pattern.}
+{Use `---` between distinct Q&A exchanges within the same chapter.}
+
+---
+
+## Summary: Big Picture Map
+
+> [!quote] 🧑‍🎓 Student
+> {Request for summary}
+
+> [!abstract] 👨‍🏫 Teacher
+> {Introduces the map}
+
+{mermaid diagram — bird's-eye view of relationships between concepts}
+
+> {One-line caption for the map}
+
+> [!quote] 🧑‍🎓 Student
+> {Summary of what was learned — genuine reinterpretation, not repetition}
+
+> [!abstract] 👨‍🏫 Teacher
+> {One-sentence distillation of the essence}
 ```
 
 Writing rules for discuss mode:
 
+- **Callout format**: Use Obsidian callout blocks for all dialogue. Student: `> [!quote] 🧑‍🎓 Student`. Teacher: `> [!abstract] 👨‍🏫 Teacher`. Never use `**Student**:` / `**Teacher**:` bare text.
+- **Chapter numbering**: Use circled numbers (①, ②, ③, ...) for chapter headings, not `Chapter N:`.
+- **Topic map**: Place a mermaid `graph TB` and a summary table at the top, before the first chapter. This gives readers a bird's-eye view of the structure.
+- **Separators**: Use `---` between distinct Q&A exchanges within a chapter. Each chapter heading also has `---` before it.
+- **Diagram captions**: After every mermaid diagram or code block, add a `>` blockquote summarizing the key takeaway in one line.
 - **Chapter structure**: Divide chapters along concept dependencies. Order so that knowledge from earlier chapters serves as prerequisite for later ones.
 - **Dialogue tone**: The teacher is polite but casual. The student asks naive questions without hesitation.
-- **Metaphor consistency**: Reuse the same metaphor across chapters (e.g., spare key → identity verification every time). Do not reset when introducing a new metaphor.
+- **Metaphor consistency**: Reuse the same metaphor across chapters. Do not reset when introducing a new metaphor.
 - **Embedded figures**: Insert comparison tables and mermaid diagrams naturally within the dialogue flow. Do not create standalone sections solely for diagrams.
 - **Student insights**: At the end of each chapter, the student restates the key points in their own words — a genuine reinterpretation, not a repetition of the teacher's explanation.
 - **Summary chapter**: In the final chapter, present a mermaid graph as a map of the big picture, providing a bird's-eye view of connections between concepts.
