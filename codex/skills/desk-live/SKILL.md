@@ -70,6 +70,14 @@ For each user message:
 
    **Skill-specific rules:**
    - **$grill-me / interactive Q&A**: Log every question asked and every answer received **without omission**. Each Q&A pair must be recorded verbatim (question text + selected option or free-form answer). Do not summarize multiple questions into a single line.
+   - **Question presentation format**: When presenting questions to the user during interactive dialogue, use Obsidian callout blocks with bullet-point formatting for scannability. Do not compress questions into single lines. Example:
+     ````markdown
+     > [!question]
+     > - **Q-1**: <question content>
+     > - **Q-2**: <question content>
+     > - **Q-3**: <question content>
+     ````
+     Each question ID and its content must be on separate bullet lines within the callout.
 
    Omit only: tool-call boilerplate, retry noise, permission prompts, and formatting scaffolding. When in doubt, include it.
 
