@@ -22,20 +22,39 @@ Run a durable beads workflow in Codex using AGENTS.md guidance, `codex exec`, an
 4. Inspect target work with `bd show <id>`.
 5. Claim work with `bd update <id> --claim`.
 
+## Hierarchy Bootstrap Rule
+
+- Before creating a new leaf task, identify the durable artifact hierarchy that the work belongs to.
+- If the work is part of a document, note, plan, feature stream, or other long-lived artifact, create or locate the parent chain first:
+  - root epic for the top-level artifact stream
+  - child task for the specific artifact being edited
+  - sub-task for the current critique/refactor/validation pass
+- Prefer `bd create --parent <id>` over standalone tasks when the parent artifact is knowable.
+- When the root epic already exists, prefer explicit descendant IDs that inherit the epic ID as a visible prefix instead of accepting unrelated auto-generated sibling IDs.
+- For known hierarchies, create descendants with both `--parent <id>` and `--id <epic-id>.<n>` / `--id <epic-id>.<n>.<m>` so the graph is readable from the ID alone.
+- If earlier flat tasks already exist for the same artifact, attach them under the correct parent with `parent-child` dependencies instead of leaving them as siblings.
+- Keep hierarchy depth at 3 levels maximum: epic -> task -> sub-task. If a fourth level seems necessary, open a new sibling task under the epic instead.
+- For note-driven work, use this default mapping unless the repo already defines a stronger convention:
+  - parent note / root document -> epic
+  - per-note deliverable -> task
+  - critique / structure / readability / validation pass -> sub-task
+
 ## Issue ID Hierarchy
 
-When creating issues manually (not via `bd create` auto-ID), use a hierarchical integer suffix `<prefix>.M.N.O`:
+When creating issues manually, use IDs that visibly inherit the root epic ID:
 
 | Level | Format | Meaning | Example |
 |-------|--------|---------|---------|
-| Epic | `<prefix>.M` | Top-level work stream | `5km.7` |
-| Task | `<prefix>.M.N` | Deliverable unit within an epic | `5km.7.1` |
-| Sub-task | `<prefix>.M.N.O` | Atomic step within a task | `5km.7.1.1` |
+| Epic | `<epic-id>` | Top-level work stream | `obsidian-baq` |
+| Task | `<epic-id>.<N>` | Deliverable unit within an epic | `obsidian-baq.1` |
+| Sub-task | `<epic-id>.<N>.<M>` | Atomic step within a task | `obsidian-baq.1.1` |
 
 Rules:
-- Increment N within the same epic, O within the same task.
-- When using `bd create --parent`, mirror the parent's suffix and append the next integer.
-- The prefix portion (e.g., `5km`, `healthcare-infra-g8b`) comes from the bd database or project convention; the `.M.N.O` suffix is the hierarchy.
+- Once a root epic exists, descendants must inherit that exact epic ID as their prefix.
+- Increment `N` for sibling tasks under the epic, and increment `M` for sibling sub-tasks under the task.
+- When creating descendants under a known epic, do not rely on unrelated auto-generated IDs; pass both `--parent` and an explicit `--id`.
+- Use `bd create --parent <epic-id> --id <epic-id>.<N>` for tasks, and `bd create --parent <epic-id>.<N> --id <epic-id>.<N>.<M>` for sub-tasks.
+- If the repo or database convention requires a custom prefix for the root epic, preserve that root epic ID verbatim and extend only with numeric suffixes.
 - Keep depth at 3 levels maximum. If deeper nesting is needed, create a new epic instead.
 
 ## Execution Protocol
