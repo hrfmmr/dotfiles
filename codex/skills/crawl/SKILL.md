@@ -1,27 +1,54 @@
 ---
 name: crawl
-description: Collect links from a daily note's `## News` / `## Picks` sections or from an explicitly named note, then create concise `Clippings/` article notes plus only the concept notes required to extend an Obsidian vault. Use when converting curated news links into compact research notes, enriching existing clipping notes with a compact summary header, or growing a knowledge graph from web content.
+description: Collect links from a daily note's `## News` / `## Picks` sections or from an explicitly named note, then write concise Japanese callout summaries directly into the daily note or into already-linked `Clippings/` notes. Use when turning curated links into glanceable structured summaries, refreshing existing clipped notes with a high-signal opening block, or deciding whether a source deserves a separate deep-dive note.
 ---
 
 # crawl
 
 ## Overview
 
-Start from links in a daily note or an explicitly named note and produce lightweight research notes.
-The goal is to track technical developments without over-researching and to steadily compound the Obsidian knowledge graph.
+Start from links in a daily note or an explicitly named note and produce lightweight, high-signal summaries.
+The default is not to create a separate note for every source. Prefer to write the summary where the reader already is: directly in the daily note for bare URLs, or at the top of an existing clipped note when one is already linked.
 
 ## Core Principles
 
 - Do not over-invest. Capture the source accurately and add only the minimum concept scaffolding needed for future recall.
-- Always create article notes under `Clippings/`.
-- Create or extend concept notes at the vault root.
+- Do not create a separate article note by default. Create one only when the user explicitly asks for a deep-dive note or when the request clearly requires an independent durable note.
+- Do not create or extend concept notes by default. Treat concept-note creation as explicit-only unless the user directly asks for it.
 - Be strictly faithful to the source content; do not introduce external knowledge, personal biases, or unmentioned technical details (e.g., specific tool usage or statistics not in the text) into the summary or logical structure.
-- When operating from a daily note, add a Wikilink from the original topic entry to the article note created from it.
+- Standardize summaries around the source's dominant value, not around one generic recap template. A shallow "what happened" recap is insufficient when the article's real value is operational guidance, technical mechanism, or a specific argument.
+- Write all agent-authored summaries and explanatory prose in plain Japanese. Keep titles, product names, service names, code, and URLs in their original form when that is clearer.
+- Prefer direct, plain Japanese over essay-like or compressed phrasing. If compression makes the note harder to scan, expand slightly and use clearer wording.
+- When operating from a daily note, prefer a top-level callout inserted immediately below the source line. Do not force a child bullet just to attach the summary.
 - Tag newly created agent-authored notes with `#ai-agent-note`.
 - Use `#ai-generated` only to mark AI-authored additions inside pre-existing notes.
 - Tag article notes derived from x.com posts with `#x-post`.
 - Follow the existing `obsidian` skill's Wikilink discipline: link only the highest-value relationships.
 - When enriching an existing clipping note, update only the opening summary block and keep the downstream body intact unless a tiny structural fix is required to avoid duplicate headings.
+
+## Summary Standardization
+
+1. Identify the source's dominant value before writing the summary block.
+2. Use one of these article-value buckets unless the source clearly demands a custom skeleton:
+   - News / announcement: what changed, why it matters, and what to watch next.
+   - Opinion / critique: the author's core claim, why they think that, and the practical implication.
+   - Technical deep dive: the mechanism, constraints, key moving parts, and what the reader should understand after reading.
+   - Incident advisory / response guide: what happened, why it matters operationally, what to check or do first, and what makes the incident dangerous.
+3. Do not force a generic recap when it hides the article's real utility. For example, incident advisories should foreground response and scope, not just retell the incident at a high level.
+4. Use a callout opening by default:
+   - `>[!summary] <dynamic one-line title>`
+5. Use a logical-structure block by default, but keep the labels grounded in the article:
+   - `論旨`
+   - `概要`
+   - `論点1: ...`
+     - `理由`
+     - `根拠`
+   - `論点2: ...`
+     - `理由`
+     - `根拠`
+   - `要するに`
+6. Keep labels short and content-bearing. Avoid abstract placeholders or mechanical headings that make the structure harder to scan.
+7. When the article is primarily valuable as a checklist, response guide, or technical mechanism note, let the summary block reflect that directly even if some labels differ from the default starting shape.
 
 ## Input Modes
 
@@ -42,8 +69,10 @@ The goal is to track technical developments without over-researching and to stea
 
 ### 1. Default Create-or-Extend Mode
 
-- Discover links, retrieve the source, and create the clipping note when it does not already exist.
-- If the clipping note already exists, prefer leaving it alone unless the request clearly asks for enrichment or the note is obviously incomplete.
+- Discover links, retrieve the source, and write or refresh the summary where the reader already is.
+- If a daily-note topic is a bare URL and no existing clipped note is already linked for that topic, insert a top-level callout directly below the source line in the daily note.
+- If a daily-note topic already points to an existing clipped note, target that clipped note first and update only its opening summary block.
+- Do not create a new clipping note or concept note in default mode unless the user explicitly asks for it.
 
 ### 2. Summarize-Only Mode
 
@@ -54,11 +83,12 @@ The goal is to track technical developments without over-researching and to stea
   2. a direct match in `Clippings/` by title or plausible title variant
   3. an existing clipping note whose `source` matches the topic's primary URL
 - If no existing clipping note can be resolved, skip that topic in summarize-only mode; do not create a new clipping note as fallback.
-- Leave the daily note unchanged in summarize-only mode unless the daily note already contains a failure log that needs a minimal correction.
+- In summarize-only mode, update the existing clipped note's opening callout block only. Leave the daily note unchanged unless the daily note already contains a failure log that needs a minimal correction.
 
 ## Link Discovery
 
 - Extract Markdown links, bare URLs, and supporting links nested under bullet items.
+- Treat existing clipped-note Wikilinks inside `## News` / `## Picks` as first-class crawl targets when they clearly correspond to the source being discussed.
 - When one topic has a primary link plus supporting links, treat the primary link as the article note's `source` and treat supporting links as `refs` in the body.
 - Collapse duplicate URLs into a single unit of work.
 
@@ -74,6 +104,7 @@ When summarize-only mode is active:
 
 - Retrieve only what is needed to write the compact opening summary block for the existing clipping note.
 - Reuse the clipping note's existing metadata when it is already sufficient; do not spend extra effort rehydrating fields that are unrelated to the summary block.
+- Choose the summary skeleton based on the article-value buckets above; do not default to a generic recap if the source is really an advisory, mechanism note, or argument.
 
 Minimal failure log:
 
@@ -85,10 +116,12 @@ Minimal failure log:
 ## Article Note Workflow
 
 1. Check whether an article note already exists under `Clippings/`, including plausible title variants.
-2. In default mode, if no note exists, create a new one under `Clippings/`.
-3. In summarize-only mode, if no note exists, skip the topic instead of creating a new note.
-4. Match the page title whenever practical; shorten it only if it is unreasonably long.
-5. New article notes should include at least the following:
+2. In default mode, if an existing clipped note is found, update that note's opening summary block instead of creating anything new.
+3. In default mode, if no clipped note exists, prefer an inline daily-note callout over creating a new note.
+4. In summarize-only mode, if no clipped note exists, skip the topic instead of creating a new note.
+5. Create a new article note under `Clippings/` only when the user explicitly asks for a separate note or when the request clearly calls for a deeper durable note.
+6. When a separate article note is explicitly needed, match the page title whenever practical; shorten it only if it is unreasonably long.
+7. A separate article note should open with the same callout style used elsewhere, rather than reverting to a different summary template.
 
 ```md
 ---
@@ -104,63 +137,61 @@ tags:
 ---
 #ai-agent-note
 
-## Summary
-2-4 sentence summary
-
-## Keywords
-- [[Concept A]]
-- Concept B
-
-## What
-- What it is
-- What it provides
-
-## Why
-- Why it mattered enough to capture
-- What problem or backdrop made it relevant
-
-## Notes
-- Key signal from the source
-- List supporting links as `refs` when present
+>[!summary] <dynamic one-line title>
+> - 論旨
+>   - ...
+> - 概要
+>   - ...
+> - 論点1: ...
+>   - 理由
+>     - ...
+>   - 根拠
+>     - ...
+> - 要するに
+>   - ...
 ```
 
-6. For summarize-only updates to an existing clipping note, insert or replace only the opening block directly after the frontmatter and any existing agent tag block. The opening block includes the summary, logical structure, and the `# body` boundary.
-7. Use the following summarize-only opening shape:
+8. For summarize-only updates to an existing clipping note, insert or replace only the opening block directly after the frontmatter and any existing agent tag block.
+9. If an old `#ai-generated` / `## Summary` / `## Logical Structure` block exists near the top, replace it with the new callout block rather than stacking another summary format on top.
+10. Use the following summarize-only opening shape as the default starting point:
 
 ```md
 #ai-generated
 
-## Summary
-(Exactly 5 sentences)
-
-## Logical Structure
-- **Core Thesis**: (One-line core claim and its logical necessity)
-- **Issue Map & Interpretation**:
-  - **[Issue 1: Topic Name]** -> **Author's Stance:** (Author's evaluation/interpretation/warning)
-    - (Sub-point 1: Reasoning or specific data/evidence from the article)
-    - (Sub-point 2: Secondary points or conditions)
-  - **[Issue 2: Topic Name]** -> **Author's Stance:** ...
-- **Synthesis**: (Overall summary of how points integrate and the final conclusion)
-
----
-# body
+>[!summary] <dynamic one-line title>
+> - 論旨
+>   - ...
+> - 概要
+>   - ...
+> - 論点1: ...
+>   - 理由
+>     - ...
+>   - 根拠
+>     - ...
+> - 論点2: ...
+>   - 理由
+>     - ...
+>   - 根拠
+>     - ...
+> - 要するに
+>   - ...
 ```
 
-8. In summarize-only mode, the `## Summary` must be exactly five sentences capturing the core backdrop, evaluation, claim, and nuance without bloating the note.
-9. In summarize-only mode, the `## Logical Structure` must use the hierarchical format (Issue Map & Interpretation) to show the depth of the argument and the author's stance on each major point. Ensure that every level of the hierarchy is grounded in the source text.
-10. Prefer concepts, tools, technologies, and service names as keywords.
-11. Keep `What` and `Why` compact. A few bullets and a brief summary are enough.
-12. Do not paste long summaries or excessive excerpts from the source.
-13. Do not rewrite the existing `# body` section or its subordinate sections (`Keywords`, `What`, `Why`, `Notes`) when summarize-only mode is sufficient. Treat everything after the `# body` heading as the preserved original content.
+11. In summarize-only mode, write the callout in plain Japanese while preserving the source's actual claims and nuance.
+12. If the article's dominant value would be obscured by the default starting shape, change the labels. For example, incident advisories may need `まずやること`, `確認項目`, or `被害範囲` instead of a generic recap flow.
+13. Do not paste long summaries or excessive excerpts from the source.
+14. Do not rewrite the existing body below the opening summary block when summarize-only mode is sufficient.
+15. If a logical-structure summary is used, prefer labels that reflect the article's real value, such as response steps, risk scope, mechanism, or core claim, instead of mechanically repeating generic headings.
 
 ## Concept Note Workflow
 
-1. Consider only the most important concept surfaced by the article.
-2. Before creating a new concept note, check for an equivalent or near-equivalent existing note.
-3. If an existing note already explains the concept well enough, do not create or append anything.
-4. Only when an existing note is empty or thin should you lightly consult primary sources such as official documentation and append a concise explanation.
-5. Use `#ai-agent-note` for new concept notes.
-6. Use `#ai-generated` only when AI adds explanatory text to an existing note.
+1. Do not create concept notes in default mode or summarize-only mode.
+2. Only create or extend a concept note when the user explicitly asks for it or when the request clearly targets concept extraction rather than article summarization.
+3. Before creating a new concept note, check for an equivalent or near-equivalent existing note.
+4. If an existing note already explains the concept well enough, do not create or append anything.
+5. Only when an existing note is empty or thin should you lightly consult primary sources such as official documentation and append a concise explanation.
+6. Use `#ai-agent-note` for new concept notes.
+7. Use `#ai-generated` only when AI adds explanatory text to an existing note.
 
 Minimal concept note shape:
 
@@ -197,24 +228,27 @@ Append example for an existing note:
 
 ## Daily Note Update Workflow
 
-1. When starting from a daily note and creating a new article note, add a Wikilink to that article note directly under the original topic entry.
-2. Use a child bullet for the addition and preserve existing supporting links or notes with the smallest possible diff.
-3. If a topic is skipped and no article note is created, add no Wikilink beyond the failure log.
-4. In summarize-only mode, do not add another child Wikilink for a topic that is already clipped.
+1. When starting from a daily note and the topic is a bare URL with no existing clipped note target, insert a top-level callout immediately below the source line.
+2. Keep the smallest possible diff around the original topic entry. Preserve existing supporting bullets or notes.
+3. If the topic already points to an existing clipped note, update that note instead of adding another summary block to the daily note by default.
+4. If a topic is skipped and no note is updated, add no extra structure beyond the failure log when needed.
+5. Do not add another child Wikilink for a topic that is already clipped unless the user explicitly asks for a new separate note.
 
 ## Output Quality Bar
 
 - Each processed link should become understandable within a few dozen seconds of reading.
-- Reading only the article note should make both the subject and its relevance clear.
+- Reading only the summary block should make both the subject and its relevance clear.
+- The summary should preserve the source's main utility. If the source is mainly valuable as a response guide, technical mechanism note, or argument, the summary must make that visible at a glance.
+- The logical structure should reduce cognitive load, not increase it. If the nesting makes the note harder to scan, simplify the labels or the depth.
 - Do not turn concept notes into encyclopedias. Preserve only the minimum that makes the next reread efficient.
-- A summarize-only update should let the reader grasp the article's thesis and skeleton from the opening block alone.
+- A summarize-only update should let the reader grasp the article's thesis, value, and next-action shape from the opening block alone.
 
 ## Stop Conditions
 
 - The source cannot be retrieved.
 - The core claim cannot be identified.
-- Existing notes are already sufficient and a new note would add noise.
+- Existing notes are already sufficient and another summary pass would add noise.
 - Summarize-only mode cannot resolve the target clipping note.
-- The existing clipping note already has a good five-sentence summary and a clear logic-outline block near the top.
+- The summary skeleton still obscures the source's dominant value after one simplification pass.
 
 In those cases, do not force completion. Leave only the smallest useful failure log or skip rationale.
