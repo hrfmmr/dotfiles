@@ -40,6 +40,7 @@ Delegate concrete work to existing skills ($wt / $grill-me / $tk / $review / $co
      {"hooks":{"Stop":[{"hooks":[{"type":"command","command":"bash <skill-dir>/scripts/desk_stop_hook.sh <vault-root>","timeout":10}]}]}}
      ```
 - For impl/research tasks, `BEADS_DIR` must be defined in the target repo's `.envrc`.
+- When task frontmatter contains `beads_dir`, treat it as the source of truth for beads transport and derive `BEADS_DOLT_SERVER_SOCKET="$beads_dir/dolt-server.sock"` plus `BEADS_DOLT_AUTO_START=0` before invoking `$beads` or raw `bd`.
 
 ## Invocation
 
@@ -69,7 +70,7 @@ YAML frontmatter for task notes. Required/optional varies by task type.
 source_issue_link: ""      # impl/research: required, adhoc: optional
 target_repo: ""            # impl/research: required
 git_working_tree: ""       # impl/research: required
-beads_dir: ""              # impl/research: required
+beads_dir: ""              # impl/research: required; also the source path for deriving BEADS_DOLT_SERVER_SOCKET=<beads_dir>/dolt-server.sock
 bd_issue_id: ""            # impl/research: required
 status: "not_started"      # required (all types)
 current_status_summary: "" # required (all types)
@@ -118,7 +119,7 @@ not_started → plan_ready → planning → in_progress → human_response_requi
 1. **Signal hook check**: Run `scripts/setup-hook.sh "$PWD"`. If hook is missing, prompt y/N for auto-install. On skip, warn that signal detection is inoperative and continue.
 2. Confirm `source_issue_link` and `task_type` with the human.
 3. Branch by `task_type`:
-   - **impl/research**: Confirm `target_repo` → resolve `BEADS_DIR` from `.envrc` → create worktree via `$wt` (propose path/branch candidates, obtain approval) → create bd epic issue via `$beads`.
+   - **impl/research**: Confirm `target_repo` → resolve `BEADS_DIR` from `.envrc` → derive `BEADS_DOLT_SERVER_SOCKET="$BEADS_DIR/dolt-server.sock"` and `BEADS_DOLT_AUTO_START=0` → create worktree via `$wt` (propose path/branch candidates, obtain approval) → create bd epic issue via `$beads`.
    - **adhoc**: No worktree or bd issue required. Leave corresponding frontmatter fields empty.
 4. Create the task note at vault root (populate frontmatter + empty Planning / Milestones / Dialogue sections).
 5. Transition to `status: plan_ready`.
@@ -244,6 +245,16 @@ BEADS_DIR=<beads_dir> bd note <bd_issue_id> --stdin <<'EOF'
 EOF
 BEADS_DIR=<beads_dir> bd dolt commit
 ```
+
+When the task note carries `beads_dir`, also derive and export:
+
+```bash
+export BEADS_DOLT_SERVER_SOCKET="<beads_dir>/dolt-server.sock"
+export BEADS_DOLT_AUTO_START=0
+```
+
+Do this before the `bd note` / `bd dolt commit` pair so desk-driven sessions
+share the same authoritative socket path.
 
 **Applies to all agents**: planner, executor, reviewer, finisher — any role that writes a Turn.
 
@@ -409,6 +420,7 @@ Include exactly:
 - `bd show <bd_issue_id>` output
 - Any `[root]`-prefixed bd notes from the current session (human decisions/clarifications made in root dialogue)
 - Working tree path and branch
+- If frontmatter contains `beads_dir`, include the instruction: "Before any `$beads` or `bd` command, export `BEADS_DIR=<beads_dir>`, `BEADS_DOLT_SERVER_SOCKET=<beads_dir>/dolt-server.sock`, and `BEADS_DOLT_AUTO_START=0`."
 - Instruction to follow Turn-N protocol with mandatory `input:: pending` inline field and always-present `agent_instruction::`
 
 ## Signal Mechanism
