@@ -25,6 +25,9 @@ Run a durable beads workflow in Codex using AGENTS.md guidance, `codex exec`, an
    - if `BEADS_DOLT_SERVER_SOCKET` is still unset after that resolution, set it to `"$BEADS_DIR/dolt-server.sock"`
    - confirm whether an externally managed authoritative `dolt sql-server --socket <path>` is available at that path
    - if the socket file is missing, start or ask for startup of the external `dolt sql-server --socket <path> --data-dir <repo>/.beads/dolt` before any `bd` read
+   - if socket startup fails because TCP-era artifacts remain, first clear only the repo-local stale markers `"$BEADS_DIR/dolt-server.pid"`, `"$BEADS_DIR/dolt-server.port"`, and `"$BEADS_DIR/dolt-server.lock"` before retrying
+   - if socket startup still reports that the Dolt database is locked, inspect `"$BEADS_DIR/dolt/.dolt/noms/LOCK"` and `"$BEADS_DIR/dolt/dolt-server.pid"`; when the referenced process is dead or absent, remove only those stale lock files and retry
+   - if `dolt sql-server` reports `Port 3306 already in use`, keep socket mode and restart with an explicit alternate TCP port such as `--host 127.0.0.1 --port 63306` rather than falling back to TCP-first access
    - set `BEADS_DOLT_AUTO_START=0` for the session
    - do not treat existing TCP host/port config or a live localhost TCP listener as the default path until socket mode has been checked and rejected
 2. Optional (when Dolt remote is configured): `bd dolt pull`.
@@ -89,6 +92,7 @@ Rules:
 - Transport precedence rule: check socket viability before trusting live TCP repo settings, existing localhost listeners, or TCP-oriented diagnostics. Use TCP only after socket mode has been checked and rejected.
 - Sandbox socket validation rule: validate the socket path with store-backed commands first. Prefer `bd show <id>`, `bd ready --json`, one safe write such as `bd update <id> --notes ...`, and when remotes matter `bd dolt remote list`, `bd dolt pull`, and `bd dolt push`. Do not rely on `bd dolt test`, `bd dolt show`, or `bd context` as the primary health signal in socket mode because some diagnostics remain host/port-oriented.
 - Socket permission rule: if socket access fails with `operation not permitted`, treat the socket path, file location, and session-level permissions as the primary suspects before treating the Dolt server as down.
+- Escalated socket-access rule: if the server is confirmed alive and the repo-local socket file exists but `bd show` or another store-backed command still fails with `operation not permitted`, retry the client command with escalated permissions instead of restarting the server again.
 - Socket missing rule: if socket access fails with `no such file or directory`, treat external server setup as the primary suspect. Verify the expected repo-local socket path and start the external `dolt sql-server --socket <path>` before attempting TCP fallback.
 - No-helper-script rule: do not require repo-local wrapper scripts for normal beads startup or access. Prefer `.envrc` plus direct `dolt sql-server --socket <path> --data-dir <repo>/.beads/dolt` setup so a fresh session can recover from first principles.
 - Blocking condition: set `--status blocked` and document the blocker in notes.
