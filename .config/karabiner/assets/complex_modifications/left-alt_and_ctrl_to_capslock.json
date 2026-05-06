@@ -1,0 +1,50 @@
+{
+  "title": "Alt+Ctrl to CapsLock",
+  "rules": [
+    {
+      "description": "Map Alt+Ctrl to CapsLock(on)",
+      "manipulators": [
+        {
+          "type": "basic",
+          "from": {
+            "key_code": "left_control",
+            "modifiers": {
+              "mandatory": [
+                "left_option"
+              ]
+            }
+          },
+          "to": [
+            {
+              "key_code": "caps_lock",
+              "lazy": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "description": "Map Alt+Ctrl to CapsLock(off)",
+      "manipulators": [
+        {
+          "type": "basic",
+          "from": {
+            "key_code": "left_control",
+            "modifiers": {
+              "mandatory": [
+                "left_option",
+                "caps_lock"
+              ]
+            }
+          },
+          "to": [
+            {
+              "key_code": "caps_lock",
+              "lazy": true
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
