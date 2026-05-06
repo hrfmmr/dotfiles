@@ -1,0 +1,26 @@
+{
+  "title": "Alt+/ to Backslash",
+  "rules": [
+    {
+      "description": "Map Alt+/ to Backslash",
+      "manipulators": [
+        {
+          "type": "basic",
+          "from": {
+            "key_code": "open_bracket",
+            "modifiers": {
+              "mandatory": [
+                "left_option"
+              ]
+            }
+          },
+          "to": [
+            {
+              "key_code": "backslash"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
