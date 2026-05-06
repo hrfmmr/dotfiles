@@ -95,6 +95,8 @@ Rules:
 - Escalated socket-access rule: if the server is confirmed alive and the repo-local socket file exists but `bd show` or another store-backed command still fails with `operation not permitted`, retry the client command with escalated permissions instead of restarting the server again.
 - Socket missing rule: if socket access fails with `no such file or directory`, treat external server setup as the primary suspect. Verify the expected repo-local socket path and start the external `dolt sql-server --socket <path>` before attempting TCP fallback.
 - No-helper-script rule: do not require repo-local wrapper scripts for normal beads startup or access. Prefer `.envrc` plus direct `dolt sql-server --socket <path> --data-dir <repo>/.beads/dolt` setup so a fresh session can recover from first principles.
+- ADR logging rule: when a non-trivial design or policy decision is made (architectural choice, technology selection, or approach that is difficult to reverse), create a bd issue with the `adr` label at the point the decision is confirmed.
+- ADR issue shape: create it as a sibling of the active issue or under the relevant epic; use `bd create "<decision title>" -l adr -d "## Background\n<context>\n## Decision\n<what was decided>\n## Rationale\n<why>\n## Consequences\n<trade-offs and follow-on work>"`. Preserve provenance with `discovered-from` when applicable.
 - Blocking condition: set `--status blocked` and document the blocker in notes.
 - Async waits: use `bd gate create` and `bd gate eval`.
 - Parallel isolation: use `bd worktree create` for concurrent workers.
