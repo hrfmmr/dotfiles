@@ -102,7 +102,7 @@ Resume is handled by cold resume:
 - Human changes `input:: pending` → `input:: done`.
 - Human may optionally write an extra note-side instruction into `agent_instruction::`.
 - obsidian-git auto-commit → post-commit hook → `.desk/signals/<task>.ready`.
-- Stop Hook detects signal on next root session idle → `decision: block` → `$desk run <task>`.
+- Root session surfaces signal-ready tasks on the next `$desk` invocation; the human runs `$desk run <task>`.
 - New executor session reads Turn-N response, including `agent_instruction::` when non-empty, and continues.
 
 ### Multiple Turns
