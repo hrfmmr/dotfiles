@@ -9,7 +9,6 @@ sequenceDiagram
     participant E1 as Executor (session 1)
     participant TN as Task Note
     participant BD as bd issue
-    participant Hook as Stop Hook
 
     H->>R: $desk run <task>
     R->>TN: Read frontmatter + latest Turn
@@ -27,10 +26,6 @@ sequenceDiagram
     E1->>TN: status: done / in_review
     E1->>R: Delete .desk/runtime/<task>.lock
     deactivate E1
-
-    Note over R,Hook: Root session goes idle
-    Hook->>Hook: Check signals + locks → allow
-    Hook-->>R: {"decision":"approve"}
 ```
 
 ## 2. Human Input Required → Cold Resume
@@ -43,7 +38,6 @@ sequenceDiagram
     participant TN as Task Note
     participant OG as obsidian-git
     participant CS as check-signals.sh
-    participant Hook as Stop Hook
     participant E2 as Executor (session 2)
 
     Note over E1: During execution, needs human judgment
@@ -63,10 +57,9 @@ sequenceDiagram
     CS->>CS: Detect input:: done in diff
     CS->>CS: Create .desk/signals/<task>.ready
 
-    Note over R,Hook: Root session goes idle
-    Hook->>Hook: Check .desk/signals/ → found!
-    Hook-->>R: {"decision":"block","reason":"$desk run <task>"}
-
+    H->>R: $desk
+    R->>R: List signal-ready tasks
+    H->>R: $desk run <task>
     R->>TN: Read frontmatter + latest Turn (with response)
     R->>BD: bd show <issue-id>
     R->>R: Create .desk/runtime/<task>.lock
@@ -81,14 +74,13 @@ sequenceDiagram
     deactivate E2
 ```
 
-## 3. Agent Crash → Auto-Recovery
+## 3. Agent Crash → Manual Recovery
 
 ```mermaid
 sequenceDiagram
     participant H as Human
     participant R as Root Session
     participant E1 as Executor (session 1)
-    participant Hook as Stop Hook
     participant E2 as Executor (session 2)
     participant TN as Task Note
 
@@ -100,10 +92,9 @@ sequenceDiagram
     deactivate E1
     Note over E1: Lock remains, PID 12345 is dead
 
-    Note over R,Hook: Root session goes idle
-    Hook->>Hook: Check locks → pid:12345 dead!
-    Hook-->>R: {"decision":"block","reason":"$desk run <task> --force"}
-
+    H->>R: $desk ps
+    R-->>H: stale lock: pid 12345 is dead
+    H->>R: $desk run <task> --force
     R->>R: Delete stale .desk/runtime/<task>.lock
     R->>TN: Read frontmatter + latest Turn
     R->>R: Create new .desk/runtime/<task>.lock
@@ -116,25 +107,20 @@ sequenceDiagram
     deactivate E2
 ```
 
-## 4. Heartbeat Stale → Notification (no auto-action)
+## 4. Heartbeat Stale → Manual Inspection
 
 ```mermaid
 sequenceDiagram
     participant H as Human
     participant R as Root Session
     participant E1 as Executor (session 1)
-    participant Hook as Stop Hook
 
     R->>E1: Agent tool (run_in_background)
     activate E1
     Note over E1: Lock exists, PID alive, but no heartbeat update >15min
 
-    Note over R,Hook: Root session goes idle
-    Hook->>Hook: Check locks → pid alive but heartbeat stale
-    Hook->>H: terminal-notifier ⚠️ "Agent hung?"
-    Hook-->>R: {"decision":"approve"}
-    Note over R: Does NOT auto-recover (human decides)
-
+    H->>R: $desk ps
+    R-->>H: alive?: ? hung
     H->>R: $desk run <task> --force
     R->>R: Delete old lock, spawn new executor
     deactivate E1
@@ -182,8 +168,9 @@ sequenceDiagram
     deactivate P
 
     Note over H: Async: answer questions in Obsidian
-    Note over H,R: ... signal → Stop Hook → cold resume ...
+    Note over H,R: ... signal generated; human starts cold resume ...
 
+    H->>R: $desk run <task>
     R->>P: Spawn planner (cold resume)
     activate P
     P->>TN: Write Snapshot + Plan + Milestones
@@ -192,7 +179,7 @@ sequenceDiagram
     deactivate P
 
     loop Cold resume chain (N sessions)
-        Note over R: Stop Hook or $desk run
+        Note over R: $desk run
         R->>E: Spawn executor
         activate E
         E->>E: $tk → $review → $commit
@@ -217,7 +204,8 @@ sequenceDiagram
     deactivate E
 
     H->>TN: Approve (input:: done)
-    Note over H,R: ... signal → Stop Hook ...
+    Note over H,R: ... signal generated ...
+    H->>R: $desk run <task>
     R->>E: Spawn finisher (cold resume)
     activate E
     E->>BD: Close epic
@@ -233,7 +221,6 @@ sequenceDiagram
 | Human → Root | sync | human types in CLI | direct input |
 | Root → Executor | async | Agent tool (background) | spawn + terminate |
 | Executor → Human | async | Turn-N in task note | obsidian notification |
-| Human → Executor | async | input:: done → signal → cold resume | obsidian-git → hook → Stop Hook |
-| Stop Hook → Root | sync | block + reason injection | hooks.Stop JSON |
+| Human → Executor | async | input:: done → signal → cold resume | obsidian-git → post-commit hook → `$desk run` |
 | Executor → bd | sync | bd comments add | CLI within session |
 | Executor → Task Note | sync | file write | Edit/Write tool |

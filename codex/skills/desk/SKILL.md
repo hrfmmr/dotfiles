@@ -21,7 +21,6 @@ Delegate concrete work to existing skills ($wt / $grill-me / $tk / $review / $co
 | bd issue | Agent-recoverable log for cold resume |
 | desk skill | State transition rules + cold resume protocol |
 | post-commit hook | Event-driven signal generation |
-| Stop Hook | Auto-resume trigger on root session idle in Claude Code / Codex |
 | `.desk/runtime/` | External observability (lock files + logs) |
 | Each agent session | Stateless worker (restore → execute → terminate) |
 
@@ -30,15 +29,7 @@ Delegate concrete work to existing skills ($wt / $grill-me / $tk / $review / $co
 - cwd is an Obsidian vault root (works with any vault).
 - obsidian-git plugin enabled (auto-commit interval ≈ 3 min).
 - [Advanced URI](https://github.com/Vinzent03/obsidian-advanced-uri) plugin enabled (for heading-level deep links in notifications).
-- **Signal hooks installed** (both are required for async auto-resume):
-  1. **post-commit hook**: `scripts/setup-hook.sh <vault-root>` — generates `.desk/signals/*.ready` on `input:: done`.
-  2. **Stop Hook**:
-     - Claude Code: `hooks.Stop` in `<vault-root>/.claude/settings.json`
-     - Codex: `hooks.Stop` in `<vault-root>/.codex/hooks.json` (requires `[features] codex_hooks = true` in `~/.codex/config.toml`)
-     Run `scripts/setup-hook.sh <vault-root>` to install both, or manually add this JSON to either config file:
-     ```json
-     {"hooks":{"Stop":[{"hooks":[{"type":"command","command":"bash <skill-dir>/scripts/desk_stop_hook.sh <vault-root>","timeout":10}]}]}}
-     ```
+- **post-commit hook installed**: `scripts/setup-hook.sh <vault-root>` — generates `.desk/signals/*.ready` on `input:: done`.
 - For impl/research tasks, `BEADS_DIR` must be defined in the target repo's `.envrc`.
 - When task frontmatter contains `beads_dir`, treat it as the source of truth for beads transport and derive `BEADS_DOLT_SERVER_SOCKET="$beads_dir/dolt-server.sock"` plus `BEADS_DOLT_AUTO_START=0` before invoking `$beads` or raw `bd`.
 
@@ -116,13 +107,12 @@ not_started → plan_ready → planning → in_progress → human_response_requi
 
 ## Phase 0: Init (`$desk new`)
 
-1. **Signal hook check**: Run `scripts/setup-hook.sh "$PWD"`. If hook is missing, prompt y/N for auto-install. On skip, warn that signal detection is inoperative and continue.
-2. Confirm `source_issue_link` and `task_type` with the human.
-3. Branch by `task_type`:
+1. Confirm `source_issue_link` and `task_type` with the human.
+2. Branch by `task_type`:
    - **impl/research**: Confirm `target_repo` → resolve `BEADS_DIR` from `.envrc` → derive `BEADS_DOLT_SERVER_SOCKET="$BEADS_DIR/dolt-server.sock"` and `BEADS_DOLT_AUTO_START=0` → create worktree via `$wt` (propose path/branch candidates, obtain approval) → create bd epic issue via `$beads`.
    - **adhoc**: No worktree or bd issue required. Leave corresponding frontmatter fields empty.
-4. Create the task note at vault root (populate frontmatter + empty Planning / Milestones / Dialogue sections).
-5. Transition to `status: plan_ready`.
+3. Create the task note at vault root (populate frontmatter + empty Planning / Milestones / Dialogue sections).
+4. Transition to `status: plan_ready`.
 
 ### Initial Task Note Structure
 
@@ -300,7 +290,7 @@ agent_instruction::
 5. Fire `terminal-notifier` with obsidian:// URL.
 6. **Terminate**.
 
-Resume happens via cold resume (see Signal Mechanism + Stop Hook Auto-Resume below).
+Resume happens via cold resume (see Signal Mechanism below).
 
 #### Pattern B: Non-blocking exit (autonomous continuation)
 
@@ -425,7 +415,7 @@ Include exactly:
 
 ## Signal Mechanism
 
-### Layer 1: obsidian-git post-commit Hook (signal generation)
+### obsidian-git post-commit Hook (signal generation)
 
 Event-driven detection leveraging obsidian-git auto-commit (≈ 3 min interval).
 
@@ -438,27 +428,6 @@ auto-commit fires
           → Create .desk/signals/<task-name>.ready
           → Fire terminal-notifier
 ```
-
-### Layer 2: Stop Hook Auto-Resume (signal consumption)
-
-Claude Code / Codex `hooks.Stop` fires when the root session goes idle. `scripts/desk_stop_hook.sh` runs and:
-
-1. Checks `.desk/signals/*.ready` — if found (FIFO, oldest first), returns `{"decision":"block","reason":"$desk run <task>"}`.
-2. Checks `.desk/runtime/*.lock` for dead PIDs (`kill -0`) — if found, returns `{"decision":"block","reason":"$desk run <task> --force"}`.
-3. Checks heartbeat staleness (>15 min with `runtime_status: running`) — fires `terminal-notifier` (does NOT block).
-4. If nothing found, returns `{"decision":"approve"}`.
-
-Execution time must be <1 second (no fswatch wait). Install via `<vault-root>/.claude/settings.json` or `<vault-root>/.codex/hooks.json`:
-
-```json
-{
-  "hooks": {
-    "Stop": [{"hooks": [{"type": "command", "command": "bash <skill-dir>/scripts/desk_stop_hook.sh <vault-root>", "timeout": 10}]}]
-  }
-}
-```
-
-Codex requires `[features] codex_hooks = true` in `~/.codex/config.toml`.
 
 ### Dedup: signal consumed → `.ready` file deleted before spawn. Lock + PID check prevents double spawn.
 
@@ -483,20 +452,19 @@ Agent stdout/stderr. Useful for post-mortem debugging.
 | lock exists | PID alive | heartbeat fresh | verdict |
 |-------------|-----------|-----------------|---------|
 | yes | yes | yes | ✓ running |
-| yes | no | — | ✗ stale (auto-reclaim via Stop Hook) |
+| yes | no | — | ✗ stale (`$desk run --force` to reclaim) |
 | no | — | — | — idle |
-| yes | yes | no (>15 min) | ? hung (notify only) |
+| yes | yes | no (>15 min) | ? hung (inspect via `$desk ps`) |
 
 ## Cold Resume Protocol
 
 Cold resume is the **canonical** way agents resume work. Every `$desk run` is a cold resume.
 
-0. **Signal hook check**: Run `scripts/setup-hook.sh "$PWD"`. If missing, prompt y/N for install.
 1. On `$desk` invocation, run `scripts/desk_ps.sh "$PWD"` to show current state. Also collect:
    - `[[task note]]` links from daily-note (yyyy-mm-dd.md)
    - Consume any `.desk/signals/*.ready` files (mark as actionable)
 2. Present candidates, prioritizing signal-ready tasks, then daily-note links.
-3. After human selection (or auto-selection via Stop Hook), execute `$desk run <task>`.
+3. After human selection, execute `$desk run <task>`.
 4. `$desk run` reads: task note frontmatter + latest Dialogue Turn + `bd show <issue-id>`.
 5. Spawn new agent session with this context. Agent restores from the appropriate Phase based on `status` + `current_status_summary`.
 
