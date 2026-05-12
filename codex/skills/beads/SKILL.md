@@ -106,8 +106,8 @@ Rules:
 - Sandbox auth rule: if sandbox clients use an external Dolt server, scope credentials deliberately. Prefer a dedicated read-only SQL user for read-mostly validation, and only reuse maintainer/write credentials after explicit ownership, auth, and rollback decisions are recorded in the active issue.
 - Git worktree fallback rule: if `bd` fails inside a git worktree because `.beads` resolution or `bd dolt` points at a broken worktree-local repo, stop troubleshooting in that worktree and switch all `bd` commands to the main repository checkout that owns the shared `.beads` database. Use the main checkout to run `bd show`, `bd ready`, `bd update`, `bd dolt status`, `bd dolt commit`, and `bd dolt push`, then continue code changes in the worktree.
 - Closure gate rule: before closing an issue or allowing an epic to auto-close, compare the acceptance criteria and current proof. If the remaining gap is "real run still not executed" rather than "code not written", do not close. Create or reopen follow-up validation issues immediately so the bd graph remains the source of truth.
-- Commit granularity rule: after each logically atomic bd issue mutation set (same unit as a proper git commit boundary), run `bd dolt commit` immediately.
-- Push pairing rule: whenever `bd dolt commit` succeeds, run `bd dolt push` in the same operation block.
+- Commit granularity rule: after each logically atomic bd issue mutation set (same unit as a proper git commit boundary), run `bd dolt commit` immediately. Fire this as a background sub-agent (`run_in_background: true`) so it does not block the main session.
+- Push pairing rule: whenever `bd dolt commit` succeeds, run `bd dolt push` in the same background sub-agent invocation, immediately after the commit command. Do not defer push to session end when a remote is configured.
 
 ## Misc
 
