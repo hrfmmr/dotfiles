@@ -56,6 +56,16 @@ Validate store-backed commands first:
 - one safe write such as `bd update <id> --notes ...`
 - when remotes matter: `bd dolt remote list`, `bd dolt pull`, `bd dolt push`
 
+For a quick end-to-end check of the minimal read path, use the bundled smoke
+script (optional shortcut — not required for normal operation):
+
+```sh
+scripts/codex-beads-socket-smoke.sh <socket-path> <issue-id>
+```
+
+The script sets `BEADS_DOLT_SERVER_SOCKET` and `BEADS_DOLT_AUTO_START=0`, then
+runs `bd show` and `bd ready --json` against the supplied socket.
+
 ## Diagnostic Caveat
 
 In `v1.0.3`, some diagnostics remain host/port-oriented even when the socket
