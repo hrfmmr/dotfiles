@@ -17,19 +17,20 @@ Run a durable beads workflow in Codex using AGENTS.md guidance, `codex exec`, an
 
 ## Session Start Protocol
 
-1. Run a socket-mode preflight before any `bd` read:
+1. Run a socket-only preflight before any `bd` read:
    - require `BEADS_DIR` for workspace targeting
    - resolve `BEADS_DOLT_SERVER_SOCKET` in this order:
      1. if a caller such as `$desk` already supplied `beads_dir`, derive `BEADS_DOLT_SERVER_SOCKET="$BEADS_DIR/dolt-server.sock"`
      2. otherwise prefer repo-level env loading such as `.envrc`
    - if `BEADS_DOLT_SERVER_SOCKET` is still unset after that resolution, set it to `"$BEADS_DIR/dolt-server.sock"`
+   - require every `bd` and Dolt client command to use the repo-local Unix socket named by `BEADS_DOLT_SERVER_SOCKET`; prohibit TCP client access
    - confirm whether an externally managed authoritative `dolt sql-server --socket <path>` is available at that path
    - if the socket file is missing, start or ask for startup of the external `dolt sql-server --socket <path> --data-dir <repo>/.beads/dolt` before any `bd` read
    - if socket startup fails because TCP-era artifacts remain, first clear only the repo-local stale markers `"$BEADS_DIR/dolt-server.pid"`, `"$BEADS_DIR/dolt-server.port"`, and `"$BEADS_DIR/dolt-server.lock"` before retrying
    - if socket startup still reports that the Dolt database is locked, inspect `"$BEADS_DIR/dolt/.dolt/noms/LOCK"` and `"$BEADS_DIR/dolt/dolt-server.pid"`; when the referenced process is dead or absent, remove only those stale lock files and retry
-   - if `dolt sql-server` reports `Port 3306 already in use`, keep socket mode and restart with an explicit alternate TCP port such as `--host 127.0.0.1 --port 63306` rather than falling back to TCP-first access
+   - prohibit starting `dolt sql-server` with a TCP bind; if the installed runtime requires an internal TCP listener even when configured with `--socket`, treat it as incompatible and blocked, then request a socket-only-capable external server or runtime
    - set `BEADS_DOLT_AUTO_START=0` for the session
-   - do not treat existing TCP host/port config or a live localhost TCP listener as the default path until socket mode has been checked and rejected
+   - ignore existing TCP host/port config and live TCP listeners; never use them for `bd` or Dolt client access
 2. Optional (when Dolt remote is configured): `bd dolt pull`.
 3. `bd prime`
 4. `bd ready --json`
@@ -85,16 +86,16 @@ Rules:
 - Runbook issue pattern: create or reuse one stable knowledge issue with a clear title such as `bd dolt db access corruption runbook`, link incident issues to it, and keep the runbook updated as the primary reference.
 - Runbook evidence shape: preserve symptom signatures, detection commands, failed hypotheses, successful recovery commands, verification checks, root-cause confidence, and open questions so later incidents can skip first-pass rediscovery.
 - Db-down fallback rule: if `bd` itself is unavailable because Dolt access is broken, gather evidence directly from `.beads/issues.jsonl`, `.beads/interactions.jsonl`, `.beads/metadata.json`, `.beads/config.yaml`, and `dolt-server.log`, then backfill the runbook issue after `bd` access is restored.
-- Transport rule: separate `localhost` reachability from beads/Dolt correctness before treating the database as broken.
-- Managed-server bind rule: do not assume `bd dolt start` will honor a non-localhost client host override. When validating sandbox access, verify the actual listen address with process or log evidence instead of inferring it from `metadata.json` or env overrides alone.
-- Sandbox socket rule: treat one externally managed `dolt sql-server --socket <path>` plus clients that require `BEADS_DOLT_SERVER_SOCKET=<path>` and set `BEADS_DOLT_AUTO_START=0` as the default operating pattern. Use host-bound TCP rebinding only as a secondary fallback.
+- Transport rule: prohibit TCP-bound server startup and TCP client access; use only the repo-local Unix socket named by `BEADS_DOLT_SERVER_SOCKET`.
+- Managed-server bind rule: do not use `bd dolt start` or any server startup that opens a TCP bind. Require a socket-only-capable external `dolt sql-server --socket <path>` runtime; if the installed runtime cannot operate without a TCP listener, mark the work blocked and request a compatible external server or runtime.
+- Sandbox socket rule: require one externally managed socket-only-capable `dolt sql-server --socket <path>` plus clients that set `BEADS_DOLT_SERVER_SOCKET=<path>` and `BEADS_DOLT_AUTO_START=0`.
 - Socket derivation rule: when a caller already knows `BEADS_DIR` structurally, prefer deriving `BEADS_DOLT_SERVER_SOCKET="$BEADS_DIR/dolt-server.sock"` over inventing a second explicit socket source. This keeps task-note state, repo env, and live server path aligned.
 - Socket path rule: prefer a repo-scoped socket path such as `.beads/dolt-server.sock`. Avoid shared socket paths such as `/tmp/mysql.sock` unless a repo-scoped path is impossible.
-- Transport precedence rule: check socket viability before trusting live TCP repo settings, existing localhost listeners, or TCP-oriented diagnostics. Use TCP only after socket mode has been checked and rejected.
+- Transport precedence rule: use the repo-local Unix socket exclusively. Never use TCP repo settings, TCP listeners, host-bound rebinding, or TCP client access, including when socket mode is unavailable.
 - Sandbox socket validation rule: validate the socket path with store-backed commands first. Prefer `bd show <id>`, `bd ready --json`, one safe write such as `bd update <id> --notes ...`, and when remotes matter `bd dolt remote list`, `bd dolt pull`, and `bd dolt push`. Do not rely on `bd dolt test`, `bd dolt show`, or `bd context` as the primary health signal in socket mode because some diagnostics remain host/port-oriented. As an optional shortcut, `scripts/codex-beads-socket-smoke.sh <socket-path> <issue-id>` runs the minimal read-path smoke check (`bd show` + `bd ready --json`) with socket env pre-set.
 - Socket permission rule: if socket access fails with `operation not permitted`, treat the socket path, file location, and session-level permissions as the primary suspects before treating the Dolt server as down.
 - Escalated socket-access rule: if the server is confirmed alive and the repo-local socket file exists but `bd show` or another store-backed command still fails with `operation not permitted`, retry the client command with escalated permissions instead of restarting the server again.
-- Socket missing rule: if socket access fails with `no such file or directory`, treat external server setup as the primary suspect. Verify the expected repo-local socket path and start the external `dolt sql-server --socket <path>` before attempting TCP fallback.
+- Socket missing rule: if socket access fails with `no such file or directory`, treat external server setup as the primary suspect. Verify the expected repo-local socket path and start a socket-only-capable external `dolt sql-server --socket <path>`; if none is available, mark the work blocked.
 - No-helper-script rule: do not require repo-local wrapper scripts for normal beads startup or access. Prefer `.envrc` plus direct `dolt sql-server --socket <path> --data-dir <repo>/.beads/dolt` setup so a fresh session can recover from first principles.
 - ADR logging rule: when a non-trivial design or policy decision is made (architectural choice, technology selection, or approach that is difficult to reverse), create a bd issue with the `adr` label at the point the decision is confirmed.
 - ADR issue shape: create it as a sibling of the active issue or under the relevant epic; use `bd create "<decision title>" -l adr -d "## Background\n<context>\n## Decision\n<what was decided>\n## Rationale\n<why>\n## Consequences\n<trade-offs and follow-on work>"`. Preserve provenance with `discovered-from` when applicable.
@@ -102,7 +103,7 @@ Rules:
 - Async waits: use `bd gate create` and `bd gate eval`.
 - Parallel isolation: use `bd worktree create` for concurrent workers.
 - Backend safety rule: even if Dolt backend operations crash, do not switch to `--db` ephemeral SQLite (for example `.beads/ephemeral.sqlite3`).
-- On Dolt failure, recover on Dolt path only (for example `bd dolt start`, `bd dolt test`, `bd dolt set mode server`) and then retry.
+- On Dolt failure, recover only through the repo-local Unix socket path and a socket-only-capable external server. Never use `bd dolt start` or a TCP-bound runtime; if socket-only operation is unsupported, mark the work blocked and request a compatible external server or runtime.
 - Sandbox auth rule: if sandbox clients use an external Dolt server, scope credentials deliberately. Prefer a dedicated read-only SQL user for read-mostly validation, and only reuse maintainer/write credentials after explicit ownership, auth, and rollback decisions are recorded in the active issue.
 - Git worktree fallback rule: if `bd` fails inside a git worktree because `.beads` resolution or `bd dolt` points at a broken worktree-local repo, stop troubleshooting in that worktree and switch all `bd` commands to the main repository checkout that owns the shared `.beads` database. Use the main checkout to run `bd show`, `bd ready`, `bd update`, `bd dolt status`, `bd dolt commit`, and `bd dolt push`, then continue code changes in the worktree.
 - Closure gate rule: before closing an issue or allowing an epic to auto-close, compare the acceptance criteria and current proof. If the remaining gap is "real run still not executed" rather than "code not written", do not close. Create or reopen follow-up validation issues immediately so the bd graph remains the source of truth.
