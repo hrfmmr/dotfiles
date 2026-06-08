@@ -69,6 +69,7 @@ Rules:
 - Increment `N` for sibling tasks under the epic, and increment `M` for sibling sub-tasks under the task.
 - When creating descendants under a known epic, do not rely on unrelated auto-generated IDs; pass both `--parent` and an explicit `--id`.
 - Use `bd create --parent <epic-id> --id <epic-id>.<N>` for tasks, and `bd create --parent <epic-id>.<N> --id <epic-id>.<N>.<M>` for sub-tasks.
+- ID collision check rule: before `bd create --id <id>`, run `bd show <id>` to confirm the ID is unused. `bd create --id <existing-id>` silently overwrites the prior issue with no conflict error — title, description, type, priority, and any notes are lost. If `bd show` finds a hit, pick the next free numeric suffix. On accidental overwrite, recover from `dolt_log` via `SELECT ... FROM issues AS OF '<hash>'` plus a `.beads/issues.jsonl` row rewrite, then `bd prime` to re-import.
 - If the repo or database convention requires a custom prefix for the root epic, preserve that root epic ID verbatim and extend only with numeric suffixes.
 - Keep depth at 3 levels maximum. If deeper nesting is needed, create a new epic instead.
 
