@@ -117,6 +117,17 @@ Use the fixed section structure below. Sections may be omitted when irrelevant, 
 
 ### Step 3: Writing rules
 
+#### Narrative composition
+
+These principles apply to the entire deliverable. Assume the reader has no prior knowledge and reads top-to-bottom.
+
+1. **Top-to-bottom readability**: order the material so the document is understandable on a single linear read. Do not rely on forward references — never write a passage that requires knowledge of a later section to make sense.
+2. **Section opening connector**: begin every section (and subsection) with a one-sentence connector that names why this material appears here, picking up from the prior section's conclusion. Sections must not start abruptly.
+3. **Premise + reason before detail**: in each section, first state what the reader needs to care about and why (the premise and its rationale), then unpack the specifics. Never lead with a conclusion or with detail data before establishing why it matters.
+4. **Introduce tables, matrices, and lists in prose**: before any table or list, state in running text what it judges or compares so interpretation is never left to the reader.
+5. **Justify exclusions at first mention**: when an option is being removed from consideration, state the reason at the first point that option is mentioned. Do not let the reader wonder where an option went.
+6. **No authoring-process context in the body**: do not leave artifacts of the writing process (diffs from prior versions, response-to-feedback notes, revision history, draft commentary). The deliverable must read as a single self-contained document.
+
 #### Language & tone
 - Always write in Japanese. Code blocks, identifiers, and URLs are exempt.
 - Use polite style (ですます調) consistently. Do not use abrupt endings (体言止め) or academic style (である調).
@@ -178,3 +189,9 @@ Verify all items before reporting completion. Fix any failures before finishing.
 - [ ] Comparison tables used for evaluations
 - [ ] Detail depth matches the audience tier
 - [ ] Desk integration (tag inheritance, wikilinks) applied when applicable
+- [ ] Top-to-bottom readability: no forward references that require later context
+- [ ] Every section opens with a connector sentence stating why it appears here
+- [ ] Premise + reason stated before supporting detail in every section
+- [ ] Tables, matrices, and lists are introduced by prose stating their purpose
+- [ ] Excluded options are justified at the first point they are mentioned
+- [ ] No authoring-process context (revision history, response-to-feedback notes) left in the body
