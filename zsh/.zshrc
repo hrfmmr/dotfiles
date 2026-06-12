@@ -134,6 +134,7 @@ done
 #
 export EDITOR=nvim
 bindkey -e
+bindkey -r '^g'
 
 #
 # * Plugins
