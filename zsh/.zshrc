@@ -125,16 +125,11 @@ alias py='poetry'
 alias ecs='ecspresso'
 alias gg='lazygit'
 alias gd='gh dash'
+alias codex='EDITOR=nvim codex'
+alias claude='EDITOR=nvim claude'
 for zsh_function_file in git.zsh navigation.zsh github.zsh devtools.zsh media.zsh; do
     source "$ZSH_CONFIG_DIR/functions/$zsh_function_file"
 done
-
-#
-# nvim
-#
-export EDITOR=nvim
-bindkey -e
-bindkey -r '^g'
 
 #
 # * Plugins
