@@ -76,17 +76,11 @@ smartFilteringAtLaunch: true
 keybindings:
   prs:
     - key: d
-      command: |-
-        tmux new-window -c {{.RepoPath}} '
-        tmux rename-window {{.RepoName}}#{{.PrNumber}} &&
-        gh pr checkout {{.PrNumber}} &&
-        nvim -c "lua require([[lazy]]).load({plugins={[[diffview.nvim]]}})" -c "DiffviewOpen origin/$(gh pr status --json baseRefName -q '.currentBranch.baseRefName')...{{.HeadRefName}}"
-        '
+      name: "nvim: DiffviewOpen"
+      command: ~/.config/gh-dash/scripts/pr-nvim.sh diffview {{.RepoPath}} {{.RepoName}} {{.PrNumber}} {{.HeadRefName}}
     - key: C
-      name: code review
-      command: |
-        tmux new-window -c {{.RepoPath}} '
-        tmux rename-window {{.RepoName}}#{{.PrNumber}} &&
-        gh pr checkout {{.PrNumber}} &&
-        nvim -c "lua require([[lazy]]).load({plugins={[[octo.nvim]]}})" -c "Octo pr edit {{.PrNumber}}"
-        '
+      name: "nvim: Octo pr edit"
+      command: ~/.config/gh-dash/scripts/pr-nvim.sh octo {{.RepoPath}} {{.RepoName}} {{.PrNumber}} {{.HeadRefName}}
+    - key: ctrl+r
+      name: "PR review: codex + diffview + octo"
+      command: ~/.config/gh-dash/scripts/pr-review-panes.sh {{.RepoPath}} {{.RepoName}} {{.PrNumber}} {{.HeadRefName}}
