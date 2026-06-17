@@ -75,16 +75,16 @@ return {
 
 		-- files
 		local find_files_opts = { find_command = { "rg", "--files", "--hidden", "-g", "!.git" } }
-		vim.keymap.set("n", "<C-u>u", function()
+		vim.keymap.set("n", "<C-u><C-u>", function()
 			builtin.find_files(find_files_opts)
 		end, {})
-		vim.keymap.set("n", "<C-u><C-u>", function()
+		vim.keymap.set("n", "<C-u>u", function()
 			local opts = vim.tbl_deep_extend("force", find_files_opts, {
 				default_text = "'" .. vim.fn.expand("<cword>"),
 			})
 			builtin.find_files(opts)
 		end, {})
-		vim.keymap.set("n", "<M-u><M-u>", function()
+		vim.keymap.set("n", "<Leader>uu", function()
 			local opts = vim.tbl_deep_extend("force", find_files_opts, { cwd = get_file_dir(), hidden = true })
 			builtin.find_files(opts)
 		end, {})
@@ -92,15 +92,12 @@ return {
 		-- buffers
 		vim.keymap.set("n", "<C-u><C-b>", builtin.buffers, {})
 		-- grep
-		vim.keymap.set("n", "<C-u><C-g>", builtin.grep_string, {})
-		vim.keymap.set("n", "<M-u><M-g>", function()
-			builtin.grep_string({ cwd = get_file_dir() })
-		end, {})
-		vim.keymap.set("n", "<C-u>g", builtin.live_grep, {})
-		vim.keymap.set("n", "<M-u>g", function()
+		vim.keymap.set("n", "<C-u><C-g>", builtin.live_grep, {})
+		vim.keymap.set("n", "<C-u>g", builtin.grep_string, {})
+		vim.keymap.set("n", "<Leader>ug", function()
 			builtin.live_grep({ cwd = get_file_dir() })
 		end, {})
-		vim.keymap.set("n", "<M-b>g", function()
+		vim.keymap.set("n", "<Leader>uG", function()
 			builtin.live_grep({ grep_open_files = true })
 		end, {})
 		-- buffer lines
