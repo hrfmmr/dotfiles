@@ -24,13 +24,22 @@ head_ref="$4"
 
 window_name="${repo_name}#${pr_number}"
 
+# Fail clearly when the repo isn't available locally — e.g. RepoName isn't covered
+# by any `repoPaths` entry, so gh-dash hands us an empty RepoPath. Otherwise the
+# nvim panes launch in whatever directory happened to be current and diffview emits
+# a cryptic "Not a repo (or any parent)" error.
+if [ -z "$repo_path" ] || ! git -C "$repo_path" rev-parse --git-dir >/dev/null 2>&1; then
+  echo "pr-review-panes.sh: '${repo_path:-<empty>}' is not a git repo — is ${repo_name} mapped under repoPaths?" >&2
+  exit 1
+fi
+
 cd "$repo_path"
 
 # Resolve the PR base branch and head commit without checking anything out.
 # Fetching only updates refs (FETCH_HEAD / origin tracking refs); the current
 # branch and working tree are left untouched. Fall back to the head ref name
 # if the fetch is unavailable (e.g. offline).
-base_ref="$(gh pr view "$pr_number" --json baseRefName -q '.baseRefName')"
+base_ref="$(gh pr view "$pr_number" -R "$repo_name" --json baseRefName -q '.baseRefName')"
 git fetch -q origin "$base_ref" 2>/dev/null || true
 git fetch -q origin "pull/${pr_number}/head" 2>/dev/null || true
 head_rev="$(git rev-parse -q --verify FETCH_HEAD 2>/dev/null || printf '%s' "$head_ref")"
@@ -64,8 +73,22 @@ printf '%s' "$prompt" >"$prompt_file"
 term_cmd="direnv allow . 2>/dev/null; codex \"\$(cat ${prompt_file})\""
 inner_codex="nvim -c $(sq "terminal zsh -lic $(sq "$term_cmd")") -c startinsert"
 
-inner_diffview="nvim -c $(sq 'lua require([[lazy]]).load({plugins={[[diffview.nvim]]}})') -c $(sq "DiffviewOpen origin/${base_ref}...${head_rev}")"
-inner_octo="nvim -c $(sq 'lua require([[lazy]]).load({plugins={[[octo.nvim]]}})') -c $(sq "Octo pr edit ${pr_number}")"
+# diffview/octo: like codex above, drive nvim from a temp Lua file via
+# `-c 'luafile <path>'` instead of an inline `-c 'lua ...'`. Pushing the Lua
+# through tmux -> sh -> zsh -> nvim's Ex layer is what mis-parsed the nested
+# brackets (E5107 ')' expected near ...); a file sidesteps every quoting layer.
+# Each chunk chdir's into the repo first so diffview/octo resolve the right git
+# tree even if the pane cwd didn't survive the wrapping ("Not a repo!").
+diffview_lua="${TMPDIR:-/tmp}/gh-dash-diffview-${slug}.lua"
+printf '%s' "vim.fn.chdir([[${repo_path}]])
+require([[lazy]]).load({ plugins = { [[diffview.nvim]] } })
+vim.cmd([[DiffviewOpen origin/${base_ref}...${head_rev}]])" >"$diffview_lua"
+octo_lua="${TMPDIR:-/tmp}/gh-dash-octo-${slug}.lua"
+printf '%s' "vim.fn.chdir([[${repo_path}]])
+require([[lazy]]).load({ plugins = { [[octo.nvim]] } })
+vim.cmd([[Octo pr edit ${pr_number}]])" >"$octo_lua"
+inner_diffview="nvim -c $(sq "luafile ${diffview_lua}")"
+inner_octo="nvim -c $(sq "luafile ${octo_lua}")"
 
 # Create the window (pane 0 = codex), then split off the two nvim panes.
 pane0="$(tmux new-window -P -F '#{pane_id}' -c "$repo_path" -n "$window_name" "$(zwrap "$inner_codex")")"
