@@ -81,11 +81,11 @@ runtime_heartbeat_at: ""   # optional: ISO8601 JST (Asia/Tokyo, +09:00) timestam
 - Describe what meaningful unit of work is underway, blocked, or just completed.
 - Do not use orchestration mechanics as the summary body.
 - Good:
-  - `未コミット差分の意図確認を進めつつ、重要参考リンクのターゲット検証を実行中。`
-  - `Milestone 2/4 完了。roundup の派生要約は通り、E2E の再確認待ち。`
+  - `Verifying uncommitted diff intent while validating key reference targets.`
+  - `Milestone 2/4 complete. Roundup derivation passed; awaiting E2E re-confirmation.`
 - Bad:
-  - `background sub-agent を再開`
-  - `hook をセットアップした`
+  - `Resumed background sub-agent`
+  - `Set up hook`
 
 ### Runtime Lease Contract
 
@@ -153,7 +153,7 @@ Lightweight plan approval gate. A planner sub-agent reads the worktree and bd is
 1. **Pre-spawn**: set `runtime_status: running`, `runtime_subagent_role: planner`, `runtime_subagent_id`, `runtime_heartbeat_at`. Create lock file.
 2. **Spawn planner sub-agent** (background, cwd = working tree). The planner:
    a. Read bd issue description, task note frontmatter, and relevant code in the worktree.
-   b. Write a Turn-N to the Dialogue section with a 3-5 line execution plan as a numbered list.
+   b. Write a Turn-N to the Dialogue section with a 3-5 step execution plan as a numbered list.
    c. Set `input:: pending` on the Turn and include an always-present `agent_instruction::` field. The plan Turn format:
    ```markdown
    ### Turn-N
@@ -161,11 +161,33 @@ Lightweight plan approval gate. A planner sub-agent reads the worktree and bd is
    agent_instruction::
 
    **Execution Plan**:
-   1. <step>
+   1. <step — see Execution Plan Verbosity Guidelines below>
    2. <step>
    3. <step>
 
    > Approve, modify, or reject. If you have an extra instruction for the next agent session, write it in `agent_instruction::` before changing `input:: pending` to `input:: done`.
+   ```
+
+   #### Execution Plan Verbosity Guidelines
+
+   Each step in the execution plan MUST be written as full sentences — not a terse label or a heading-style phrase. The target reader is someone who has NOT been in any prior conversation: they must be able to cold-read the plan and understand the full picture without additional context.
+
+   Every step must answer four questions:
+   - **What** will be done in this step (specific action, not a category name)
+   - **Why** this step is necessary at this point (rationale, dependency, or risk being addressed)
+   - **Prerequisite / assumed state** entering this step (what must already be true or known)
+   - **Expected output / outcome** — what will be known or available after this step completes
+
+   The ordering of steps must be self-evident from the narrative: each step should naturally lead into the next, so the reader intuitively understands why the sequence is what it is.
+
+   **Before (too terse — do not write like this)**:
+   ```
+   1. **Dependency audit**: Check which packages need updating.
+   ```
+
+   **After (verbose, context-rich — write like this)**:
+   ```
+   1. **Audit dependencies for version conflicts**: Before modifying any code, we need to know which installed packages conflict with the target version — because a silent version mismatch causes runtime failures that are hard to trace back to the upgrade. Run the package manager's outdated-check command and cross-reference each result against the new version's compatibility matrix. The output is a pinned list of packages that must be upgraded or excluded before the migration can proceed safely.
    ```
    d. **bd sync** (Turn-N ↔ bd Sync Invariant): `bd note <bd_issue_id> "[Turn-N] <plan summary>"` + `bd dolt commit`.
    e. Update frontmatter: `status: human_response_required`, update `current_status_summary` with plan gist.
@@ -336,7 +358,7 @@ When a Turn produces a linkable artifact, append a dedicated callout block **ins
 
 **Derived note** — learning note, investigation report, design doc:
 ```markdown
-> [!note] 派生ノート
+> [!note] Derived Note
 > [[📝Derived Note Name]]
 ```
 
@@ -376,8 +398,8 @@ Run `scripts/desk_ps.sh <vault-root>` to display the unified status table:
 ```
 task                       | status                  | agent     | heartbeat | alive?
 ---------------------------|-------------------------|-----------|-----------|-------
-ios-kenko ヘルスケア連携UI  | human_response_required | —         | 2h        | —
-ios-kenko Sourcery退役      | in_progress             | pid:12345 | 3m        | ✓
+my-app Auth UI refactor    | human_response_required | —         | 2h        | —
+my-app Remove legacy SDK   | in_progress             | pid:12345 | 3m        | ✓
 ```
 
 - Default: notes where `status != done`.
