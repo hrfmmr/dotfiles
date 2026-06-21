@@ -60,13 +60,33 @@ Example prompt forms:
 - If `.github/pull_request_template.md` exists on the target base branch, create the PR body from that template and fill every markdown heading with obvious context (do not leave heading sections empty).
   - Fill with concrete values from available fields (`intent_summary`, `changed_paths`, `issue_refs`, `patch_id`, current validation/check state).
   - Keep template heading structure unchanged; append concise bullets/sentences under each heading as needed.
-- If the repo template does not exist, use `assets/pr-template.md` or `gh pr create --fill`.
+  - Apply the PR description content policy (below) when writing the content under each heading.
+- If the repo template does not exist, use `assets/pr-template.md` (own fallback structure) or `gh pr create --fill`.
 - Prefer explicit body create when template is present: `gh pr create --title <title> --head <branch> --base <base> --body "<rendered-template-body>"`.
 - Default to ready-for-review (no drafts unless configured).
 - If `issue_refs` includes one or more bd issue IDs and `BEADS_DIR` is present, record PR linkage on each issue immediately after creation:
   - Set external reference: `bd update <issue-id> --external-ref pr:<number>`
   - Append durable log token for extraction: `bd update <issue-id> --append-notes "Linked PR #<number> (pr:<number>)"`
   - Verify linkage write: `bd show <issue-id> --json`
+  - This linkage write is one-directional (PR info → bd). Never write bd issue IDs or bd-specific context back into PR-visible text; see "PR description content policy" below.
+
+## PR description content policy
+- Write for the reader, not for the diff: every PR body must make Why, What, and How legible without forcing the reader into the diff itself. Favor plain, explicit phrasing over terse polish.
+- Default heading set (fallback only, see `assets/pr-template.md`): Overview / Background / Changes / Notes. When a repo template exists, keep its headings (per "PR creation policy" above) but hold the same clarity bar inside them.
+- Shape each heading the same way: open with a plain-language summary in prose, then list the key points as bullets beneath it. Don't open a heading with a bare bullet list — give the reader prose to orient on first, however long that takes to be clear.
+- Under each topic in Changes, lead with the reason before the mechanics — a reader should know *why* a change exists before seeing *what* it touches. If a topic needs more than a bullet's worth of explanation, give it its own `### <Topic>` subsection instead of cramming it into the bullet.
+- Surface any prerequisite the reader needs but the diff won't show (a prior incident, an upstream change, a constraint) — don't assume shared context.
+- Carry origin context forward: if the patch comes from a `$desk` task, append `source issue link: <url>` as the last line of Overview (or the template's closest equivalent heading), using the task note path/URL as `<url>`.
+- `bd` stays internal: no `bd` issue ID or bd-specific detail ever appears in PR-visible text (description or any comment the skill posts). Linkage flows one way — PR → bd via `bd update` — never the reverse.
+- Default to Japanese content unless the invoking context says otherwise.
+
+### Self-check before publishing
+Before sending the body via `gh pr create`/`gh pr edit`, confirm:
+- Each topic states *why*, not just *what*.
+- Any non-obvious prerequisite/background fact is stated.
+- `source issue link: <url>` is present at the end of Overview if the patch originated from a `$desk` task.
+- No `bd` issue ID or bd-specific text appears anywhere in the body or in skill-authored comments.
+- Heading structure matches the repo template if one exists, otherwise the four-heading fallback.
 
 ## Operating mode
 Use one mode only:
