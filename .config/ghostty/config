@@ -16,3 +16,7 @@ quick-terminal-position = top
 quick-terminal-size = 90%
 quick-terminal-animation-duration = 0.2
 quick-terminal-screen = main
+
+# keybinds
+keybind = alt+f=text:\x1bf
+keybind = alt+b=text:\x1bb
