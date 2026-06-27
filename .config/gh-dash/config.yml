@@ -84,3 +84,6 @@ keybindings:
     - key: ctrl+r
       name: "PR review: codex + diffview + octo"
       command: ~/.config/gh-dash/scripts/pr-review-panes.sh {{.RepoPath}} {{.RepoName}} {{.PrNumber}} {{.HeadRefName}}
+    - key: c
+      name: "PR review: claude + diffview + octo"
+      command: ~/.config/gh-dash/scripts/pr-review-panes.sh {{.RepoPath}} {{.RepoName}} {{.PrNumber}} {{.HeadRefName}} claude
