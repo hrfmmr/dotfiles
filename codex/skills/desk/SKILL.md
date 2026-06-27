@@ -142,63 +142,26 @@ not_started → plan_ready → planning → in_progress → human_response_requi
 
 ## Plan-First Flow (default for initial `$desk run` on `plan_ready` tasks)
 
-Lightweight plan approval gate. A planner sub-agent reads the worktree and bd issue, then writes a 3-5 line execution plan into a Dialogue Turn for human approval. Use Phase 1 instead for large tasks requiring deep requirement clarification.
+Delegate to `$rough-plan` for impl tasks. `$rough-plan` handles requirement clarity check (`$grill-me` gate), approach selection (`$creative-problem-solver` gate), rough plan drafting with pseudocode, and human approval via Turn-N.
 
 ### Trigger
 
-`$desk run <task>` when `status == plan_ready` and `--no-plan` is **not** set.
+`$desk run <task>` when `status == plan_ready`, `task_type == impl`, and `--no-plan` is **not** set.
 
 ### Steps
 
 1. **Pre-spawn**: set `runtime_status: running`, `runtime_subagent_role: planner`, `runtime_subagent_id`, `runtime_heartbeat_at`. Create lock file.
-2. **Spawn planner sub-agent** (background, cwd = working tree). The planner:
-   a. Read bd issue description, task note frontmatter, and relevant code in the worktree.
-   b. Write a Turn-N to the Dialogue section with a 3-5 step execution plan as a numbered list.
-   c. Set `input:: pending` on the Turn and include an always-present `agent_instruction::` field. The plan Turn format:
-   ```markdown
-   ### Turn-N
-   input:: pending
-   agent_instruction::
-
-   **Execution Plan**:
-   1. <step — see Execution Plan Verbosity Guidelines below>
-   2. <step>
-   3. <step>
-
-   > Approve, modify, or reject. If you have an extra instruction for the next agent session, write it in `agent_instruction::` before changing `input:: pending` to `input:: done`.
-   ```
-
-   #### Execution Plan Verbosity Guidelines
-
-   Each step in the execution plan MUST be written as full sentences — not a terse label or a heading-style phrase. The target reader is someone who has NOT been in any prior conversation: they must be able to cold-read the plan and understand the full picture without additional context.
-
-   Every step must answer four questions:
-   - **What** will be done in this step (specific action, not a category name)
-   - **Why** this step is necessary at this point (rationale, dependency, or risk being addressed)
-   - **Prerequisite / assumed state** entering this step (what must already be true or known)
-   - **Expected output / outcome** — what will be known or available after this step completes
-
-   The ordering of steps must be self-evident from the narrative: each step should naturally lead into the next, so the reader intuitively understands why the sequence is what it is.
-
-   **Before (too terse — do not write like this)**:
-   ```
-   1. **Dependency audit**: Check which packages need updating.
-   ```
-
-   **After (verbose, context-rich — write like this)**:
-   ```
-   1. **Audit dependencies for version conflicts**: Before modifying any code, we need to know which installed packages conflict with the target version — because a silent version mismatch causes runtime failures that are hard to trace back to the upgrade. Run the package manager's outdated-check command and cross-reference each result against the new version's compatibility matrix. The output is a pinned list of packages that must be upgraded or excluded before the migration can proceed safely.
-   ```
-   d. **bd sync** (Turn-N ↔ bd Sync Invariant): `bd note <bd_issue_id> "[Turn-N] <plan summary>"` + `bd dolt commit`.
-   e. Update frontmatter: `status: human_response_required`, update `current_status_summary` with plan gist.
-   f. Set `runtime_status: waiting_human`, clear `runtime_subagent_id`, refresh `runtime_heartbeat_at`.
-   g. Delete lock file. Fire `terminal-notifier`. Terminate.
+2. **Invoke `$rough-plan`** (background, cwd = working tree). `$rough-plan` executes its full workflow (precondition check → optional grill-me → optional creative-problem-solver → draft plan → human approval Turn-N). All Turn-N writes and bd sync are handled by `$rough-plan`.
 3. **On approval** (`input:: done` detected via signal mechanism): next `$desk run` reads the approved Turn, spawns executor with the plan in the cold resume context.
+
+### Trivial skip
+
+If the change is trivially small (1 file, a few lines, self-evident fix), `$rough-plan` may skip itself with a 1-line note in the Turn-N explaining the skip reason. The task transitions directly to `in_progress`.
 
 ### `--no-plan` bypass
 
 When `$desk run <task> --no-plan` is invoked on a `plan_ready` task:
-- Skip planner spawn. Transition `status` directly to `in_progress`.
+- Skip `$rough-plan`. Transition `status` directly to `in_progress`.
 - Spawn executor immediately. The executor derives its work from bd issue description and task note context.
 
 ## Phase 1: Planning (deep — for large tasks)

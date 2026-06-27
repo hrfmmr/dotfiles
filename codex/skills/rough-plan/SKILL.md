@@ -103,6 +103,28 @@ Rules:
 - Phase boundaries align with commit boundaries (1 phase = 1 commit by default).
 - State verification checkpoints (e.g. "plan diff must be zero") explicitly when applicable.
 
+#### Plan Verbosity Guidelines
+
+The natural-language sections MUST be written as full sentences — not terse labels or heading-style phrases. The target reader is someone who has NOT been in any prior conversation: they must be able to cold-read the plan and understand the full picture without additional context.
+
+Each phase's explanation must answer four questions:
+- **What** will be done in this phase (specific action, not a category name)
+- **Why** this phase is necessary at this point (rationale, dependency, or risk being addressed)
+- **Prerequisite / assumed state** entering this phase (what must already be true or known)
+- **Expected output / outcome** — what will be known or available after this phase completes
+
+The ordering of phases must be self-evident from the narrative: each phase should naturally lead into the next, so the reader intuitively understands why the sequence is what it is.
+
+**Before (too terse — do not write like this)**:
+```
+**Phase 1: Dependency audit** — Check which packages need updating.
+```
+
+**After (verbose, context-rich — write like this)**:
+```
+**Phase 1: Audit dependencies for version conflicts** — Before modifying any code, we need to know which installed packages conflict with the target version — because a silent version mismatch causes runtime failures that are hard to trace back to the upgrade. Run the package manager's outdated-check command and cross-reference each result against the new version's compatibility matrix. The output is a pinned list of packages that must be upgraded or excluded before the migration can proceed safely.
+```
+
 ### Step 5: Human Approval
 
 Write the rough plan into a Turn-N in the task note and request approval.
