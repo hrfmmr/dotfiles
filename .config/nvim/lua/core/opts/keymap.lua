@@ -53,3 +53,19 @@ vim.keymap.set("n", "<Leader>ff", require("utils").toggleQuickfix)
 -- term
 vim.keymap.set("n", "<C-t>", ":term<CR>", { silent = true })
 vim.keymap.set("t", "<C-q>", "<C-\\><C-n>")
+-- Copy current buffer path to clipboard
+local function copyBufPath(modifier)
+	local path = vim.fn.expand("%" .. modifier)
+	if path == "" then
+		vim.notify("No file in current buffer", vim.log.levels.WARN)
+		return
+	end
+	vim.fn.setreg("+", path)
+	vim.notify("Copied: " .. path)
+end
+vim.keymap.set("n", "<Leader>cp", function()
+	copyBufPath(":~:.")
+end, { desc = "Copy relative path of current buffer" })
+vim.keymap.set("n", "<Leader>cP", function()
+	copyBufPath(":p")
+end, { desc = "Copy absolute path of current buffer" })
