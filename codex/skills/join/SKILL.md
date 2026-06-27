@@ -1,6 +1,6 @@
 ---
 name: join
-description: "PR autopilot via `gh` only: target explicit PRs or all open PRs, create/manage PRs, keep branches current, gate on required checks, apply minimal remote fixes, optionally invoke `$review` as a review gate, and publish merge-ready handoff without merging. Use for PR monitoring, CI-failure triage, branch hygiene, and human-merge handoff."
+description: "PR autopilot via `gh` only: target explicit PRs or all open PRs, create/manage PRs, keep branches current, gate on required checks, apply minimal remote fixes, optionally invoke `$review` as a review gate, and publish merge-ready handoff without merging. After creating a PR it watches review activity by default (in-session poll until reviewDecision is decisive or a timeout), reporting in-session without posting PR comments. Use for PR monitoring, CI-failure triage, branch hygiene, review-comment watch, and human-merge handoff."
 ---
 
 # Join
@@ -12,7 +12,8 @@ Run a continuous PR operator using `gh` commands only. Keep PRs created, green, 
 - Use only `gh` CLI commands (`gh pr`, `gh run`, `gh api`, `gh repo`).
 - Do not run `git` or any non-`gh` command.
 - Exception: when linking a created PR to an existing bd issue, allow `bd show` and `bd update` only for that linkage write.
-- If a required action cannot be completed with `gh` alone, pause automation for that PR and leave a blocking comment.
+- If a required action cannot be completed with `gh` alone, pause automation for that PR and report the block to the user in-session (do not post a PR comment).
+- Never post operator status/handoff/block/stalled comments to a PR (no `Join Operator` comments). Report all such state to the user in-session; the only `gh` writes allowed are PR/branch mutations the user asked for and, when explicitly instructed, a formal `gh pr review`.
 
 ## Quick start
 1. Ensure `gh auth status` succeeds.
@@ -36,10 +37,11 @@ Example prompt forms:
 - `--review-target pr|artifact` (default: `pr`).
 - `--gate required-only` (optional checks ignored for handoff).
 - `--wait poll:30-60s` via `gh pr checks --required --json ...`.
-- `--status comment:Join Operator --update in-place`.
+- `--status in-session` (report status to the user in the session; never post or maintain PR comments).
 - `--target --pr <num> | --target all-open`.
-- `--boundary gh-only`; if blocked => `--pause pr --comment block`.
+- `--boundary gh-only`; if blocked => `--pause pr` and report the block in-session.
 - `--no-merge --no-approve` unless user explicitly overrides.
+- `--watch` is default-on after PR creation; `--no-watch` opts out. Tune with `--watch-interval 180s` and `--watch-timeout 2h` (see Post-create review watch).
 
 ## Auth preflight (required)
 - Run these checks before any PR routing or mutation:
@@ -69,6 +71,7 @@ Example prompt forms:
   - Append durable log token for extraction: `bd update <issue-id> --append-notes "Linked PR #<number> (pr:<number>)"`
   - Verify linkage write: `bd show <issue-id> --json`
   - This linkage write is one-directional (PR info → bd). Never write bd issue IDs or bd-specific context back into PR-visible text; see "PR description content policy" below.
+- After a PR is created successfully (and linked, if applicable), start the post-create review watch by default unless `--no-watch` was passed (see Post-create review watch).
 
 ## PR description content policy
 - Write for the reader, not for the diff: every PR body must make Why, What, and How legible without forcing the reader into the diff itself. Favor plain, explicit phrasing over terse polish.
@@ -116,7 +119,7 @@ Process PRs sequentially (blocking per PR on CI):
    - Enforce CI gate (required checks only; see below).
    - If failing, run the surgical fix loop.
    - Run review gate when `--review != off` (see Review integration).
-   - When green and review gate is satisfied, publish merge-ready handoff status.
+   - When green and review gate is satisfied, report merge-ready handoff to the user in-session.
    - Do not approve or merge.
 
 ## Review integration
@@ -127,14 +130,14 @@ Process PRs sequentially (blocking per PR on CI):
 - Policy:
   - `--review off`: skip review gate.
   - `--review auto`: run review gate; if unavailable/error, continue with handoff and record `review_skipped`.
-  - `--review required`: run review gate; if unavailable/error, pause automation for that PR and comment block reason.
+  - `--review required`: run review gate; if unavailable/error, pause automation for that PR and report the block reason in-session.
 - Reviewer output contract (must match mesh Round E):
   - `decision: approve|request_changes`
   - `findings[]` with `finding_id, location, severity, label, issue, evidence, minimal_fix, code_context`
   - `summary`
 - Decision handling:
   - `approve`: continue to handoff.
-  - `request_changes`: post consolidated findings comment; optionally `gh pr review --request-changes`; return to surgical fix loop.
+  - `request_changes`: report the consolidated findings to the user in-session; post a formal `gh pr review --request-changes` only on explicit user instruction; return to surgical fix loop.
 - Beads integration:
   - If `BEADS_DIR` is present and any finding label is `MUST_FIX`, open/update bd issue(s) and link finding ids.
 
@@ -148,7 +151,7 @@ Process PRs sequentially (blocking per PR on CI):
 - Stalled CI (10 minutes with no observable progress):
   - Define “progress” as any change in the required-check snapshot (`name`, `bucket`, `startedAt`, `completedAt`).
   - While waiting, keep sampling with the same polling command above.
-  - If the snapshot does not change for 10 minutes while not all checks are `bucket=pass`, pause automation for that PR and leave a summary comment with links to the stuck checks.
+  - If the snapshot does not change for 10 minutes while not all checks are `bucket=pass`, pause automation for that PR and report a summary with links to the stuck checks to the user in-session.
   - Treat `bucket=pending`, `bucket=skipping`, and `bucket=cancel` as “not green” (blocked) until resolved; do not mark as handoff-ready through them.
 - Drill into GitHub Actions when needed:
   - Identify check links: `gh pr checks <num> --required --json name,bucket,link,workflow`
@@ -162,13 +165,13 @@ Smallest change that makes CI green using `gh` only:
 2. Apply the minimal fix via `gh api` using the Contents API on the PR head branch (single-file minimal edits preferred).
 3. Re-run checks and re-evaluate.
 4. Limit attempts (default 3). On exhaustion, permission issues, or hard conflicts:
-   - Leave a summary comment.
-   - Request changes as last resort.
+   - Report a summary to the user in-session.
+   - Request changes as a last resort only on explicit user instruction (`gh pr review --request-changes`).
    - Pause automation for that PR.
 
 ## Handoff (no merge)
 - When required checks are green (or no required checks exist), review gate is satisfied, and no pause condition:
-  - Update status/comment to indicate: ready for human review/merge.
+  - Report to the user in-session: ready for human review/merge (do not post a PR comment).
   - Keep the PR open.
 - Policy:
   - Never run `gh pr merge` (any flags).
@@ -176,27 +179,45 @@ Smallest change that makes CI green using `gh` only:
 - Confirm handoff state:
   - `gh pr view <num> --json state,mergeStateStatus,reviewDecision`
 
+## Post-create review watch (default-on)
+After creating a PR, watch its review activity by default until the review outcome is decisive. Skip only when `--no-watch` was passed.
+
+- Mechanism: in-session self-poll via `ScheduleWakeup`. The main session re-invokes itself on each interval and polls; between polls the session stays free for the user. This watch does not survive the session ending (accepted trade-off; use a detached routine if cross-session durability is needed).
+- Cadence: poll every `--watch-interval` (default `180s`, within the prompt-cache window). Do not drop below 60s.
+- Baseline: at watch start, record counts and ids for reviews, inline review comments, and issue (conversation) comments, plus `reviewDecision`. Use these as the diff anchor.
+  - reviews: `gh api repos/<owner>/<repo>/pulls/<num>/reviews`
+  - inline comments: `gh api repos/<owner>/<repo>/pulls/<num>/comments`
+  - conversation comments: `gh api repos/<owner>/<repo>/issues/<num>/comments`
+  - decision/state: `gh pr view <num> --json reviewDecision,mergeStateStatus,state`
+- Each poll: detect anything new vs baseline — new formal reviews, new inline comments, new bot/conversation comments (e.g. a Codex review bot), or a `reviewDecision` change. Summarize new content to the user in-session and advance the baseline. Never post a PR comment.
+- Stop conditions (any one):
+  - `reviewDecision` becomes decisive: `APPROVED` or `CHANGES_REQUESTED`.
+  - `--watch-timeout` elapses (default `2h`) — stop and report current state. This caps the common case where a bot only comments and no required reviewer is set, so `reviewDecision` never becomes decisive.
+  - The PR is merged or closed.
+- On `CHANGES_REQUESTED` or actionable findings: summarize the findings to the user in-session and hand off. Do not auto-enter the surgical fix loop, and never merge or approve. The user decides whether to address, discuss, or fix.
+- Continue the no-PR-comment rule throughout: the watch reports only in-session.
+
 ## Adaptive polling
 - Poll under 60s unless CI is slow.
 - Use recent CI duration to back off (cap at 120s).
 - Exponential backoff on API errors.
 
 ## Status reporting
-- Maintain a single PR comment titled `Join Operator` (comment mode only).
-- Update the same comment in place (store/reuse the comment id; avoid comment spam).
-- If comment update is not permitted, pause automation for that PR and leave one fallback comment when possible.
+- Report status to the user in the session output (and local operator logs); never post or maintain any PR comment.
+- Keep a concise running status (created / green / review / handoff / blocked / stalled) in-session so the user can act.
+- Do not post a `Join Operator` comment to the PR under any condition.
 
-## Gh-only block comment template
+## Gh-only block report (in-session)
 ```
-Join Operator: gh-only automation block
+join: gh-only automation block
 
 This PR needs an action outside the gh-only boundary (for example, manual conflict resolution or a local-only edit path).
 Apply the needed commit manually, then resume automation.
 ```
 
-## Stalled CI comment template
+## Stalled CI report (in-session)
 ```
-Join Operator: required checks stalled
+join: required checks stalled
 
 Required checks showed no progress for 10 minutes.
 Investigate the linked runs, unblock CI, then resume automation.
@@ -220,7 +241,6 @@ Investigate the linked runs, unblock CI, then resume automation.
 - Request changes: `gh pr review <num> --request-changes --body "<reason>"`
 - Review trigger (example): `$review --mode pr-comment --target-pr <num>`
 - Handoff state: `gh pr view <num> --json state,mergeStateStatus,reviewDecision`
-- Handoff note (example): `gh pr comment <num> --body "Join Operator: required checks are green; ready for human merge."`
 - bd issue linkage (exception path): `bd update <issue-id> --external-ref pr:<num>`
 - bd issue linkage log token: `bd update <issue-id> --append-notes "Linked PR #<num> (pr:<num>)"`
 
