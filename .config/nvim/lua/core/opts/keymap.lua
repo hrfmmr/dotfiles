@@ -69,3 +69,13 @@ end, { desc = "Copy relative path of current buffer" })
 vim.keymap.set("n", "<Leader>cP", function()
 	copyBufPath(":p")
 end, { desc = "Copy absolute path of current buffer" })
+vim.keymap.set("n", "<Leader>cl", function()
+	local path = vim.fn.expand("%:~:.")
+	if path == "" then
+		vim.notify("No file in current buffer", vim.log.levels.WARN)
+		return
+	end
+	local result = path .. ":L" .. vim.fn.line(".")
+	vim.fn.setreg("+", result)
+	vim.notify("Copied: " .. result)
+end, { desc = "Copy relative path with line number of current buffer" })
