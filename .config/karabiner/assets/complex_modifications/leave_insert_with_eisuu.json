@@ -2,16 +2,37 @@
   "title": "Leave INSERT mode with EISUU",
   "rules": [
     {
-      "description": "Ctrl+] -> Leave INSERT mode with EISUU",
+      "description": "Ctrl+- -> Leave INSERT mode with EISUU",
       "manipulators": [
         {
-          "type": "basic",
-          "from": {"key_code": "hyphen", "modifiers": {"mandatory": ["left_control"]}},
-          "to": [{"key_code": "left_command"}, {"key_code": "escape"}],
           "conditions": [
-            {"type": "frontmost_application_if",
-              "bundle_identifiers": ["com.googlecode.iterm2"]}
-          ]
+            {
+              "bundle_identifiers": [
+                "com.googlecode.iterm2",
+                "md.obsidian",
+                "com.mitchellh.ghostty",
+                "com.cmuxterm.app"
+              ],
+              "type": "frontmost_application_if"
+            }
+          ],
+          "from": {
+            "key_code": "hyphen",
+            "modifiers": {
+              "mandatory": [
+                "left_control"
+              ]
+            }
+          },
+          "to": [
+            {
+              "key_code": "japanese_eisuu"
+            },
+            {
+              "key_code": "escape"
+            }
+          ],
+          "type": "basic"
         }
       ]
     }
