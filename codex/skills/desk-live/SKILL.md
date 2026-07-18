@@ -26,7 +26,7 @@ Prerequisite: the target task note must already exist (created via `$desk new` o
 ### 1. Open
 
 1. Read task note frontmatter + latest Dialogue Turn.
-2. If `bd_issue_id` is set, run `bd show <bd_issue_id>` for context.
+2. If `bd_issue_id` is set: **first establish bd transport** per the `$beads` Session Start Protocol — derive `BEADS_DOLT_SERVER_SOCKET="$beads_dir/dolt-server.sock"` from the task note `beads_dir` and set `BEADS_DOLT_AUTO_START=0` — **then** run `bd show <bd_issue_id>` for context. Never run raw `bd` with `BEADS_DIR` alone: it auto-starts a stale Dolt instance and existing issues appear missing.
 3. If `git_working_tree` is set, cd to it.
 4. Guard: if `.desk/runtime/<task>.lock` exists and PID alive → report conflict, abort.
 5. Create `.desk/runtime/<task>.lock` with `role=interactive`.
@@ -86,7 +86,11 @@ For each user message:
    > **⚠ MOST COMMONLY VIOLATED GATE**: In practice, Turn-N is written but the bd comment is forgotten. This is the #1 protocol violation observed across sessions. Treat the bd comment as an inseparable part of the Turn-N write — they are one atomic operation, not two independent steps. If you catch yourself about to yield to the user after writing a Turn-N, STOP and verify you fired the bd comment first.
    ```bash
    # run_in_background: true
-   BEADS_DIR=<bd_beads_dir> bd comment <bd_issue_id> "Turn-N: <structured summary — findings, decisions, actions, artifacts — compact but reproducible>"
+   # transport per $beads Session Start Protocol — socket-only; never BEADS_DIR alone
+   BEADS_DIR=<bd_beads_dir> \
+   BEADS_DOLT_SERVER_SOCKET="<bd_beads_dir>/dolt-server.sock" \
+   BEADS_DOLT_AUTO_START=0 \
+   bd comment <bd_issue_id> "Turn-N: <structured summary — findings, decisions, actions, artifacts — compact but reproducible>"
    ```
    Content rules: concise but substantively complete — preserve key data points, decision rationale, created/modified identifiers (bead IDs, file paths, commit SHAs), and state transitions. Omit verbose prose.
 4. Update frontmatter `runtime_heartbeat_at` every ~5 Turns (not every Turn — avoid noise).
@@ -164,6 +168,7 @@ Rules:
 ## Guardrails
 
 - **No sub-agent spawn**: desk-live runs entirely in the root session.
+- **bd transport (inherited from desk)**: desk-live inherits desk's `$beads`-mandatory transport rule (desk SKILL.md §Guardrails). Before the **first** `bd` command (Open §2, every Loop §3 comment, and Close), derive `BEADS_DOLT_SERVER_SOCKET="$beads_dir/dolt-server.sock"` and set `BEADS_DOLT_AUTO_START=0` per the `$beads` Session Start Protocol. Never issue raw `bd` with `BEADS_DIR` alone — it auto-starts a stale Dolt instance and existing issues appear missing.
 - **No signal mechanism**: interactive mode does not use `.desk/signals/` — dialogue is synchronous.
 - **Compatible Turns**: Turn-N format must remain readable by desk's async cold resume.
 - **Turn-N is a hard gate**: every *task-substantive* user turn MUST produce exactly one Turn-N append before the assistant yields. Skipping or batching multiple turns into one retroactive write is a protocol violation. Off-topic exchanges (protocol Q&A, session mechanics, skill meta-discussion) are exempt — see Loop §2 off-topic exception.
