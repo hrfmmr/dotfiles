@@ -1,0 +1,18 @@
+# Starship prompt configuration
+# Docs: https://starship.rs/config/
+# Minimal setup: keep the informative defaults (directory, git branch/status,
+# command duration) and add a blank line before each prompt for readability.
+
+add_newline = true
+
+# Show how long the previous command took when it is slow.
+[cmd_duration]
+min_time = 2000
+format = "took [$duration]($style) "
+
+# Git branch on the left prompt (replaces the old zsh RPROMPT git branch).
+[git_branch]
+symbol = " "
+
+[git_status]
+disabled = false

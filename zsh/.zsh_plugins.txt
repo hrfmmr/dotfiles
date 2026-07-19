@@ -1,0 +1,21 @@
+# antidote plugin bundle (managed in dotfiles, symlinked to ~/.zsh_plugins.txt)
+# Order matters: syntax-highlighting near the end, history-substring-search last.
+
+# UI
+chrissicool/zsh-256color
+
+# navigation / utilities
+mollifier/anyframe
+
+# completions (adds to fpath)
+zsh-users/zsh-completions
+
+# suggestions
+zsh-users/zsh-autosuggestions
+
+# notifier
+marzocchi/zsh-notify
+
+# order-sensitive tail: syntax-highlighting then history-substring-search
+zsh-users/zsh-syntax-highlighting
+zsh-users/zsh-history-substring-search

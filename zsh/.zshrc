@@ -24,8 +24,7 @@ setopt PUSHD_IGNORE_DUPS # ignore duplicate directory in AUTO_PUSHD
 #
 KEYTIMEOUT=40
 
-#rendering user/host in PROMPT
-PROMPT="[%n@%m]%~ $ "
+# NOTE: prompt is managed by Starship (see the end of this file)
 
 # enable auto-completion
 autoload -Uz compinit
@@ -85,15 +84,6 @@ zle -N history-beginning-search-backward-end \
 bindkey "^p" history-beginning-search-backward-end
 
 #
-# * Git
-#
-# rendering current Git branch in RPROMPT
-autoload VCS_INFO_get_data_git; VCS_INFO_get_data_git 2> /dev/null
-setopt prompt_subst
-RPROMPT='[`rprompt-git-current-branch`]'
-
-
-#
 # * aliases
 #
 alias e='exa'
@@ -132,19 +122,6 @@ for zsh_function_file in git.zsh navigation.zsh github.zsh devtools.zsh media.zs
 done
 
 #
-# * Plugins
-#
-# Antigen
-# https://github.com/zsh-users/antigen
-if [[ -f $HOME/.zsh/antigen/antigen.zsh ]]; then
-    source $HOME/.zsh/antigen/antigen.zsh
-    antigen bundle zsh-users/zsh-syntax-highlighting
-    antigen bundle zsh-users/zsh-completions src
-    antigen bundle mollifier/anyframe
-    antigen apply
-fi
-
-#
 # * mise
 #
 eval "$(mise activate zsh)"
@@ -178,41 +155,42 @@ if hash yarn 2>/dev/null; then export PATH="$PATH:`yarn global bin`"; fi
 #
 
 #
-# zplug
+# * Plugins (antidote)
 #
-source ~/.zplug/init.zsh
-
-# ui
-zplug "chrissicool/zsh-256color"
-zplug "zsh-users/zsh-syntax-highlighting", defer:2
-zplug "mafredri/zsh-async", from:github
-zplug "sindresorhus/pure", use:pure.zsh, from:github, as:theme
-
-# history
-zplug "zsh-users/zsh-history-substring-search"
-if zplug check "zsh-users/zsh-history-substring-search"; then
-    bindkey '^P' history-substring-search-up
-    bindkey '^N' history-substring-search-down
+# Plugins are declared in ~/.zsh_plugins.txt and statically bundled into
+# ~/.zsh_plugins.zsh for fast startup. The bundle is regenerated only when the
+# declaration file is newer than the generated file.
+antidote_home="${HOMEBREW_PREFIX:-/opt/homebrew}/opt/antidote/share/antidote"
+zsh_plugins="${ZDOTDIR:-$HOME}/.zsh_plugins"
+if [[ -e "$antidote_home/antidote.zsh" ]]; then
+  # (Re)generate the static bundle only when the declaration is newer than the
+  # generated file. Regenerate to a temp file and move into place so a failed
+  # bundle never leaves a truncated ~/.zsh_plugins.zsh that would not self-heal.
+  if [[ ! ${zsh_plugins}.zsh -nt ${zsh_plugins}.txt ]]; then
+    source "$antidote_home/antidote.zsh"
+    if antidote bundle <"${zsh_plugins}.txt" >| "${zsh_plugins}.zsh.tmp"; then
+      mv -f "${zsh_plugins}.zsh.tmp" "${zsh_plugins}.zsh"
+    else
+      rm -f "${zsh_plugins}.zsh.tmp"
+    fi
+  fi
 fi
+[[ -r "${zsh_plugins}.zsh" ]] && source "${zsh_plugins}.zsh"
+unset antidote_home zsh_plugins
 
-# completion
-zplug "zsh-users/zsh-autosuggestions"
-zplug "zsh-users/zsh-completions"
-
-# notifier
-zplug "marzocchi/zsh-notify"
+# zsh-notify config
 zstyle ':notify:*' error-title "😢 Command failed... (in #{time_elapsed} seconds)"
 zstyle ':notify:*' success-title "✔ Command finished! (in #{time_elapsed} seconds)"
 zstyle ':notify:*' command-complete-timeout 10
 zstyle ':notify:*' activate-terminal yes
 
-# Install plugins if there are plugins that have not been installed
-if ! zplug check --verbose; then
-    printf "Install? [y/N]: "
-    if read -q; then
-        echo; zplug install
-    fi
+# zsh-history-substring-search keybinds (only if the plugin's widget loaded)
+if (( ${+widgets[history-substring-search-up]} )); then
+  bindkey '^P' history-substring-search-up
+  bindkey '^N' history-substring-search-down
 fi
 
-# Then, source plugins and add commands to $PATH
-zplug load
+#
+# * Starship prompt
+#
+eval "$(starship init zsh)"
