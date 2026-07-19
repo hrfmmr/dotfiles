@@ -140,7 +140,10 @@ if brew --prefix z > /dev/null; then source $(brew --prefix)/etc/profile.d/z.sh;
 #
 # * fzf
 #
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+# Homebrew fzf: shell integration (completion + key bindings) via `fzf --zsh`
+if command -v fzf >/dev/null 2>&1; then
+  source <(fzf --zsh)
+fi
 export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow --exclude ".git" ""'
 export FZF_ALT_C_COMMAND='fd --type d --hidden --follow --exclude ".git" ""'
 export FZF_DEFAULT_OPTS="--reverse --inline-info"
