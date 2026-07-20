@@ -157,15 +157,9 @@ if hash yarn 2>/dev/null; then export PATH="$PATH:`yarn global bin`"; fi
 #
 # * Plugins (antidote)
 #
-# Plugins are declared in ~/.zsh_plugins.txt and statically bundled into
-# ~/.zsh_plugins.zsh for fast startup. The bundle is regenerated only when the
-# declaration file is newer than the generated file.
 antidote_home="${HOMEBREW_PREFIX:-/opt/homebrew}/opt/antidote/share/antidote"
 zsh_plugins="${ZDOTDIR:-$HOME}/.zsh_plugins"
 if [[ -e "$antidote_home/antidote.zsh" ]]; then
-  # (Re)generate the static bundle only when the declaration is newer than the
-  # generated file. Regenerate to a temp file and move into place so a failed
-  # bundle never leaves a truncated ~/.zsh_plugins.zsh that would not self-heal.
   if [[ ! ${zsh_plugins}.zsh -nt ${zsh_plugins}.txt ]]; then
     source "$antidote_home/antidote.zsh"
     if antidote bundle <"${zsh_plugins}.txt" >| "${zsh_plugins}.zsh.tmp"; then
@@ -178,13 +172,6 @@ fi
 [[ -r "${zsh_plugins}.zsh" ]] && source "${zsh_plugins}.zsh"
 unset antidote_home zsh_plugins
 
-# zsh-notify config
-zstyle ':notify:*' error-title "😢 Command failed... (in #{time_elapsed} seconds)"
-zstyle ':notify:*' success-title "✔ Command finished! (in #{time_elapsed} seconds)"
-zstyle ':notify:*' command-complete-timeout 10
-zstyle ':notify:*' activate-terminal yes
-
-# zsh-history-substring-search keybinds (only if the plugin's widget loaded)
 if (( ${+widgets[history-substring-search-up]} )); then
   bindkey '^P' history-substring-search-up
   bindkey '^N' history-substring-search-down

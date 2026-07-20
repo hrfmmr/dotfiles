@@ -13,9 +13,6 @@ zsh-users/zsh-completions
 # suggestions
 zsh-users/zsh-autosuggestions
 
-# notifier
-marzocchi/zsh-notify
-
 # order-sensitive tail: syntax-highlighting then history-substring-search
 zsh-users/zsh-syntax-highlighting
 zsh-users/zsh-history-substring-search
