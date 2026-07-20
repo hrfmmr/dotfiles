@@ -1,5 +1,4 @@
 add_newline = true
-right_format = "$git_state$custom"
 
 [directory]
 truncate_to_repo = false
