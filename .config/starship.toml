@@ -16,3 +16,8 @@ symbol = " "
 
 [git_status]
 disabled = false
+
+# Hide the GCP account email from the prompt (gcloud module shows the active
+# `gcloud config` account by default).
+[gcloud]
+disabled = true
