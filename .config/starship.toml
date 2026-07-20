@@ -1,4 +1,5 @@
 add_newline = true
+right_format = "$git_state$custom"
 
 [directory]
 truncate_to_repo = false
@@ -19,3 +20,24 @@ disabled = true
 
 [gcloud]
 disabled = true
+
+[custom.git_clean]
+require_repo = true
+when = 'test -z "$(git status --porcelain 2>/dev/null)"'
+symbol = "●"
+style = "bold green"
+format = "[$symbol]($style)"
+
+[custom.git_untracked]
+require_repo = true
+when = 'test -n "$(git status --porcelain 2>/dev/null)" && test -z "$(git status --porcelain 2>/dev/null | grep -v "^??")"'
+symbol = "●"
+style = "bold yellow"
+format = "[$symbol]($style)"
+
+[custom.git_dirty]
+require_repo = true
+when = 'test -n "$(git status --porcelain 2>/dev/null | grep -v "^??")"'
+symbol = "●"
+style = "bold red"
+format = "[$symbol]($style)"
