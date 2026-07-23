@@ -60,8 +60,9 @@ Agents are research-only: they must not modify files.
 After all lanes complete:
 1. Normalize findings into the required schema.
 2. Deduplicate materially identical findings across lanes. Keep the highest severity.
-3. Sort by severity: `HIGH > MEDIUM > LOW`.
-4. Produce a unified summary.
+3. **Evidence gate**: for any HIGH or MEDIUM finding that asserts tool/system behavior, confirm it carries a verifiable `evidence` citation (doc+URL, `--help`/source, or command output). Demote any uncited tool-behavior finding to LOW and relabel it "UNVERIFIED — needs verification". Do not present an unverified tool-behavior claim as a HIGH/MEDIUM finding.
+4. Sort by severity: `HIGH > MEDIUM > LOW`.
+5. Produce a unified summary.
 
 ### 5. Return Output
 
@@ -80,11 +81,34 @@ Read the artifact below and identify issues from your lane's perspective.
 Challenge assumptions, question design choices, surface edge cases and failure modes.
 Be constructive: explain WHY something is a problem and WHAT would improve it.
 
+EVIDENCE MANDATE — no speculation about tool/system behavior:
+Any finding that depends on how a specific tool or system actually behaves — CLI
+flags/options, subcommand semantics, API/SDK behavior, config-file format, default
+values, exit/error codes, version-specific behavior — MUST be backed by primary
+evidence you verified during THIS review:
+- official docs (quote + URL), `--help` / `man` / `-h` output, the tool's source,
+  or the observed result of actually running it (command + output).
+Do NOT rely on training-prior memory or guess. "Almost certainly", "likely",
+"typically X does Y", "I believe", "in pup --org selects ..." stated from memory
+are NOT evidence and MUST NOT be the basis of a finding.
+If you cannot verify a tool/system-behavior claim with the tools available:
+- do NOT raise it as HIGH or MEDIUM;
+- record it as LOW, explicitly labeled "UNVERIFIED — needs verification", and phrase
+  it as an action/question ("verify whether `--org` creates a separate session"),
+  NOT as a conclusion ("`--org` does not isolate sessions").
+A confident-but-wrong tool-behavior finding is the exact failure this mandate
+prevents — it is worse than no finding and destroys the value of the review.
+
 For each finding, provide:
 - severity: HIGH (must fix before proceeding), MEDIUM (should fix, risk if ignored), LOW (nice to have)
 - subject: short label (e.g., "S3 sync --delete ordering")
 - issue: what is wrong or risky
 - recommendation: specific actionable improvement
+- evidence: REQUIRED whenever the finding asserts tool/system behavior — a doc
+  quote + URL, `--help`/`man` output, source ref (file:line), or command + observed
+  output that you verified this session. Use "n/a (design-level, not tool-behavior)"
+  only when the finding makes no tool-behavior claim. "UNVERIFIED" is allowed only
+  paired with LOW severity per the rule above.
 
 Artifact:
 ---
@@ -107,6 +131,7 @@ unified_findings:
     subject: "short label"
     issue: "what is wrong"
     recommendation: "what to do"
+    evidence: "doc quote+URL / --help / source file:line / command+output; or 'n/a (design-level)'; 'UNVERIFIED' only with LOW"
 summary: "1-5 line cross-lane synthesis"
 stats:
   high: N
@@ -140,6 +165,7 @@ Also look for new issues introduced by the fixes.
 - Only the orchestrator aggregates and returns findings.
 - If a lane agent fails, retry once. If still failing, continue without that lane and note the gap in the summary.
 - Do not fabricate findings. If a lane has nothing to report, return zero findings.
+- Evidence over speculation: any finding about tool/system behavior (CLI flags/options, subcommand or API/SDK semantics, config formats, defaults, exit codes, version-specific behavior) MUST cite primary evidence verified this session — official doc + URL, `--help`/`man` output, source `file:line`, or command + observed output. Memory-based or hedged claims ("likely", "almost certainly", "typically") are not evidence. Uncited tool-behavior claims may not be HIGH/MEDIUM; record them as LOW labeled "UNVERIFIED — needs verification", phrased as an action to verify, never as a conclusion. A confident-but-wrong finding defeats the purpose of critique.
 - Keep lane count between 2 and 4. More lanes produce diminishing returns and waste context.
 
 ## Relationship to Other Skills
