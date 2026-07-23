@@ -52,6 +52,14 @@ Delegate concrete work to existing skills ($wt / $grill-me / $tk / $review / $co
 | research | required | required | required | — |
 | adhoc | — | — | — | — |
 
+## Standard impl workflow
+
+For `task_type: impl`, follow this standard:
+
+- **plan**: define with `$grill-me`, then develop with `$rough-plan` (invokes `$creative-problem-solver` for approach trade-offs and, at its Step 4.5, runs `$critique` — or `$herdr-critique-loop` when `HERDR_ENV=1` — to converge the plan to no-HIGH before approval).
+- **impl**: delegate to `$herdr-impl` when `HERDR_ENV=1`; otherwise run the built-in executor cycle (`$tk` → `$review` → `$commit`).
+- **verify**: internalized in `$herdr-impl` (its `herdr-review-loop`); on the non-Herdr fallback, use `$review`. Do not run a separate verify pass on the Herdr path.
+
 ## Frontmatter Spec
 
 YAML frontmatter for task notes. Required/optional varies by task type.
@@ -177,6 +185,12 @@ Spawn a sub-agent with the working tree as cwd to refine the plan via extended Q
 7. Transition to `status: in_progress`.
 
 ## Phase 2: Execution
+
+### Execution routing
+
+If `HERDR_ENV=1`, delegate the whole execution to `$herdr-impl`: reuse the worktree already created in Init (do not create a new one). `$herdr-impl` runs orchestrator/worker/reviewer panes and internalizes verify (its `herdr-review-loop`), leaving a merge-ready branch and opening a PR per task policy.
+
+Otherwise, run the built-in Executor Work Cycle described below (the fallback).
 
 Each executor session is a **stateless worker**: restore context → execute a unit of work → checkpoint → terminate.
 Multiple executor sessions may run sequentially on the same task (cold resume chain).
@@ -506,11 +520,10 @@ SORT file.mtime DESC
 |-------|----------------|---------|
 | Init | `$wt` | worktree creation |
 | Init | `$beads` | bd epic issue creation |
-| Plan-First | (built-in) | lightweight execution plan + approval gate |
+| Plan-First | `$rough-plan` (grill-me + creative-problem-solver + critique) | plan draft + critique convergence + approval gate |
 | Planning (deep) | `$grill-me` (async adapted) | requirement clarification via Q&A |
-| Execution | `$tk` | minimal-diff incision |
-| Execution | `$review` | approval gate |
-| Execution | `$commit` | micro-commit |
+| Execution | `$herdr-impl` (HERDR_ENV=1) / `$tk` + `$review` + `$commit` (fallback) | implement issue; Herdr orchestrator or built-in executor cycle |
+| Verify | `herdr-review-loop` (inside `$herdr-impl`) / `$review` (fallback) | review convergence |
 | Completion | `$join` | PR creation |
 | All phases | `$beads` | bd issue CRUD & sync |
 
