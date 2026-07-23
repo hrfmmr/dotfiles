@@ -35,6 +35,7 @@ This skill replaces desk's plan-first flow.
 2. (optional) $grill-me gate
 3. (optional) $creative-problem-solver
 4. Draft rough plan
+4.5 Critique (converge plan; $herdr-critique-loop if HERDR_ENV=1 else $critique)
 5. Human approval
 6. Handoff to execution
 ```
@@ -124,6 +125,18 @@ The ordering of phases must be self-evident from the narrative: each phase shoul
 ```
 **Phase 1: Audit dependencies for version conflicts** — Before modifying any code, we need to know which installed packages conflict with the target version — because a silent version mismatch causes runtime failures that are hard to trace back to the upgrade. Run the package manager's outdated-check command and cross-reference each result against the new version's compatibility matrix. The output is a pinned list of packages that must be upgraded or excluded before the migration can proceed safely.
 ```
+
+### Step 4.5: Critique (optional)
+
+After drafting, review the plan before human approval.
+
+Routing:
+- If `HERDR_ENV=1`, invoke `$herdr-critique-loop`. It spawns one critique pane per review lane, aggregates findings back to the architect/root pane, revises the plan, and re-reviews — an autonomous loop converging on zero HIGH findings (cycle cap 3).
+- Otherwise invoke `$critique` (in-session parallel sub-agent review).
+
+Fold verified HIGH findings into the plan; converge to no-HIGH before Step 5. MED/LOW findings are recorded for the human and are non-blocking.
+
+Trivial changes may skip this step (consistent with the Applicability trivial-skip rule); record the skip reason in Turn-N.
 
 ### Step 5: Human Approval
 
