@@ -25,6 +25,8 @@
 # red = "#ff6188"
 # green = "#a6e3a1"
 
+name = "gruvbox"
+auto_switch = false
 [terminal]
 # Executable used for new interactive panes.
 # Empty means $SHELL, then /bin/sh.
@@ -236,12 +238,13 @@ prefix = "ctrl+z"
 # accent = "cyan"
 
 # Background notification popup delivery
+agent_panel_sort = "spaces"
 [ui.toast]
 # off = disable pop-up notifications
 # herdr = show in-app toasts
 # terminal = ask the outer terminal to show a desktop notification
 # system = ask the OS notification service directly
-# delivery = "off"
+delivery = "system"
 # delay_seconds = 1
 
 [ui.toast.herdr]
