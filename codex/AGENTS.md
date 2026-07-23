@@ -11,8 +11,9 @@ Use Double Diamond to avoid converging too early: separate "are we solving the r
 
 - Discover/Define: `$grill-me`, `$tk`(advice-mode)
 - Develop: `$creative-problem-solver` (five-tier portfolio)
-- Planning/Issue tracking: `$gen-plan`, `$gen-beads`, `$beads`
-- Deliver: `$tk`, `$commit`
+- Planning: `$rough-plan`, `$critique`, `$herdr-critique-loop`
+- Issue tracking: `$beads`
+- Deliver: `$herdr-impl`
 - Skill authoring/maintenance: `$ms`, `$refine`
 
 ## Issue Tracking
