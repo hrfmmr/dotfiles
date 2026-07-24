@@ -18,5 +18,6 @@ quick-terminal-animation-duration = 0.2
 quick-terminal-screen = main
 
 # keybinds
+macos-option-as-alt = left
 keybind = alt+f=text:\x1bf
 keybind = alt+b=text:\x1bb
