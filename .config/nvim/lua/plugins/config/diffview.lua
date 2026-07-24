@@ -12,6 +12,12 @@ return {
 			},
 		})
 		vim.keymap.set("n", "<Leader>gM", "<cmd>DiffviewOpen<cr>", { silent = true })
+		vim.keymap.set("n", "<Leader>gr", function()
+			local hash = vim.fn.input("Base commit hash: ")
+			if hash ~= "" then
+				vim.cmd("DiffviewOpen " .. hash .. "..HEAD")
+			end
+		end, { silent = true })
 		vim.keymap.set("n", "<Leader>gc", "<cmd>DiffviewClose<cr>", { silent = true })
 		vim.keymap.set("n", "<Leader>gH", "<cmd>DiffviewFileHistory %<cr>", { silent = true })
 	end,
