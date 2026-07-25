@@ -82,6 +82,16 @@ Write the rough plan using this structure:
 
 Approach: <1-2 line summary of the direction>
 
+**Big Picture**
+
+\```mermaid
+<architecture / structure diagram — components, boundaries, and how they connect (MUST)>
+\```
+
+\```mermaid
+<sequence diagram — publish/request/event flow across components (REQUIRED when runtime interaction / data flow spans ≥2 components; otherwise omit + note why)>
+\```
+
 **Phase N: <phase name>**
 
 <natural-language explanation: outline, key points, rationale>
@@ -99,7 +109,11 @@ Approach: <1-2 line summary of the direction>
 
 Rules:
 - The natural-language sections present the outline and key points per topic.
-- Critical implementation details MUST include pseudocode.
+- **Big Picture MUST output items** (non-trivial impl plans; the Applicability trivial-skip rule still applies):
+  - **Architecture / structure diagram — MUST.** Every plan opens with a `mermaid` diagram of the whole change: the components involved, their boundaries (accounts / services / modules), and how they connect. This gives the cold reader the shape before the phase-by-phase detail.
+  - **Sequence diagram — conditional MUST.** A `mermaid` sequence diagram is REQUIRED when the change involves runtime interaction or data flow across two or more components (cross-service calls, message/event flows, request→response paths). It may be omitted ONLY when no such flow exists (e.g. a pure static-config or local refactor change); when omitted, state the reason in one line.
+  - **Diagram notation is `mermaid`** (renders in Obsidian; consistent with `$report`). ASCII / box-art is allowed only as a supplement, never as a replacement for the mermaid diagram.
+- **Pseudocode — MUST per phase.** Each phase MUST include a pseudocode block; critical implementation details MUST be expanded, not summarized.
 - Pseudocode should be granular enough to convey the concrete shape of the change (TF resource definitions, code structure, file operations, etc.).
 - Phase boundaries align with commit boundaries (1 phase = 1 commit by default).
 - State verification checkpoints (e.g. "plan diff must be zero") explicitly when applicable.
