@@ -26,7 +26,7 @@ comment inside a plain ` ``` ` code fence (never ` ```mermaid `).
 ## Supported subset
 
 - header `flowchart TD|TB|BT|LR|RL` or `graph …` — direction is normalized to a
-  top-to-bottom layered layout (this reinforces the ①→⑫ reading route).
+  top-to-bottom layered layout (this reinforces the `1.)`→`N.)` reading route).
 - nodes `ID["label"]`, `ID[label]`, `ID(label)`, `ID{label}`, `ID((label))`;
   `<br/>` splits a label into multiple lines; parentheses inside `[...]` labels
   are handled.
@@ -37,10 +37,11 @@ comment inside a plain ` ``` ` code fence (never ` ```mermaid `).
 ## Known limits (keep diagrams small)
 
 - `subgraph … end` is parsed but its border is NOT drawn. Encode grouping in the
-  node label instead, e.g. `SN["③ service network (owner)"]`.
+  node label instead, e.g. `SN["3.) service network (owner)"]`.
 - Only flowchart/graph is converted. For a genuinely sequence- or state-shaped
   change, hand-author the box-art (still inside a plain ` ``` ` fence).
 - No crossing minimization; dense branchy graphs may show edge crossings. Prefer
   one clear diagram of <= ~10 nodes; hand-tune the output if needed.
 - Display width assumes East-Asian Wide/Fullwidth = 2 columns, others = 1
-  (circled numbers ①.. count as 1); minor drift is possible in some terminals.
+  (ASCII number prefixes like `1.)` are 1 column per char); minor drift is
+  possible in some terminals.

@@ -16,9 +16,10 @@ Provenance
 Supported subset (what crit-explain emits)
     - header: `flowchart TD|TB|BT|LR|RL` or `graph ...`
       (direction is normalized to a top-to-bottom layered layout, which
-       reinforces the ①->⑫ reading route)
+       reinforces the 1.)->N.) reading route)
     - node decls: ID["label"] / ID[label] / ID(label) / ID{label} / ID((label))
-      label may contain <br/> for multi-line, and circled numbers ①..⑫
+      label may contain <br/> for multi-line, and grep-friendly number
+      prefixes like 1.) 2.) 3.) (wide CJK chars are still width-aware too)
     - edges: A --> B / A -->|"label"| B / A -.-> B (dotted) / A --- B
     - nodes may be declared inline in edges: A["x"] --> B["y"]
     - subgraph ... end : parsed (borders not drawn); inner nodes/edges kept
