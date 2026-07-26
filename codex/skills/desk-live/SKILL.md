@@ -69,6 +69,7 @@ For each user message:
    - Prefer task-critical substance over orchestration chatter. Omit repeated signal, lock, retry, or housekeeping details unless they change task state, block progress, or justify a decision.
 
    **Skill-specific rules:**
+   - **Native ask mode (MUST when available)**: When the task needs a human judgment call — plan direction, design decisions, scope, trade-offs, anything that refines the plan or approach — ask through the host's native structured-question tool (e.g. `AskUserQuestion`) instead of posing the questions as prose in the response body. Give 2-4 concrete options per question, recommended option first, and state each option's consequence rather than only its label. Fall back to prose questions only when the environment exposes no such tool. Asking natively never replaces the record: log every question and its selected answer per the Q&A rule below.
    - **$grill-me / interactive Q&A**: Log every question asked and every answer received **without omission**. Each Q&A pair must be recorded verbatim (question text + selected option or free-form answer). Do not summarize multiple questions into a single line.
    - **Question presentation format**: When presenting questions to the user during interactive dialogue, use Obsidian callout blocks with bullet-point formatting for scannability. Do not compress questions into single lines. Example:
      ````markdown
@@ -172,6 +173,7 @@ Rules:
 - **No signal mechanism**: interactive mode does not use `.desk/signals/` — dialogue is synchronous.
 - **Compatible Turns**: Turn-N format must remain readable by desk's async cold resume.
 - **Turn-N is a hard gate**: every *task-substantive* user turn MUST produce exactly one Turn-N append before the assistant yields. Skipping or batching multiple turns into one retroactive write is a protocol violation. Off-topic exchanges (protocol Q&A, session mechanics, skill meta-discussion) are exempt — see Loop §2 off-topic exception.
+- **Native ask mode is the default question channel**: any plan- or direction-refining Q&A MUST go through the host's native structured-question tool when one is exposed. Prose-only questioning is the fallback, not the default. The Turn-N Q&A record is required either way — see Loop §2 Skill-specific rules.
 - **Lock discipline**: always create lock on open, delete on close. If the session crashes, desk's Stop Hook will detect the stale lock.
 - **Skill delegation**: desk-live may invoke any skill that desk executors use (`$tk`, `$commit`, `$beads`, etc.) directly in the root session. The **caller** (desk-live loop) owns Turn-N writes — delegated skills never write Turns.
 - **Standard impl workflow (`task_type: impl`)**: follow desk's Standard impl workflow — plan via `$rough-plan` (including its Step 4.5 critique loop), implement via `$herdr-impl` when `HERDR_ENV=1` (else the built-in `$tk` / `$review` / `$commit` cycle), and verify internalized in `$herdr-impl` (its `herdr-review-loop`; `$review` on the fallback). `$herdr-impl` runs as a root-session orchestrator, which is compatible with desk-live's root-holds-task model.

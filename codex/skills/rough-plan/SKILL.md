@@ -28,6 +28,16 @@ This skill replaces desk's plan-first flow.
 - After rough-plan obtains human approval, desk spawns the executor.
 - The `--no-plan` flag remains valid (bypasses rough-plan, transitions directly to executor).
 
+## Question Channel
+
+Whenever a step needs a human judgment call — Step 2 requirement clarification, Step 3 approach selection, or any mid-draft decision that shapes the plan — ask through the host's native structured-question tool (e.g. `AskUserQuestion`) when the environment exposes one. Prose questions in the response body are the fallback, used only when no such tool is available.
+
+Rules:
+- One question per decision; 2-4 concrete options each, recommended option first.
+- Each option must state the consequence of choosing it, not just a label.
+- Record every question and its selected answer in the task note Turn-N, and in the bd issue when one exists, using the caller's Turn-N format. Native ask mode changes how you *ask*, never whether you *log*.
+- Step 5 approval keeps its Turn-N `input:: pending` gate. In a synchronous context (`$desk-live`) the approval prompt may be issued via native ask, but the written Turn-N record is still required.
+
 ## Workflow
 
 ```
@@ -184,6 +194,7 @@ When `$rough-plan` is called directly outside desk:
 
 ## Guardrails
 
+- Ask plan-shaping questions through native ask mode when available; prose questioning is the fallback (see Question Channel).
 - Do not make code changes before rough plan approval.
 - Do not sneak in changes beyond the plan's scope (feedback: bug fix scope must be strictly honored).
 - Pseudocode is a plan, not production code. Adjust as needed during implementation.
