@@ -2,7 +2,7 @@
 confirm-close-surface = false
 
 # font
-font-family = SauceCodePro Nerd
+font-family = "SauceCodePro Nerd Font Mono"
 font-size = 12
 
 # appearance
