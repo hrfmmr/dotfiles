@@ -2,6 +2,18 @@
 confirm-close-surface = false
 
 # font
+#
+# Requires the SauceCodePro Nerd Font (Source Code Pro + Nerd Font glyphs).
+# Install on macOS (Apple Silicon):
+#
+#   brew install --cask font-sauce-code-pro-nerd-font
+#
+# Verify the family name is visible to Ghostty:
+#
+#   ghostty +list-fonts | grep SauceCodePro
+#
+# The "Mono" variant is chosen so Nerd Font icons are forced to a single cell
+# width, keeping powerline/devicon glyphs aligned in the terminal grid.
 font-family = "SauceCodePro Nerd Font Mono"
 font-size = 12
 
