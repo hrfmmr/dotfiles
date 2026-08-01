@@ -88,11 +88,14 @@ there are **multiple** critique panes (one per lane).
    3. tooling         — Makefile/runner/cred flow correctness
    Spawning one critique pane per lane...
    ```
-3. Inspect the caller pane and split one sibling pane per lane, preserving cwd
-   and focus:
+3. Inspect the caller pane and lay the lane panes out as a bottom row, preserving
+   cwd and focus (herdr agent pane geometry — split down first, then vsplit):
    - `herdr pane layout --pane "$HERDR_PANE_ID"`
-   - For each lane: `herdr pane split --current --direction right --cwd "<cwd>" --no-focus`
-     and read the new pane id from `.result.pane.pane_id`.
+   - First lane: `herdr pane split --current --direction down --cwd "<cwd>" --no-focus`
+     — this bottom pane is the base for every remaining lane.
+   - Each remaining lane: `herdr pane split --pane <last-bottom-pane-id> --direction right --cwd "<cwd>" --no-focus`
+     (never split the caller pane again). Read each new pane id from
+     `.result.pane.pane_id`.
 4. Start one critique agent per pane with a unique lane-scoped name, and set the
    pane label to the SAME name (name + label at creation — an unnamed pane is
    hard to target later):

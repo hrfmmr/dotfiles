@@ -71,9 +71,13 @@ reach zero, a cycle cap fires, or a finding is held for a human.
 ## Setup (once)
 
 1. Learn the current CLI: `herdr --help`, then `herdr pane` and `herdr agent`.
-2. Inspect the caller pane and split a sibling, preserving cwd and focus:
+2. Inspect the caller pane and split the reviewer pane below it, preserving cwd
+   and focus (agent panes live in a bottom row; see herdr agent pane geometry):
    - `herdr pane layout --pane "$HERDR_PANE_ID"`
-   - `herdr pane split --current --direction right --cwd "<review-cwd>" --no-focus`
+   - `herdr pane split --current --direction down --cwd "<review-cwd>" --no-focus`
+   - If a bottom agent row already exists (e.g. a `worker` pane from
+     `herdr-impl`), vsplit it instead:
+     `herdr pane split --pane <last-bottom-pane-id> --direction right --cwd "<review-cwd>" --no-focus`
    - Read the new pane id from `.result.pane.pane_id`.
 3. Start the reviewer in that pane with a unique name:
    - `herdr agent start reviewer --kind <kind> --pane <pane-id> --timeout 60000`

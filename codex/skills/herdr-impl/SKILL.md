@@ -69,7 +69,10 @@ counterpart. Reference it for the loop pattern; do not reimplement it.
    Detect IaC-repo context to enable specializations (see below).
 1. **Worktree.** Use `wt` to create branch/worktree `<bd-id>--<slug>` from
    `origin/<default-branch>` (fetch first) under the repo's `__worktrees__/`.
-2. **Worker pane.** `herdr pane split --no-focus` with `--cwd <worktree>`, then
+2. **Worker pane.** Split the architect pane DOWN — `herdr pane split --current
+   --direction down --no-focus` with `--cwd <worktree>` — so the agent panes form
+   a bottom row under this session (herdr agent pane geometry). This worker pane
+   is the base that the reviewer pane later vsplits off in Step 5. Then
    `herdr agent start worker --kind <worker_kind> --pane <id>`, then
    `herdr pane rename <id> worker`. **Set BOTH the agent name AND the pane label
    to `worker`.**
@@ -88,7 +91,9 @@ counterpart. Reference it for the loop pattern; do not reimplement it.
    (no bd-id leak, clean scope) and that the plan matches expectation.
 5. **Review.** Invoke `/herdr-review-loop` with a `reviewer` pane (kind =
    `reviewer_kind`; set agent name AND pane label to `reviewer`) over the branch
-   diff and the artifacts.
+   diff and the artifacts. Place it by vsplitting the worker pane —
+   `herdr pane split --pane <worker-pane> --direction right --no-focus` — so
+   worker and reviewer sit side by side in the bottom row.
 6. **Relay loop.** Feed HIGH findings to the worker → worker fixes and commits →
    re-review. **Loop until HIGH findings = 0.** HIGH = correctness / security /
    data-loss impact. MED/LOW are recorded as PR comments (non-blocking). Cap at
