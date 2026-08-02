@@ -123,7 +123,27 @@ symlink_files() {
   done < "$LINKS_CONF"
 }
 
+setup_nvim_python_host () {
+  info 'provisioning nvim python3 provider host'
+
+  local script="$DOTFILES_ROOT/.config/nvim/scripts/setup-python-host.sh"
+
+  if [ ! -x "$script" ]; then
+    info "skipped: $script not executable"
+    return
+  fi
+
+  # Non-fatal: a missing python3 provider degrades nvim, it should not abort
+  # the rest of the dotfiles install.
+  if "$script"; then
+    success 'nvim python3 provider host ready'
+  else
+    info 'nvim python3 provider host setup failed (run the script manually)'
+  fi
+}
+
 symlink_files
+setup_nvim_python_host
 
 echo ''
 echo '  All installed!'
