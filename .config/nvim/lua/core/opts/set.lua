@@ -4,6 +4,15 @@ vim.opt.relativenumber = true
 vim.opt.lazyredraw = true
 vim.opt.clipboard = "unnamedplus"
 
+-- Providers
+-- Pin the python3 host to a dedicated venv so runtime version bumps (mise, brew)
+-- never leave the provider pointing at an interpreter without pynvim.
+-- stdpath("data") keeps this in sync with the setup script's XDG_DATA_HOME handling.
+local python3_host = vim.fn.stdpath("data") .. "/venv/bin/python3"
+if (vim.uv or vim.loop).fs_stat(python3_host) then
+	vim.g.python3_host_prog = python3_host
+end
+
 -- GUI
 vim.opt.cmdheight = 2
 vim.opt.list = true
