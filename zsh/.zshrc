@@ -118,7 +118,7 @@ alias gd='gh dash'
 alias codex='EDITOR=nvim codex'
 alias claude='EDITOR=nvim claude'
 alias claude-fork='EDITOR=nvim claude --resume --fork-session'
-for zsh_function_file in git.zsh navigation.zsh github.zsh devtools.zsh media.zsh; do
+for zsh_function_file in git.zsh navigation.zsh github.zsh devtools.zsh media.zsh aws.sh; do
     source "$ZSH_CONFIG_DIR/functions/$zsh_function_file"
 done
 
