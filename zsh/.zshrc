@@ -150,11 +150,6 @@ export FZF_DEFAULT_OPTS="--reverse --inline-info"
 [ -n "$NVIM_LISTEN_ADDRESS" ] && FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --no-height"
 
 #
-# * yarn
-#
-if hash yarn 2>/dev/null; then export PATH="$PATH:`yarn global bin`"; fi
-
-#
 # * pet
 #
 
