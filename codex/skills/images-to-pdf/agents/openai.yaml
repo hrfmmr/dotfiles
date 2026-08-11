@@ -1,0 +1,3 @@
+interface:
+  display_name: "Images to PDF"
+  short_description: "Merge images into a single PDF"
