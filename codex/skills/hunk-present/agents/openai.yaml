@@ -1,0 +1,3 @@
+interface:
+  display_name: "Hunk Present"
+  short_description: "Present an agent-written changeset in Hunk and get human approval"

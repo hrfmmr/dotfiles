@@ -56,9 +56,10 @@ Delegate concrete work to existing skills ($wt / $grill-me / $tk / $review / $co
 
 For `task_type: impl`, follow this standard:
 
-- **plan**: define with `$grill-me`, then develop with `$rough-plan` (invokes `$creative-problem-solver` for approach trade-offs and, at its Step 4.5, runs `$critique` — or `$herdr-critique-loop` when `HERDR_ENV=1` — to converge the plan to no-HIGH before approval).
+- **plan**: define with `$grill-me`, then develop with `$rough-plan` (invokes `$creative-problem-solver` for approach trade-offs and, at its Step 4.5, runs `$critique` — or `$herdr-critique-loop` when `HERDR_ENV=1` — to converge the plan to no-HIGH before approval). Planning/critique agents carry no model pinning.
 - **impl**: delegate to `$herdr-impl` when `HERDR_ENV=1`; otherwise run the built-in executor cycle (`$tk` → `$review` → `$commit`).
 - **verify**: internalized in `$herdr-impl` (its `herdr-review-loop`); on the non-Herdr fallback, use `$review`. Do not run a separate verify pass on the Herdr path.
+- **human review**: present the implemented diff with `$hunk-present` — sidecar reading map hosted in a dedicated Herdr tab, questions answered as inline hunk comments, verdict recorded there. This replaces the former `$crit-explain` crit-session flow for diff review. On the Herdr path, **reuse `$herdr-impl`'s implementer worker as the hunk fix worker** (no new spawn); pass it the hunk session coordinates per `$hunk-present`'s Fix worker spawn contract so it owns comment-driven fixes and the post-fix re-sync.
 
 ## Frontmatter Spec
 
@@ -358,7 +359,7 @@ Rules:
 
 ## Phase 3: Completion
 
-1. After all milestones are complete, append a final human-check `Turn-N` to the Dialogue section. This Turn MUST use `input:: pending` — the Status-Turn Consistency Invariant (see Guardrails) prohibits `done` while any Turn awaits input.
+1. After all milestones are complete, append a final human-check `Turn-N` to the Dialogue section. This Turn MUST use `input:: pending` — the Status-Turn Consistency Invariant (see Guardrails) prohibits `done` while any Turn awaits input. For impl tasks, present the final diff for this check via `$hunk-present` (dedicated Herdr tab; hunk comments carry the Q&A and the verdict) rather than a crit session.
 2. Transition to `status: in_review`. Set `runtime_status: waiting_human`, clear `runtime_subagent_id`, refresh `runtime_heartbeat_at`, and fire notification.
 3. **Pre-done validation** (on human approval): Before transitioning to `done`, verify that the latest Turn-N has `input:: done` and does NOT contain an unresolved **Question**. If the human's response requests additional work, transition back to `in_progress` (not `done`).
 4. On human approval (latest Turn confirmed resolved):
@@ -524,6 +525,7 @@ SORT file.mtime DESC
 | Planning (deep) | `$grill-me` (async adapted) | requirement clarification via Q&A |
 | Execution | `$herdr-impl` (HERDR_ENV=1) / `$tk` + `$review` + `$commit` (fallback) | implement issue; Herdr orchestrator or built-in executor cycle |
 | Verify | `herdr-review-loop` (inside `$herdr-impl`) / `$review` (fallback) | review convergence |
+| Human review | `$hunk-present` (Herdr tab hosting; herdr-impl worker reused as fix worker) | diff reading map, hunk comment Q&A, verdict |
 | Completion | `$join` | PR creation |
 | All phases | `$beads` | bd issue CRUD & sync |
 

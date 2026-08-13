@@ -5,10 +5,12 @@ description: >-
   architect/orchestrator. Create a bd-issue-prefixed worktree, spawn a `worker`
   agent to implement the issue's handoff plan, collect validation + tfplan
   artifacts, run a third-party review loop in a `reviewer` pane, relay findings
-  worker↔reviewer until no HIGH findings remain, then leave a merge-ready branch
-  for a human to open and merge the PR. Requires HERDR_ENV=1 and an existing
-  canonical bd issue that already contains a handoff plan. Composes the herdr,
-  wt, herdr-review-loop, and desk-live skills. Use when asked
+  worker↔reviewer until no HIGH findings remain, present the diff for human
+  review via hunk-present (reusing the implementer worker as the hunk fix
+  worker), then leave a merge-ready branch for a human to open and merge the PR.
+  Worker runs claude sonnet5; reviewer runs codex. Requires HERDR_ENV=1 and an
+  existing canonical bd issue that already contains a handoff plan. Composes the
+  herdr, wt, herdr-review-loop, hunk-present, and desk-live skills. Use when asked
   to orchestrate implementation with worker and reviewer panes, delegate a bd
   issue to a Herdr worker and review-loop it to convergence, bridge worker and
   reviewer as an architect, run implement-then-review across panes, or invoke
@@ -54,6 +56,7 @@ review directly; you broker a `worker` pane (implements) and a `reviewer` pane
 - `herdr` — base pane/agent control (split, agent start, prompt, read, wait, rename).
 - `wt` — create the bd-issue-prefixed worktree. Always reuse `wt`; never raw `git worktree`.
 - `herdr-review-loop` — reviewer pane + branch-diff review loop (Step 5–6).
+- `hunk-present` — human review of the branch diff (Step 7): reading map in a dedicated Herdr tab, hunk comment Q&A, verdict.
 - `beads` — bd graph writes when the repo uses a bd-backed issue DB.
 - `desk-live` — Turn-N logging when a desk task note is active (optional; see Logging).
 
@@ -63,9 +66,14 @@ counterpart. Reference it for the loop pattern; do not reimplement it.
 ## Arguments
 
 - `bd_issue` (required unless derivable from an active desk task): the canonical issue.
-- `worker_kind` (default `claude`), `reviewer_kind` (default `codex`): overridable.
+- `worker_kind` (default `claude`, model `sonnet5` — start with `--kind claude -- --model sonnet`), `reviewer_kind` (default `codex`): overridable.
 - `slug` (optional): branch slug; else derive from the bd issue title.
 - `plan_source` precedence: explicit arg > bd issue description > desk task note.
+
+Model policy: the main orchestrator session driving this skill (the architect / commander
+role in the Herdr session) runs on claude fable5. worker = claude sonnet5. reviewer = codex
+(unchanged). Planning/critique agents launched upstream (desk plan-first / `$rough-plan`)
+carry no model pinning.
 
 ## Agent naming (session-unique)
 
@@ -183,7 +191,18 @@ Whatever name is resolved, apply that SAME value to the agent name AND the pane 
    re-review. **Loop until HIGH findings = 0.** HIGH = correctness / security /
    data-loss impact. MED/LOW are recorded as PR comments (non-blocking). Cap at
    **3 review cycles**, then human-escalate.
-7. **PR handoff.** Leave the merge-ready branch. Report the branch and how to
+7. **Human review (hunk).** Present the branch diff to the human via
+   `$hunk-present`: dedicated Herdr tab named `hunk-<PR番号|slug>`, three-dot
+   (merge-base) target, sidecar reading map. **Reuse `<PFX>-worker` as the hunk
+   fix worker — do NOT spawn a new fixer.** The worker keeps its existing pane
+   (topology stays as built in Step 2); satisfy `$hunk-present`'s Fix worker spawn
+   contract by briefing it with the hunk session coordinates: the worktree path
+   (`--repo` selector), the TUI tab/pane ids (read/drive-forbidden), the human
+   comments (or the `comment list` command to fetch them), and 5b ownership —
+   the worker runs the post-fix re-sync (sidecar anchors, three-dot reload,
+   in-place replies with the commit hash). Verdict is recorded per
+   `$hunk-present` step 6.
+8. **PR handoff.** Leave the merge-ready branch. Report the branch and how to
    open the PR. Do not create or merge it.
 
 ## Delegation prompt rules (worker and reviewer)
