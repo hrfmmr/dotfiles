@@ -57,8 +57,9 @@ Delegate concrete work to existing skills ($wt / $grill-me / $tk / $review / $co
 For `task_type: impl`, follow this standard:
 
 - **plan**: define with `$grill-me`, then develop with `$rough-plan` (invokes `$creative-problem-solver` for approach trade-offs and, at its Step 4.5, runs `$critique` — or `$herdr-critique-loop` when `HERDR_ENV=1` — to converge the plan to no-HIGH before approval). Planning/critique agents carry no model pinning.
-- **impl**: delegate to `$herdr-impl` when `HERDR_ENV=1`; otherwise run the built-in executor cycle (`$tk` → `$review` → `$commit`).
+- **impl**: delegate to `$herdr-impl` when `HERDR_ENV=1`; otherwise run the built-in executor cycle (`$tk` → `$review` → `$commit`). The commit standard on both paths is `$commit` — the Herdr path binds it through `$herdr-impl`'s delegation prompt rules.
 - **verify**: internalized in `$herdr-impl` (its `herdr-review-loop`); on the non-Herdr fallback, use `$review`. Do not run a separate verify pass on the Herdr path.
+- **pre-present grooming**: before any `$hunk-present` presentation, the branch must satisfy `$commit`'s pre-PR grooming contract — the `$herdr-impl` path internalizes this in its Step 7; on the fallback cycle, groom before presenting.
 - **human review**: present the implemented diff with `$hunk-present` — sidecar reading map hosted in a dedicated Herdr tab, questions answered as inline hunk comments, verdict recorded there. This replaces the former `$crit-explain` crit-session flow for diff review. On the Herdr path, **reuse `$herdr-impl`'s implementer worker as the hunk fix worker** (no new spawn); pass it the hunk session coordinates per `$hunk-present`'s Fix worker spawn contract so it owns comment-driven fixes and the post-fix re-sync.
 
 ## Frontmatter Spec
@@ -363,7 +364,7 @@ Rules:
 2. Transition to `status: in_review`. Set `runtime_status: waiting_human`, clear `runtime_subagent_id`, refresh `runtime_heartbeat_at`, and fire notification.
 3. **Pre-done validation** (on human approval): Before transitioning to `done`, verify that the latest Turn-N has `input:: done` and does NOT contain an unresolved **Question**. If the human's response requests additional work, transition back to `in_progress` (not `done`).
 4. On human approval (latest Turn confirmed resolved):
-   - impl tasks: Create PR via `$join` if needed. Update frontmatter `pull_request_url`.
+   - impl tasks: Verify the branch satisfies `$commit`'s pre-PR grooming contract (semantic-unit commits, English subjects); if not, groom and re-sync per `$commit` before proceeding. Then create PR via `$join` if needed. Update frontmatter `pull_request_url`.
    - Close the bd epic issue.
 5. Transition to `status: done`, set `runtime_status: done`, clear `runtime_subagent_id`, and refresh `runtime_heartbeat_at`.
 

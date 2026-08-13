@@ -191,7 +191,12 @@ Whatever name is resolved, apply that SAME value to the agent name AND the pane 
    re-review. **Loop until HIGH findings = 0.** HIGH = correctness / security /
    data-loss impact. MED/LOW are recorded as PR comments (non-blocking). Cap at
    **3 review cycles**, then human-escalate.
-7. **Human review (hunk).** Present the branch diff to the human via
+7. **Human review (hunk).** First groom the branch per `$commit`'s pre-PR
+   grooming contract (semantic-unit squash, English subjects, tree-identity
+   check) — groom BEFORE the hunk session exists so no review re-sync is
+   needed. Delegate the grooming to the worker with an explicit push
+   authorization for this step only (`--force-with-lease`; overrides the
+   default push ban). Then present the branch diff to the human via
    `$hunk-present`: dedicated Herdr tab named `hunk-<PR番号|slug>`, three-dot
    (merge-base) target, sidecar reading map. **Reuse `<PFX>-worker` as the hunk
    fix worker — do NOT spawn a new fixer.** The worker keeps its existing pane
@@ -209,6 +214,7 @@ Whatever name is resolved, apply that SAME value to the agent name AND the pane 
 
 Every delegation prompt MUST:
 - Be self-contained (the agent should not need bd access); embed the plan/spec.
+- **Require `$commit` discipline for every commit**: micro-commits (one reviewable incision per commit; corrections to unpushed commits are absorbed via amend/fixup, not stacked) with at least one validation signal before committing, and English Conventional-Commits subjects. Embed these rules in the prompt itself — the worker does not auto-load the skill.
 - **Forbid**: `git push`, PR creation, and any writes to bd issues or task notes.
 - Forbid writing the bd-id into code or commit messages.
 - Forbid `terraform apply`; note SSO auth is human-approved.
