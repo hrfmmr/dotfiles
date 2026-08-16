@@ -98,7 +98,7 @@ When `HERDR_ENV=1`, host the presentation for the user instead of making them la
 
 1. Create a dedicated tab in the current workspace (`herdr tab create`) — the TUI wants the full pane.
 2. Name **both** the tab and its pane `hunk-<PR番号|topic>` (`herdr tab rename` / `herdr pane rename`). The user finds it in the sidebar by that name; keep the convention stable across presentations.
-3. Run the launch command there: `herdr pane run <pane> "cd <worktree> && hunk diff <target> --agent-context .local/hunk/agent-context.json --agent-notes"`. Do not steal focus — tell the user the tab name instead.
+3. Run the launch command there: `herdr pane run <pane> "cd <worktree> && EDITOR=nvim hunk diff <target> --agent-context .local/hunk/agent-context.json --agent-notes"`. Always launch `hunk` with `EDITOR=nvim` so in-TUI edit actions open nvim (the env is fixed at launch; it cannot be added later via `hunk session ...`). Do not steal focus — tell the user the tab name instead.
 4. From here the session is live: interact only via `hunk session ...` (comments, reload). Never read or drive the TUI pane itself.
 
 #### Fix worker spawn contract
@@ -115,7 +115,7 @@ When the presentation runs inside a `$herdr-impl` orchestration, **reuse its imp
 When `HERDR_ENV` is unset (or the user asks to run it themselves), print the command and let them run it in their terminal:
 
 ```bash
-hunk diff --agent-context .local/hunk/agent-context.json
+EDITOR=nvim hunk diff --agent-context .local/hunk/agent-context.json
 ```
 
 - Add `--agent-notes` when the notes must be visible on open.
