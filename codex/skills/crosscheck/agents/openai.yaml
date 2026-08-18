@@ -1,0 +1,3 @@
+interface:
+  display_name: "Crosscheck"
+  short_description: "Commander + persistent codex fact-check reviewer for investigations"
