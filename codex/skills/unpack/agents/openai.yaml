@@ -1,0 +1,3 @@
+interface:
+  display_name: "Unpack"
+  short_description: "Structure a topic into an ID-anchored nested outline a reader can climb"
