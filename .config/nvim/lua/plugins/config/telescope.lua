@@ -84,8 +84,14 @@ return {
 			})
 			builtin.find_files(opts)
 		end, {})
+		-- list files under the current buffer's dir in file-name ascending order
+		local sorted_find_command = { "rg", "--files", "--hidden", "--sort", "path", "-g", "!.git" }
 		vim.keymap.set("n", "<Leader>uu", function()
-			local opts = vim.tbl_deep_extend("force", find_files_opts, { cwd = get_file_dir(), hidden = true })
+			local opts = vim.tbl_deep_extend("force", find_files_opts, {
+				cwd = get_file_dir(),
+				hidden = true,
+				find_command = sorted_find_command,
+			})
 			builtin.find_files(opts)
 		end, {})
 		vim.keymap.set("n", "<C-u><C-h>", "<cmd>Telescope oldfiles<cr>", {})
