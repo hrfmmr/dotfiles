@@ -28,6 +28,8 @@ Only Codex-authored reviews are handled automatically; other reviewers are repor
 - `gh` authenticated for the repo; `git` on the PR branch; PR pushed and mergeable-in-progress.
 - Codex review is enabled for the repo (it reacts to `@codex review`).
 - Determine `OWNER/REPO` and `PR` once; reuse for every API call. See `references/mechanics.md`.
+- Read `references/evidence-discipline.md` before treating any empty query result as a fact —
+  it is the rule the approval gate below depends on.
 
 ## Execution model (background subagent)
 
@@ -103,8 +105,11 @@ never blindly at step 1 — this prevents double triggers.
    run-state, never from memory — so re-entry is idempotent and a missed re-invoke is harmless.
 3. **Detect approval.** Approved when the bot posts an issue comment starting
    `Codex Review: Didn't find any major issues.` whose `Reviewed commit` matches the pushed head,
-   OR a review that adds no new actionable inline comments. On approval the loop is **done**.
-   Report and stop.
+   OR when **zero unresolved bot review threads remain** — read from GraphQL `isResolved`
+   (`references/mechanics.md` §3), never inferred from an empty inline-comment count. That inference
+   is the false-approval path this loop has already taken once: an unpaginated REST count returns
+   `0` as soon as the PR passes 30 inline comments, and it returns `0` most reliably for the newest
+   review — the one being judged. On approval the loop is **done**. Report and stop.
 4. **Triage every unresolved bot thread** (not just this cycle's review — sweeps and overlapping
    auto-reviews surface older ones too). First dedup: fingerprint by (path, line, gist of the
    claim); duplicates get one canonical triage, and the non-canonical threads get a short reply
@@ -152,6 +157,19 @@ respawn.
 
 - Handle only `chatgpt-codex-connector[bot]` reviews. Surface non-Codex reviews to the human; never
   auto-reply or auto-resolve them.
+- **An empty result is not evidence of absence** (`references/evidence-discipline.md`). Before any
+  query's emptiness may mean "nothing is there" — no new findings, no unresolved threads, no bot
+  activity — prove the query could have returned the answer: right surface, right field name, right
+  filters, and **not truncated** (paging, `first:` caps, time windows). A silently partial answer is
+  shaped exactly like a clean one, and truncation hides the *newest* rows first — so it fails hardest
+  on precisely the question you are asking. When it gates a verdict, run the control query too (drop
+  the narrowing terms and confirm the count moves).
+- **Never downgrade the instrument at the decision point.** Approval is where a false empty costs the
+  most, so it takes the strongest signal available: a field that directly states the property
+  (`isResolved`) over a proxy you infer it from (a comment count), and a truncation-immune surface
+  over one you must remember to paginate. Knowing the footgun is not protection — the observed
+  failure was an agent that used the strong GraphQL surface correctly all session, then reached for a
+  cheap unpaginated REST count exactly when the answer became load-bearing.
 - Never resolve a thread you did not respond to first. Every resolved thread has a reply explaining
   fix or won't-fix.
 - Write every thread reply as a **polite Japanese statement** (desu/masu form): courteous, factual, and

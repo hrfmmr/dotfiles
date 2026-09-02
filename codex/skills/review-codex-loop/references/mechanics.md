@@ -10,6 +10,27 @@
 > **issue comment**, not a review): (1) polling `reviews` only, and (2) using the wrong login form.
 > Always query `issues/{pr}/comments` too, with the exact `[bot]` login.
 
+> **Every REST list is paged at 30 — a silent-truncation footgun.** GitHub REST list endpoints
+> return **30 items per page, oldest first**, and `gh api` fetches **page 1 only** unless you pass
+> `--paginate`. There is no error and no warning. Past 30 items the *newest* rows — the review you
+> just triggered, the approval you are waiting for, the comment proving a finding is still open —
+> sit on a later page, and the query returns a confident, wrong, empty-looking answer. Every list
+> call below carries `--paginate`; keep it there, and never add an unpaginated list call.
+>
+> Paging semantics differ by surface (both verified on gh 2.98.0 — re-verify after a gh upgrade):
+>
+> - **REST** `--paginate` concatenates all pages into ONE array and *then* applies `--jq`, so
+>   aggregating filters (`[.[].id]|max`, `length`, `max_by`) stay correct.
+> - **GraphQL** `--paginate` (needs an `$endCursor:String` variable plus
+>   `pageInfo{ hasNextPage endCursor }`) applies `--jq` **per page** and prints one result per page.
+>   Aggregating jq is WRONG here — emit one line per node and count in the shell (`| wc -l`).
+> - `--slurp` is not an option: `the --slurp option is not supported with --jq or --template`.
+> - A bare `reviewThreads(first:100)` is itself a cap, not a guarantee. Either paginate it, or read
+>   `pageInfo.hasNextPage` and treat `true` as "this answer is incomplete" — never as a count.
+>
+> The general rule this is one instance of lives in `references/evidence-discipline.md`: an empty
+> result only means "nothing is there" once you have shown the query could have seen it.
+
 ```sh
 # From inside the repo/worktree:
 PR=$(gh pr view --json number --jq .number)            # or take from arg
@@ -25,7 +46,7 @@ auto-trigger a Codex review, so findings/verdicts can predate the loop:
 ```sh
 BOT='chatgpt-codex-connector[bot]'
 # Latest bot verdict comment (may already be an approval for the current head):
-gh api "repos/$OWNER/$REPO/issues/$PR/comments" \
+gh api --paginate "repos/$OWNER/$REPO/issues/$PR/comments" \
   --jq "[.[]|select(.user.login==\"$BOT\")]|max_by(.id)|{id,created_at,body}"
 # All unresolved bot threads (same GraphQL as §6) → triage them as cycle-0 findings.
 ```
@@ -38,8 +59,8 @@ Capture baselines **BEFORE** posting the trigger — capturing after is a race: 
 lands at/below the baseline and is silently skipped by §2's `>` filters (false timeout).
 
 ```sh
-BASE_REVIEW_ID=$(gh api "repos/$OWNER/$REPO/pulls/$PR/reviews" --jq '[.[].id]|max // 0')
-BASE_ISSUE_ID=$(gh api "repos/$OWNER/$REPO/issues/$PR/comments" --jq '[.[].id]|max // 0')
+BASE_REVIEW_ID=$(gh api --paginate "repos/$OWNER/$REPO/pulls/$PR/reviews" --jq '[.[].id]|max // 0')
+BASE_ISSUE_ID=$(gh api --paginate "repos/$OWNER/$REPO/issues/$PR/comments" --jq '[.[].id]|max // 0')
 TRIGGER_URL=$(gh pr comment "$PR" --body "@codex review")   # returns the comment URL
 TRIGGER_TS=$(date +%s)
 ```
@@ -55,9 +76,9 @@ terminal status line — `RESPONSE`, `TIMEOUT`, or `PENDING` (budget not yet ela
 BOT='chatgpt-codex-connector[bot]'
 DEADLINE=$((TRIGGER_TS + 1200))     # 20-min wall-clock budget, anchored to the trigger
 for _ in $(seq 1 8); do             # ~60s * 8 ≈ 8 min per arm (stays under fg/bg caps)
-  NEW_REVIEWS=$(gh api "repos/$OWNER/$REPO/pulls/$PR/reviews" \
+  NEW_REVIEWS=$(gh api --paginate "repos/$OWNER/$REPO/pulls/$PR/reviews" \
         --jq "[.[]|select(.id>$BASE_REVIEW_ID and .user.login==\"$BOT\")]")
-  NEW_ISSUES=$(gh api "repos/$OWNER/$REPO/issues/$PR/comments" \
+  NEW_ISSUES=$(gh api --paginate "repos/$OWNER/$REPO/issues/$PR/comments" \
         --jq "[.[]|select(.id>$BASE_ISSUE_ID and .user.login==\"$BOT\")]")
   if [ "$NEW_REVIEWS" != "[]" ] || [ "$NEW_ISSUES" != "[]" ]; then echo RESPONSE; exit 0; fi
   if [ "$(date +%s)" -ge "$DEADLINE" ]; then echo TIMEOUT; exit 0; fi
@@ -95,7 +116,7 @@ nothing, it adds a PR issue comment whose body starts with
 under `pulls/{pr}/reviews` — poll `issues/{pr}/comments` for it too (step 2). Check it every cycle:
 
 ```sh
-APPROVED=$(gh api "repos/$OWNER/$REPO/issues/$PR/comments" \
+APPROVED=$(gh api --paginate "repos/$OWNER/$REPO/issues/$PR/comments" \
   --jq "[.[]|select(.user.login==\"$BOT\" and (.body|startswith(\"Codex Review: Didn't find any major issues\")))]|max_by(.created_at)")
 # Confirm it reviewed the current head (avoid a stale approval from an earlier commit):
 echo "$APPROVED" | jq -r '.body' | grep -oE 'Reviewed commit:[^ ]* `[0-9a-f]+`'
@@ -103,14 +124,32 @@ echo "$APPROVED" | jq -r '.body' | grep -oE 'Reviewed commit:[^ ]* `[0-9a-f]+`'
 
 If `APPROVED` is non-empty AND its `Reviewed commit` matches the pushed head → **approved, done**.
 
-Otherwise, when Codex DID post one or more reviews, a review set that adds **no new actionable
-inline comments** also counts as approval:
+Otherwise, decide approval from **unresolved bot threads** — never from "did this review attach
+inline comments". That count answers the wrong question twice over: findings carried over from an
+earlier cycle have no comment on the newest review, and the newest review's own comments are exactly
+the ones that fall off REST page 1. Ask the resolved-state question directly (GraphQL `isResolved`):
 
 ```sh
-NCOMMENTS=$(echo "$NEW_REVIEWS" | jq -r '.[].id' | while read -r RID; do
-  gh api "repos/$OWNER/$REPO/pulls/$PR/comments" \
-    --jq "[.[]|select(.pull_request_review_id==$RID)]|length"; done | paste -sd+ - | bc)
+UNRESOLVED=$(gh api graphql --paginate -f query='
+query($owner:String!,$repo:String!,$pr:Int!,$endCursor:String){
+  repository(owner:$owner,name:$repo){
+    pullRequest(number:$pr){
+      reviewThreads(first:100,after:$endCursor){
+        pageInfo{ hasNextPage endCursor }
+        nodes{ id isResolved comments(first:1){ nodes{ databaseId path author{login} } } }
+      }
+    }
+  }
+}' -F owner="$OWNER" -F repo="$REPO" -F pr="$PR" \
+  --jq '.data.repository.pullRequest.reviewThreads.nodes[]
+        | select(.isResolved==false and .comments.nodes[0].author.login=="chatgpt-codex-connector")
+        | .id' | wc -l | tr -d ' ')
 ```
+
+`UNRESOLVED` == 0 **and** a `Reviewed commit` matching the pushed head → approved. Two traps baked
+into that snippet, both load-bearing: the GraphQL login form has **no `[bot]` suffix** (bot-login
+callout), and the count is aggregated with `wc -l` rather than a jq `length` because GraphQL
+`--paginate` runs `--jq` once per page (paging callout).
 
 (👍 reactions on the trigger comment are NOT part of the approval definition — the waiter does not
 watch reactions, so treating them as approval would just convert them into false timeouts.)
@@ -125,7 +164,7 @@ fingerprint, non-canonical threads get a short reply referencing the canonical t
 resolve. Per-review enumeration (when you need to attribute comments to a specific review):
 
 ```sh
-gh api "repos/$OWNER/$REPO/pulls/$PR/comments" \
+gh api --paginate "repos/$OWNER/$REPO/pulls/$PR/comments" \
   --jq ".[]|select(.pull_request_review_id==$REVIEW_ID)|{id,path,line:(.line//.original_line),body}"
 ```
 
@@ -151,19 +190,23 @@ detecting *new* reviewer activity.
 Map a REST inline comment to its GraphQL review-thread node id, then resolve it.
 
 ```sh
-# List review threads with their first comment's databaseId + resolved state:
-gh api graphql -f query='
-query($owner:String!,$repo:String!,$pr:Int!){
+# List review threads with their first comment's databaseId + resolved state.
+# --paginate + $endCursor: `first:100` alone is a silent cap, not a guarantee (paging callout).
+# The --jq streams one object per node, so per-page jq application is harmless here.
+gh api graphql --paginate -f query='
+query($owner:String!,$repo:String!,$pr:Int!,$endCursor:String){
   repository(owner:$owner,name:$repo){
     pullRequest(number:$pr){
-      reviewThreads(first:100){
-        nodes{ id isResolved comments(first:1){ nodes{ databaseId path } } }
+      reviewThreads(first:100,after:$endCursor){
+        pageInfo{ hasNextPage endCursor }
+        nodes{ id isResolved comments(first:1){ nodes{ databaseId path author{login} } } }
       }
     }
   }
 }' -F owner="$OWNER" -F repo="$REPO" -F pr="$PR" \
   --jq '.data.repository.pullRequest.reviewThreads.nodes[]
-        | {threadId:.id, resolved:.isResolved, commentId:.comments.nodes[0].databaseId, path:.comments.nodes[0].path}'
+        | {threadId:.id, resolved:.isResolved, commentId:.comments.nodes[0].databaseId,
+           path:.comments.nodes[0].path, author:.comments.nodes[0].author.login}'
 ```
 
 Find the `threadId` whose `commentId` equals the Codex comment id you handled, then:
@@ -208,7 +251,7 @@ liveness guarantee; the completion notification is only an optimization that let
   `@codex review` comments created since the run's start timestamp (carry the start ts and prior
   counts in the escalation payload across respawns):
   ```sh
-  gh api "repos/$OWNER/$REPO/issues/$PR/comments" \
+  gh api --paginate "repos/$OWNER/$REPO/issues/$PR/comments" \
     --jq "[.[]|select(.user.login==\"$ME\" and .body==\"@codex review\" and .created_at>=\"$RUN_START_ISO\")]|length"
   ```
   Stop at 5 without approval.
