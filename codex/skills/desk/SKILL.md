@@ -1,48 +1,45 @@
 ---
 name: desk
 description: >
-  Stateless task protocol driven by Obsidian task notes. Defines state transitions and cold resume procedures for the full task lifecycle — intake, planning, execution, completion. Each agent session is an independent, stateless worker that restores context from the task note and bd issue, executes, then terminates.
-  Use when user says "$desk", "desk", "create task", "start task", "resume work", "$desk ps", "$desk run", "$desk --flush", or wants to manage implementation/research/ad-hoc tasks via Obsidian task notes with async human-agent dialogue or inspect/resume task execution.
+  Interactive task protocol driven by Obsidian task notes. The root session holds the task and dialogues with the user in real time; the task note keeps a fixed top-of-note view (現在地 / 設計 / Milestones / 論点) plus an Event Log that gains a Turn-N only when real progress occurs, mirrored to a bd issue.
+  Use when user says "$desk", "desk", "$desk new", "$desk --sync" (alias "--flush"), "$desk-live", "desk-live", "create task", "start task", "resume work", or wants to start, resume, or update a desk-managed task note (planning Q&A, design decisions, milestone progress) for impl/research/adhoc tasks.
 ---
 
 # Desk
 
 ## Overview
 
-Stateless task protocol that defines state transitions and cold resume procedures, using Obsidian task notes as the sole human interface.
-Each agent session is an independent worker: restore context from task note + bd issue → execute → terminate.
-Delegate concrete work to existing skills ($wt / $grill-me / $tk / $review / $commit / $join / $beads).
+Interactive task protocol on an Obsidian task note. The root session holds the task and dialogues with the human in real time — no sub-agent spawn, no async signal cycle.
+
+The task note is the human's state view. A fixed block at the top always answers "which phase are we in, which decisions remain, what is left, what should the human do next". Below it, an Event Log gains a Turn-N only when a real progress event occurs. The bd issue mirrors the same state so an agent can recover cold.
+
+Delegate concrete work to existing skills ($wt / $rough-plan / $grill-me / $tk / $review / $commit / $join / $beads / $herdr-impl / $hunk-present).
 
 ### Architecture
 
 | component | role |
 |-----------|------|
-| Task note | State machine store (frontmatter=state, Dialogue=I/O channel) |
-| bd issue | Agent-recoverable log for cold resume |
-| desk skill | State transition rules + cold resume protocol |
-| post-commit hook | Event-driven signal generation |
-| `.desk/runtime/` | External observability (lock files + logs) |
-| Each agent session | Stateless worker (restore → execute → terminate) |
+| Task note | Human-facing state. Fixed head sections are the source of truth; the Event Log is the changelog of head-section changes. |
+| bd issue | Agent-recoverable mirror. `design` field = latest snapshot (replace); comments = event summaries (append). |
+| desk skill | Note contract, event gate, session lifecycle. |
+| Root session | Single writer of the note and the bd issue. |
 
 ## Prerequisites
 
 - cwd is an Obsidian vault root (works with any vault).
-- obsidian-git plugin enabled (auto-commit interval ≈ 3 min).
-- [Advanced URI](https://github.com/Vinzent03/obsidian-advanced-uri) plugin enabled (for heading-level deep links in notifications).
-- **post-commit hook installed**: `scripts/setup-hook.sh <vault-root>` — generates `.desk/signals/*.ready` on `input:: done`.
 - For impl/research tasks, `BEADS_DIR` must be defined in the target repo's `.envrc`.
-- When task frontmatter contains `beads_dir`, treat it as the source of truth for beads transport and derive `BEADS_DOLT_SERVER_SOCKET="$beads_dir/dolt-server.sock"` plus `BEADS_DOLT_AUTO_START=0` before invoking `$beads` or raw `bd`.
+- When task frontmatter contains `beads_dir`, treat it as the source of truth for beads transport: derive `BEADS_DOLT_SERVER_SOCKET="$beads_dir/dolt-server.sock"` and `BEADS_DOLT_AUTO_START=0` before invoking `$beads` or raw `bd`. Never run raw `bd` with `BEADS_DIR` alone — it auto-starts a stale Dolt instance and existing issues appear missing.
 
 ## Invocation
 
 | pattern | behavior |
 |---------|----------|
-| `$desk` | Scan daily-note (yyyy-mm-dd.md) for `[[task note]]` links + detect notes with status in_progress/human_response_required. Present candidates; human selects to resume. |
-| `$desk <task-note-name>` | Resume or init the specified task directly. |
-| `$desk new` | Create a new task. |
-| `$desk ps [--all\|--inactive]` | List desk-managed tasks with task status, milestone progress summary, runtime state, assigned sub-agent, and heartbeat. Default shows non-done tasks; `--inactive` narrows to tasks without an active sub-agent lease. |
-| `$desk run <task-note-name> [--force] [--no-plan]` | Explicitly ensure the specified task has an active sub-agent now. Use for inactive/stale tasks. `--force` marks an existing runtime lease stale and re-assigns the task. `--no-plan` skips plan-first approval and transitions directly to executor (use when bd issue already contains explicit steps). |
-| `$desk --flush` | Catch-up sync: scan current session for unlogged discussion context, write a Turn-N summarizing decisions/findings/actions since the last Turn, and append a `bd comment` to the corresponding bd issue. Run as a background Agent. Use when Turn-N updates have been deferred or when the user explicitly requests a log flush. |
+| `$desk` | Scan daily-note (yyyy-mm-dd.md) for `[[task note]]` links and notes with `status: in_progress\|in_review`. Present candidates; human selects. |
+| `` $desk `<task-note-name>` `` | Open an interactive session on the task (see Session Lifecycle). If the note does not exist, suggest `$desk new`. |
+| `$desk new` | Create a new task (see Init). |
+| `$desk --sync` (alias `--flush`) | Reconcile the note with the conversation (see `--sync`). |
+
+Removed forms: `$desk ps` and `$desk run`. If the user types one, say it was removed and open the task via `` $desk `<task-note-name>` ``. For a cross-note overview use the Dataview "Active Tasks" query in `references/vault-integrations.md`.
 
 ## Task Types
 
@@ -52,385 +49,238 @@ Delegate concrete work to existing skills ($wt / $grill-me / $tk / $review / $co
 | research | required | required | required | — |
 | adhoc | — | — | — | — |
 
+All types share the same note structure. For adhoc, keep 論点 few and skip every bd step.
+
 ## Standard impl workflow
 
 For `task_type: impl`, follow this standard:
 
-- **plan**: define with `$grill-me`, then develop with `$rough-plan` (invokes `$creative-problem-solver` for approach trade-offs and, at its Step 4.5, runs `$critique` — or `$herdr-critique-loop` when `HERDR_ENV=1` — to converge the plan to no-HIGH before approval). Planning/critique agents carry no model pinning.
-- **impl**: delegate to `$herdr-impl` when `HERDR_ENV=1`; otherwise run the built-in executor cycle (`$tk` → `$review` → `$commit`). The commit standard on both paths is `$commit` — the Herdr path binds it through `$herdr-impl`'s delegation prompt rules.
-- **verify**: internalized in `$herdr-impl` (its `herdr-review-loop`); on the non-Herdr fallback, use `$review`. Do not run a separate verify pass on the Herdr path.
-- **pre-present grooming**: before any `$hunk-present` presentation, the branch must satisfy `$commit`'s pre-PR grooming contract — the `$herdr-impl` path internalizes this in its Step 7; on the fallback cycle, groom before presenting.
-- **human review**: present the implemented diff with `$hunk-present` — sidecar reading map hosted in a dedicated Herdr tab, questions answered as inline hunk comments, verdict recorded there. This replaces the former `$crit-explain` crit-session flow for diff review. On the Herdr path, **reuse `$herdr-impl`'s implementer worker as the hunk fix worker** (no new spawn); pass it the hunk session coordinates per `$hunk-present`'s Fix worker spawn contract so it owns comment-driven fixes and the post-fix re-sync.
+- **plan**: settle 論点 and draft the rough plan with `$rough-plan` (invokes `$grill-me` for requirement clarity, `$creative-problem-solver` for approach trade-offs, and at its Step 4.5 `$critique` — or `$herdr-critique-loop` when `HERDR_ENV=1` — to converge to no-HIGH before approval). The approved plan lands in 設計 > 設計方針・構成 and Milestones.
+- **impl**: delegate to `$herdr-impl` when `HERDR_ENV=1`; otherwise run the fallback cycle (`$tk` → `$review` → `$commit`) in the root session. The commit standard on both paths is `$commit`.
+- **verify**: internalized in `$herdr-impl` (its `herdr-review-loop`); on the fallback, use `$review`. Do not run a separate verify pass on the Herdr path.
+- **pre-present grooming**: before any `$hunk-present` presentation, the branch must satisfy `$commit`'s pre-PR grooming contract — `$herdr-impl` internalizes this in its Step 7; on the fallback cycle, groom before presenting.
+- **human review**: present the implemented diff with `$hunk-present` (sidecar reading map in a dedicated Herdr tab, questions as inline hunk comments, verdict recorded there). On the Herdr path, reuse `$herdr-impl`'s implementer worker as the hunk fix worker (no new spawn) and pass it the hunk session coordinates per `$hunk-present`'s Fix worker spawn contract.
 
-## Frontmatter Spec
+## Task Note Contract
 
-YAML frontmatter for task notes. Required/optional varies by task type.
+### Frontmatter
 
 ```yaml
 ---
 source_issue_link: ""      # impl/research: required, adhoc: optional
 target_repo: ""            # impl/research: required
 git_working_tree: ""       # impl/research: required
-beads_dir: ""              # impl/research: required; also the source path for deriving BEADS_DOLT_SERVER_SOCKET=<beads_dir>/dolt-server.sock
+beads_dir: ""              # impl/research: required; source path for BEADS_DOLT_SERVER_SOCKET=<beads_dir>/dolt-server.sock
 bd_issue_id: ""            # impl/research: required
-status: "not_started"      # required (all types)
-current_status_summary: "" # required (all types)
+status: "not_started"      # required: not_started | in_progress | in_review | done
+current_status_summary: "" # required: one-line projection of 現在地
 pull_request_url: ""       # impl: optional
-figma_url: ""              # optional (all types)
+figma_url: ""              # optional
 task_type: ""              # required: impl | research | adhoc
-runtime_status: ""         # optional: idle | running | waiting_human | done | stale
-runtime_subagent_id: ""    # optional: currently assigned sub-agent id
-runtime_subagent_role: ""  # optional: planner | executor | reviewer | finisher
-runtime_heartbeat_at: ""   # optional: ISO8601 JST (Asia/Tokyo, +09:00) timestamp of latest agent checkpoint
 ---
 ```
 
 ### `current_status_summary` Contract
 
-- Write the current critical-path progress in the task's milestone context.
-- Describe what meaningful unit of work is underway, blocked, or just completed.
+- One line describing the critical-path progress in milestone context: what meaningful unit of work is underway, blocked, or just completed.
+- Refresh it whenever 現在地 is refreshed.
 - Do not use orchestration mechanics as the summary body.
-- Good:
-  - `Verifying uncommitted diff intent while validating key reference targets.`
-  - `Milestone 2/4 complete. Roundup derivation passed; awaiting E2E re-confirmation.`
-- Bad:
-  - `Resumed background sub-agent`
-  - `Set up hook`
-
-### Runtime Lease Contract
-
-- Treat the runtime fields as the desk control-plane truth for "is a sub-agent actively assigned?".
-- `runtime_status: running` means a sub-agent currently owns the task.
-- `runtime_status: waiting_human` means the task is blocked on note input, even if no agent is actively computing.
-- `runtime_status: stale` means the prior lease is no longer trusted and `$desk run ... --force` may reclaim it.
-- Update `runtime_heartbeat_at` on spawn, before/after major checkpoints, and whenever ownership changes.
-- When a sub-agent exits cleanly, clear `runtime_subagent_id`, set `runtime_subagent_role` appropriately or empty it, and set `runtime_status` to `idle`, `waiting_human`, or `done`.
+- Good: `Milestone 2/4 complete. Roundup derivation passed; awaiting E2E re-confirmation.`
+- Bad: `Resumed session`, `Set up hook`.
 
 ### Status Transitions
 
 ```
-not_started → plan_ready → planning → in_progress → human_response_required ⇄ in_progress → in_review → done
-                 │                                        ↑
-                 └─ (plan-first) → human_response_required ┘  (Turn-N with execution plan, approved via input:: done)
-                 └─ (--no-plan)  → in_progress directly
+not_started → in_progress → in_review → done
+                   ↑            │
+                   └────────────┘  (review requests changes)
 ```
 
-## Phase 0: Init (`$desk new`)
+Flip `not_started` → `in_progress` when the first substantive work begins.
+
+### Sections (fixed order)
+
+Exact template: `references/note-templates.md`.
+
+| section | holds | update style |
+|---------|-------|--------------|
+| `## 現在地` | Derived view: 位置 (Milestone-based, e.g. `M3/5 <name>`), 未決の論点 (D-ids), 残TODO (count + next one), Next Action (human), Next Action (agent), as of (`Turn-N`, the last Turn this view reflects). | Rewrite in place. Refresh with every head update. |
+| `## 設計` | Fixed sub-sections: 問題定義 (one line) / 成功基準 / 前提 (Facts) / 設計方針・構成. | Rewrite in place. |
+| `## Milestones` | Dataview table (`bd_issue::`, `summary::`, `milestone_status::` = open \| in_progress \| done \| skipped). | Update rows in place; keep each row's bd child issue consistent (`done` → `bd close`; `skipped` → `bd close --reason skipped`). Rows without a bd issue (adhoc) carry `—`. |
+| `## 論点` | One `#### D-n <topic>` sub-section per substantial decision topic (see below). | Edit in place; overturn by supersede. |
+| `## Event Log` | `### Turn-N` entries, newest last. | Append only. |
+
+**論点 entry**: `decision_status:: open | decided | superseded | dropped`, then 問い / 選択肢 / 判断 / 根拠 / 影響先. Use `decision_status::` (never bare `status::`) so it cannot collide with the frontmatter `status` in Dataview.
+
+- Overturning a decided 論点: mark the original `superseded → D-m` and add `D-m` (noting `supersedes D-n`). Never overwrite the trail.
+- Closing a 論点 without deciding: `dropped`, with the reason; if it is carried to a separate bd issue, name that issue.
+- Grain: substantial topics — a decision that would change design, plan, or scope. Not per-file or per-function nitpicks.
+
+**grill-me mapping**: `$grill-me` Snapshot fields land as Problem statement / Success criteria / Facts → 設計; Decisions / Open questions → 論点.
+
+## Event Gate
+
+An event is a change a human re-reading the note later would need in order to know where things stand.
+
+**Events** (Turn required):
+- 論点 added, decided, superseded, or dropped (or its options materially changed).
+- 設計 changed substantively.
+- Milestone status transition, or a row added/removed (scope change).
+- Blocker or unexpected failure occurred/resolved. Errors during task execution are always events.
+- Artifact or external event: PR created/merged, derived note, branch task note, human review verdict.
+- Status change to `in_review` or `done`, or back to `in_progress`. The initial `not_started` → `in_progress` flip rides with whichever event triggers it and gets no Turn of its own.
+
+**Non-events** (write nothing): Q&A or investigation that settled nothing; session mechanics, protocol semantics, skill invocation chatter; a 現在地-only refresh; for impl, per-commit and per-review-cycle detail (bd note only — see Checkpoint).
+
+### Gate procedure
+
+At the end of every task-substantive response, run the event check. If an event occurred, do all three **in the same response, before yielding**, in this order. The head is the truth, so an interrupted gate leaves the truth intact and the Turn and bd recoverable through `--sync`. Multiple events in one response share one Turn. Before step 1, run the note-drift test from the Drift check: if `as of` is ahead of the last Event Log Turn, an earlier gate was interrupted, so write its missing Turn first.
+
+1. **Head**: first set 現在地 `as of` to the Turn number you are about to write (so the marker exists as soon as any head edit does), then update the affected head sections, then refresh the rest of 現在地 and `current_status_summary`.
+2. **Turn**: append `### Turn-N` to the Event Log (format below).
+3. **bd sync** (if `bd_issue_id` is set; run in background):
+
+   ```bash
+   # run_in_background: true — transport per $beads Session Start Protocol (socket-only)
+   export BEADS_DIR=<beads_dir> BEADS_DOLT_SERVER_SOCKET="<beads_dir>/dolt-server.sock" BEADS_DOLT_AUTO_START=0
+   bd update <bd_issue_id> --design-file - <<'EOF' && bd comment <bd_issue_id> "Turn-N: <event summary — decisions, identifiers, state transitions>" && bd dolt commit
+   <現在地 + 設計 + 論点 snapshot>
+   EOF
+   ```
+
+   The `&&` chain makes the comment a reliable marker: it exists only if the `design` replace succeeded. The `design` snapshot is self-contained: 現在地 (as of this event; between events bd may lag and the note is authoritative), 設計 (all four sub-sections), then 論点 (decided: 判断 + 根拠 in one line; superseded: the chain; open: 問い). On a milestone transition, also update the bd child issue (see Milestones).
+
+   - **Verify replace semantics** on the first write in a session that replaces a non-empty `design` (known from Open's `bd show` or your earlier write): run that write in the foreground, then `bd show <bd_issue_id> --json` and require `design` to equal the snapshot exactly (not old + new). If not, stop writing `design` and tell the human. A write over an empty `design` proves nothing.
+   - **Failure path**: check the background result when it finishes. On failure retry only the failed command (before re-running the comment, check that bd does not already have it), then tell the human and leave the drift for the next Open or `--sync` to repair.
+
+**⚠ MOST COMMONLY VIOLATED**: the three steps are one atomic operation. Never yield after step 1 or 2 without verifying the rest was launched.
+
+If no event occurred, write nothing. Refresh 現在地 and `current_status_summary` silently when a Next Action changed (no Turn, no bd sync, `as of` unchanged).
+
+### Turn format
+
+```markdown
+### Turn-N <yyyy-MM-dd HH:mm JST> — <event title>
+- <what happened>
+  - <nested detail: finding, pointer to rationale, identifiers (bead IDs, commit SHAs, paths)>
+- Updated: D-2 → decided; M3 → done; status → in_review; 設計 > 設計方針・構成
+```
+
+- The *why* lives in 論点 (判断 / 根拠); a Turn states what changed and points there.
+- Never record raw Q&A, transcripts, or tool-call chatter.
+- Turns are append-only and numbered monotonically. Fix a mistake with a new Turn.
+- Append artifact callouts at the end of the Turn (formats in `references/note-templates.md`); one per artifact.
+
+### Drift check
+
+Used by Open and `--sync` on non-legacy notes. Two independent signals:
+
+- **Note drift**: 現在地 `as of` is ahead of the last Event Log Turn (a head update whose Turn was never written), or a Turn's `Updated:` line is not reflected in the head. Recover: write the missing Turn, reconstructing its content from the head (`git log -p -- <note>` when the vault is a git repo) and marking it `(recovered)`; reconcile the head in the second case. A human's direct edit does not change `as of`, so it is not drift.
+- **bd drift**: some Turn-N in the Event Log has no marker in bd: a comment starting `Turn-N:` (read with `bd comments <bd_issue_id> --json`) or, for legacy Turns, a `[Turn-N]` line in the issue notes (`bd show <bd_issue_id> --json`; use the JSON forms and do not rely on plain `bd show` for comment bodies). Check every Turn, not only the latest. Recover: replace `design` once, then, only after that succeeds, write one comment per missing Turn.
+
+A 現在地-only refresh is never drift.
+
+### Checkpoint (impl)
+
+After each successful `$commit`: `bd note <bd_issue_id> "<sha>: <change summary>"` then `bd dolt commit`. Write a Turn only when the commit completes a milestone or is itself an event.
+
+## Session Lifecycle
+
+### 1. Open
+
+1. Read frontmatter, all head sections, and the latest Turn.
+2. If the note is legacy (see Legacy Notes), offer distillation first. Until it is distilled, skip step 5 and every `design` write.
+3. If `bd_issue_id` is set, first establish bd transport per the `$beads` Session Start Protocol, then run `bd show <bd_issue_id>`.
+4. If `git_working_tree` is set, cd to it.
+5. Run the Drift check and repair what it finds.
+6. Present 現在地 (especially Next Action) and begin the dialogue. Write nothing else on open.
+
+### 2. Loop
+
+For each user message:
+
+1. Process the input (research, answer, discuss, execute).
+2. **Native ask mode (MUST when available)**: for any human judgment call — plan direction, design, scope, trade-offs — ask through the host's native structured-question tool (e.g. `AskUserQuestion`), 2–4 concrete options, recommended first, each option's consequence stated. Fall back to prose only when no such tool exists; then use callout blocks with one bullet per question:
+
+   ````markdown
+   > [!question]
+   > - **Q-1**: <question>
+   > - **Q-2**: <question>
+   ````
+3. A settled question is recorded by updating its 論点 — not by logging the Q&A.
+4. If a delegated skill (`$grill-me`, `$rough-plan`, `$herdr-impl`, …) produced the outcome, the desk session — not the skill — writes the note and bd. Suppress the skill's own writes (e.g. `$grill-me`'s bd issue reflection, Turns); the Event Gate covers them.
+5. Run the Event Gate.
+
+The human may edit the note directly in Obsidian; their text wins. Re-read the section you are about to update first.
+
+### 3. Close
+
+Triggered by "done" / "end" / "close" / "exit", or the user switching to another task or topic.
+
+1. If an unrecorded event exists, run the Event Gate (or `--sync`).
+2. Refresh 現在地 so Next Action is current (`current_status_summary` too).
+
+No lock, lease, or heartbeat exists to clean up.
+
+## `--sync`
+
+Reconciliation for missed or half-written events.
+
+1. Run the Drift check and repair what it finds.
+2. Scan the conversation since the last Turn (or session start) against the head sections and Event Log, and collect events that meet the event test but are unrecorded.
+3. For wholly missed events, first reconcile the head sections; then set `as of` to the number of the last Turn you are about to write, and write one Turn per distinct event in chronological order. Finally replace the bd `design` once and, only after that succeeds, write one bd comment per Turn.
+
+## Init (`$desk new`)
 
 1. Confirm `source_issue_link` and `task_type` with the human.
 2. Branch by `task_type`:
-   - **impl/research**: Confirm `target_repo` → resolve `BEADS_DIR` from `.envrc` → derive `BEADS_DOLT_SERVER_SOCKET="$BEADS_DIR/dolt-server.sock"` and `BEADS_DOLT_AUTO_START=0` → create worktree via `$wt` (propose path/branch candidates, obtain approval) → create bd epic issue via `$beads`.
-   - **adhoc**: No worktree or bd issue required. Leave corresponding frontmatter fields empty.
-3. Create the task note at vault root (populate frontmatter + empty Planning / Milestones / Dialogue sections).
-4. Transition to `status: plan_ready`.
+   - **impl/research**: confirm `target_repo` → resolve `BEADS_DIR` from `.envrc` → derive socket vars → create the worktree via `$wt` (propose path/branch candidates, obtain approval) → create the bd epic via `$beads`.
+   - **adhoc**: no worktree or bd issue; leave the fields empty.
+3. **Seed 論点**: research the source issue and repo read-only, list the topics that need a decision, and present them via native ask for the human to add, remove, or merge. Fix the result as placeholders (`decision_status:: open`, other fields blank) so later work knows where each conclusion belongs.
+4. Create the note at vault root from `references/note-templates.md`: fill 問題定義 and 前提 with what is known, leave the rest as placeholders, draft Milestones as a rough critical path, set `status: not_started`.
+5. Treat creation as an event: write Turn-1 (`Task initialized`) and run the bd sync. Before the first `design` write, read `bd show`; fold any existing `design` content into 設計, because the replace would discard it.
 
-### Initial Task Note Structure
+## Planning
 
-Frontmatter + empty Planning (Snapshot / Plan) / Milestones table / Dialogue skeleton. Exact template: `references/note-templates.md`.
+- impl: run `$rough-plan` unless the change is trivial. Trivial skip (1 file, a few lines, self-evident fix): record the skip and reason as one line in 設計 > 設計方針・構成 and treat it as an event.
+- research/adhoc: settle open 論点 with `$grill-me` in the root session as needed.
+- Plan approval is a native-ask decision recorded as an event.
+- Once Milestones are derived, create a bd child issue per row (`bd create --parent <epic-id>` via `$beads`) and fill `bd_issue::`.
+- If the approved plan is too long to keep the head readable, put it in a derived note and link it from 設計方針・構成.
 
-## Plan-First Flow (default for initial `$desk run` on `plan_ready` tasks)
+## Execution
 
-Delegate to `$rough-plan` for impl tasks. `$rough-plan` handles requirement clarity check (`$grill-me` gate), approach selection (`$creative-problem-solver` gate), rough plan drafting with pseudocode, and human approval via Turn-N.
+- `HERDR_ENV=1`: delegate to `$herdr-impl`, reusing the worktree created in Init. Its worker and reviewer panes never write the note or bd; the root session relays results as events.
+- Otherwise run the fallback cycle in the root session: `$tk` → `$review` → `$commit`, with a Checkpoint after each commit.
+- impl Turns cover milestone transitions, PR create/merge, review verdicts, blockers, and deviations from the design.
 
-### Trigger
+### Sub-issue discovery
 
-`$desk run <task>` when `status == plan_ready`, `task_type == impl`, and `--no-plan` is **not** set.
+When a derived sub-issue surfaces: `bd create "<title>" --parent <epic-id>`, create a dedicated branch task note for it, add a Milestones row, and treat it as an event (`> [!info] Branch` callout).
 
-### Steps
+### Derived notes
 
-1. **Pre-spawn**: set `runtime_status: running`, `runtime_subagent_role: planner`, `runtime_subagent_id`, `runtime_heartbeat_at`. Create lock file.
-2. **Invoke `$rough-plan`** (background, cwd = working tree). `$rough-plan` executes its full workflow (precondition check → optional grill-me → optional creative-problem-solver → draft plan → human approval Turn-N). All Turn-N writes and bd sync are handled by `$rough-plan`.
-3. **On approval** (`input:: done` detected via signal mechanism): next `$desk run` reads the approved Turn, spawns executor with the plan in the cold resume context.
-
-### Trivial skip
-
-If the change is trivially small (1 file, a few lines, self-evident fix), `$rough-plan` may skip itself with a 1-line note in the Turn-N explaining the skip reason. The task transitions directly to `in_progress`.
-
-### `--no-plan` bypass
-
-When `$desk run <task> --no-plan` is invoked on a `plan_ready` task:
-- Skip `$rough-plan`. Transition `status` directly to `in_progress`.
-- Spawn executor immediately. The executor derives its work from bd issue description and task note context.
-
-## Phase 1: Planning (deep — for large tasks)
-
-Spawn a sub-agent with the working tree as cwd to refine the plan via extended Q&A. Before spawn, set `runtime_status: running`, `runtime_subagent_role: planner`, `runtime_subagent_id`, and `runtime_heartbeat_at`. Use this instead of Plan-First when the task requires multi-round requirement clarification ($grill-me).
-
-1. Write questions using the Q-ID scheme into the Planning section (see `references/async-dialogue-protocol.md`).
-2. Insert async response guide into the note and fire a `terminal-notifier` notification.
-3. Detect responses via **signal file mechanism** (below). On detection, resume deep-dive from questions marked `status:: done`. Add follow-up questions as `Q-n-m`.
-4. Once all open questions are exhausted, write the raw Snapshot to Planning > Snapshot. Sync to bd issue.
-5. Write the finalized plan to Planning > Plan.
-6. Populate the Milestones table with a rough critical path using Dataview inline fields.
-7. Transition to `status: in_progress`.
-
-## Phase 2: Execution
-
-### Execution routing
-
-If `HERDR_ENV=1`, delegate the whole execution to `$herdr-impl`: reuse the worktree already created in Init (do not create a new one). `$herdr-impl` runs orchestrator/worker/reviewer panes and internalizes verify (its `herdr-review-loop`), leaving a merge-ready branch and opening a PR per task policy.
-
-Otherwise, run the built-in Executor Work Cycle described below (the fallback).
-
-Each executor session is a **stateless worker**: restore context → execute a unit of work → checkpoint → terminate.
-Multiple executor sessions may run sequentially on the same task (cold resume chain).
-
-Before spawn, the invoking `$desk run` must:
-1. Create `.desk/runtime/<task-name>.lock` (see Lock File Protocol below).
-2. Set frontmatter: `runtime_status: running`, `runtime_subagent_role: executor`, `runtime_subagent_id: pid:<PID>`, `runtime_heartbeat_at`.
-
-### Executor Work Cycle (single session)
-
-```
-restore context (frontmatter + latest Turn + bd show)
-  loop:
-    → $tk (reasonable incision)
-    → $review (approval gate)
-    → $commit
-    → checkpoint
-    → if human input needed: exit loop
-    → if more work remains and context budget allows: continue loop
-    → else: exit loop
-  write Exit Turn (MANDATORY — see Exit Turn Contract)
-  terminate
-```
-
-### Turn-N ↔ bd Sync Invariant
-
-**Every Turn-N write to the task note MUST be paired with a `bd note` append to the corresponding bd issue.** This is a hard invariant — no Turn-N may exist in the Dialogue section without a matching bd note entry. The sync is the agent's responsibility at the point of Turn write, not deferred to a later phase.
-
-**When**: Immediately after writing/appending any Turn-N content to the task note (plan Turn, exit Turn, intermediate Turn, critique summary, etc.).
-
-**What to sync**: A compact summary of the Turn content, prefixed with the Turn identifier. Format:
-```
-[Turn-N] <one-line summary of what the Turn contains>
-<optional 2-3 bullet points for key decisions/findings>
-```
-
-**How**:
-```bash
-BEADS_DIR=<beads_dir> bd note <bd_issue_id> --stdin <<'EOF'
-[Turn-N] <summary>
-EOF
-BEADS_DIR=<beads_dir> bd dolt commit
-```
-
-When the task note carries `beads_dir`, also derive and export:
-
-```bash
-export BEADS_DOLT_SERVER_SOCKET="<beads_dir>/dolt-server.sock"
-export BEADS_DOLT_AUTO_START=0
-```
-
-Do this before the `bd note` / `bd dolt commit` pair so desk-driven sessions
-share the same authoritative socket path.
-
-**Applies to all agents**: planner, executor, reviewer, finisher — any role that writes a Turn.
-
-**Background execution OK**: The bd sync may run in background (`run_in_background: true` for Agent, or `&` in bash) since it is append-only and does not block subsequent task note operations. But it MUST be initiated before the agent terminates.
-
-### Checkpoint Contract
-
-After each successful `/commit`:
-- Append to bd issue: `bd note <issue-id> "<commit-hash>: <change summary>"`.
-- Persist: `bd dolt commit`.
-
-On each status transition:
-- Update task note frontmatter `status` and `current_status_summary`.
-- Update runtime lease fields if ownership or wait-state changed.
-- Update `milestone_status::` in the Milestones table.
-
-### Exit Turn Contract
-
-Every executor session MUST append a Turn-N to the Dialogue section before terminating. **No silent exits.** This Turn is the human-visible record and the cold resume anchor for the next session.
-
-Two exit patterns:
-
-#### Pattern A: Blocking exit (human judgment needed)
-
-Use when the next step requires human decision, verification, or approval (including CI verification, merge approval, design review).
-
-```markdown
-### Turn-N
-input:: pending
-agent_instruction::
-
-**Context**: <what was done and why this decision is needed>
-**Question**: <specific question requiring judgment>
-**Options**: <enumerate choices if applicable>
-
-> Write your response here. If you want the next agent session to follow an extra instruction, write it in `agent_instruction::`. Change `input:: pending` to `input:: done` when finished.
-```
-
-1. **bd sync** (Turn-N ↔ bd Sync Invariant): `bd note <bd_issue_id> "[Turn-N] <context summary>"` + `bd dolt commit`.
-2. Transition to `status: human_response_required`. Update frontmatter `current_status_summary`.
-3. Set `runtime_status: waiting_human`, clear `runtime_subagent_id`, refresh `runtime_heartbeat_at`.
-4. Delete `.desk/runtime/<task-name>.lock`.
-5. Fire `terminal-notifier` with obsidian:// URL.
-6. **Terminate**.
-
-Resume happens via cold resume (see Signal Mechanism below).
-
-#### Pattern B: Non-blocking exit (autonomous continuation)
-
-Use when the session exhausts its context budget but remaining work is clearly defined and needs no human judgment. The next `$desk run` picks up from this Turn.
-
-```markdown
-### Turn-N
-input:: done
-agent_instruction::
-
-**Completed**: <summary of commits and changes>
-**Next**: <what the next session should do>
-```
-
-1. **bd sync** (Turn-N ↔ bd Sync Invariant): `bd note <bd_issue_id> "[Turn-N] <completed summary + next>"` + `bd dolt commit`.
-2. Keep `status: in_progress`. Update frontmatter `current_status_summary`.
-3. Set `runtime_status: idle`, clear `runtime_subagent_id`, refresh `runtime_heartbeat_at`.
-4. Delete `.desk/runtime/<task-name>.lock`.
-5. **Terminate**.
-
-**When in doubt, use Pattern A.** Human verification of external events (CI, deploy, review) is always Pattern A.
-
-### Sub-issue Discovery
-
-When a derived sub-issue surfaces during execution:
-- Create via `bd create "<title>" --parent <epic-id>`.
-- Create a dedicated branch task note for the sub-issue.
-- Add a row to the Milestones table.
-- Address the sub-issue, logging context in its bd issue.
-
-### Derived Notes
-
-When execution produces a substantial artifact (design doc, investigation report, decision record):
+When the work produces a substantial artifact (design doc, investigation report, decision record):
 
 1. Create a new note in the vault root with a descriptive name.
-2. **Tag inheritance**: Copy all `#prj-*` tags from the parent task note's first line into the derived note's first line. This ensures vault-wide project filtering remains consistent.
-3. Link it from the task note using Obsidian wikilink syntax only (for example `[[Derived Note]]`) in the relevant Turn-N. Do not use markdown file links for derived-note references.
+2. **Tag inheritance**: copy all `#prj-*` tags from the parent task note's first line into the derived note's first line.
+3. Link it from the relevant Turn with Obsidian wikilink syntax only (`[[Derived Note]]`) and a `> [!note] Derived Note` callout.
 4. If `bd_issue_id` is set, reference it in the bd issue notes.
 
-### Turn-N Artifact Callouts
+## Completion
 
-When a Turn produces a linkable artifact (derived note / PR / branch task note), append the matching callout block inside the Turn-N, at the end of the Agent section — one callout per artifact. Exact callout formats and rules: `references/note-templates.md`.
+1. When every Milestone is `done` or `skipped` and no 論点 is `open`, set `status: in_review` and run the Event Gate. For impl, present the final diff via `$hunk-present`; the verdict is recorded there.
+2. **Done gate** — `status: done` requires all of: (a) no `open` 論点 (carry-over topics are closed as `dropped` with the follow-up issue named), (b) every Milestone `done` or `skipped`, (c) an explicit human verdict. If the human requests more work, return to `in_progress`, add Milestones or 論点 as needed, and record the event.
+3. On pass, impl: verify the branch satisfies `$commit`'s pre-PR grooming contract (semantic-unit commits, English subjects); groom and re-sync if not. Create the PR via `$join` if needed and update `pull_request_url`.
+4. Set `status: done` and run the Event Gate (head, Turn, bd sync), then close the bd epic (the human verdict is the required human check gate).
 
-## Phase 3: Completion
+## Legacy Notes
 
-1. After all milestones are complete, append a final human-check `Turn-N` to the Dialogue section. This Turn MUST use `input:: pending` — the Status-Turn Consistency Invariant (see Guardrails) prohibits `done` while any Turn awaits input. For impl tasks, present the final diff for this check via `$hunk-present` (dedicated Herdr tab; hunk comments carry the Q&A and the verdict) rather than a crit session.
-2. Transition to `status: in_review`. Set `runtime_status: waiting_human`, clear `runtime_subagent_id`, refresh `runtime_heartbeat_at`, and fire notification.
-3. **Pre-done validation** (on human approval): Before transitioning to `done`, verify that the latest Turn-N has `input:: done` and does NOT contain an unresolved **Question**. If the human's response requests additional work, transition back to `in_progress` (not `done`).
-4. On human approval (latest Turn confirmed resolved):
-   - impl tasks: Verify the branch satisfies `$commit`'s pre-PR grooming contract (semantic-unit commits, English subjects); if not, groom and re-sync per `$commit` before proceeding. Then create PR via `$join` if needed. Update frontmatter `pull_request_url`.
-   - Close the bd epic issue.
-5. Transition to `status: done`, set `runtime_status: done`, clear `runtime_subagent_id`, and refresh `runtime_heartbeat_at`.
+A note without `## 現在地` (old `## Planning` / `## Dialogue` layout, possibly with `runtime_*`, `input::`, or `agent_instruction::`) is legacy. Do not rewrite it unprompted.
 
-## Runtime Visibility
-
-### `$desk ps`
-
-Run `scripts/desk_ps.sh <vault-root>` to display the unified status table:
-
-```
-task                       | status                  | agent     | heartbeat | alive?
----------------------------|-------------------------|-----------|-----------|-------
-my-app Auth UI refactor    | human_response_required | —         | 2h        | —
-my-app Remove legacy SDK   | in_progress             | pid:12345 | 3m        | ✓
-```
-
-- Default: notes where `status != done`.
-- `--inactive`: only tasks whose status suggests work remains but runtime lease is absent or stale.
-- `--all`: include done tasks.
-
-### `$desk run`
-
-1. Read task note frontmatter → choose spawned role:
-   - `plan_ready` + `--no-plan` → executor (skip plan-first, transition directly to `in_progress`)
-   - `plan_ready` (no flag) → planner (plan-first flow: write execution plan Turn, await approval)
-   - `planning` → planner (Phase 1 deep planning)
-   - `in_progress` → executor
-   - `human_response_required` with `input:: done` in latest Turn → executor (cold resume)
-   - `human_response_required` with `input:: pending` → do not spawn; report blocked
-   - `in_review` → finisher only after the required human check is satisfied
-2. Guard: if `.desk/runtime/<task>.lock` exists and PID is alive → report existing lease, do not spawn. (`--force` overrides: delete stale lock, proceed.)
-3. **Pre-spawn**: create `.desk/runtime/<task>.lock` with PID, timestamp, role.
-4. **Spawn** Agent tool with `run_in_background: true` and cold resume context (see below).
-5. **Post-spawn**: delete consumed `.desk/signals/<task>.ready` if present.
-6. On agent completion: delete `.desk/runtime/<task>.lock`, update frontmatter.
-
-### Cold Resume Context (executor spawn prompt)
-
-Include exactly:
-- Task note frontmatter (full)
-- Latest Dialogue Turn (most recent `Turn-N` section, including `agent_instruction::` when present)
-- If the latest Turn contains an approved execution plan (from plan-first flow), include the instruction: "Follow the approved execution plan in Turn-N"
-- If the latest Turn contains a non-empty `agent_instruction::`, include the instruction: "Also follow `agent_instruction::` from Turn-N unless it conflicts with explicit task scope."
-- `bd show <bd_issue_id>` output
-- Any `[root]`-prefixed bd notes from the current session (human decisions/clarifications made in root dialogue)
-- Working tree path and branch
-- If frontmatter contains `beads_dir`, include the instruction: "Before any `$beads` or `bd` command, export `BEADS_DIR=<beads_dir>`, `BEADS_DOLT_SERVER_SOCKET=<beads_dir>/dolt-server.sock`, and `BEADS_DOLT_AUTO_START=0`."
-- Instruction to follow Turn-N protocol with mandatory `input:: pending` inline field and always-present `agent_instruction::`
-
-## Signal Mechanism
-
-### obsidian-git post-commit Hook (signal generation)
-
-Event-driven detection leveraging obsidian-git auto-commit (≈ 3 min interval).
-
-```
-auto-commit fires
-  → .git/hooks/post-commit executes
-    → scripts/check-signals.sh
-      → Determine if changed files match a task note awaiting input
-        → Match found & inline field `input:: done` detected
-          → Create .desk/signals/<task-name>.ready
-          → Fire terminal-notifier
-```
-
-### Dedup: signal consumed → `.ready` file deleted before spawn. Lock + PID check prevents double spawn.
-
-## Lock File Protocol
-
-### `.desk/runtime/<task-name>.lock`
-
-Created by `$desk run` **before** Agent tool invocation. Deleted by executor on clean exit or by `$desk run --force` on stale reclaim.
-
-```
-pid=<PID of claude CLI session>
-started_at=<ISO8601 UTC>
-role=<planner|executor|reviewer|finisher>
-```
-
-### `.desk/runtime/<task-name>.log`
-
-Agent stdout/stderr. Useful for post-mortem debugging.
-
-### Health check matrix
-
-| lock exists | PID alive | heartbeat fresh | verdict |
-|-------------|-----------|-----------------|---------|
-| yes | yes | yes | ✓ running |
-| yes | no | — | ✗ stale (`$desk run --force` to reclaim) |
-| no | — | — | — idle |
-| yes | yes | no (>15 min) | ? hung (inspect via `$desk ps`) |
-
-## Cold Resume Protocol
-
-Cold resume is the **canonical** way agents resume work. Every `$desk run` is a cold resume.
-
-1. On `$desk` invocation, run `scripts/desk_ps.sh "$PWD"` to show current state. Also collect:
-   - `[[task note]]` links from daily-note (yyyy-mm-dd.md)
-   - Consume any `.desk/signals/*.ready` files (mark as actionable)
-2. Present candidates, prioritizing signal-ready tasks, then daily-note links.
-3. After human selection, execute `$desk run <task>`.
-4. `$desk run` reads: task note frontmatter + latest Dialogue Turn + `bd show <issue-id>`.
-5. Spawn new agent session with this context. Agent restores from the appropriate Phase based on `status` + `current_status_summary`.
-
-## Notification
-
-Fire `terminal-notifier` with an `obsidian://adv-uri` deep link to the target Turn heading (Advanced URI plugin; percent-encode every query value; message carries a `[yyyy-MM-dd HH:MM:SS]` timestamp and the target `Turn-N`). Full recipe and encoding pitfalls: `references/vault-integrations.md`.
-
-## Dataview Integration
-
-Pending-input and active-task cross-note queries: `references/vault-integrations.md`.
+- **On open**: offer distillation via native ask, unless the Event Log already holds a `Legacy distillation declined` Turn.
+- **If approved**: draft 現在地 / 設計 / 論点 from the Turns, `bd show`, and old Planning content (Snapshot and Plan → 設計, moving long content to a derived note linked from 設計方針・構成; decisions found in Turns → 論点, marked as reconstructed). Show the draft and write only after approval. Then rename `## Dialogue` to `## Event Log`, leave old Turns untouched, continue numbering, drop `runtime_*`, and map legacy status (`plan_ready` / `planning` → `not_started` or `in_progress`; `human_response_required` → `in_progress`).
+- **If declined**: record a one-line `Legacy distillation declined` Turn so Open stops re-offering. The note has no head sections, so the event rule applies to Turn appends (below the existing Dialogue) and bd comments only — skip head updates and the bd `design` replace — and the done gate reduces to the human verdict. Map legacy status values on any status flip as above.
 
 ## Skill Delegation Map
 
@@ -438,30 +288,23 @@ Pending-input and active-task cross-note queries: `references/vault-integrations
 |-------|----------------|---------|
 | Init | `$wt` | worktree creation |
 | Init | `$beads` | bd epic issue creation |
-| Plan-First | `$rough-plan` (grill-me + creative-problem-solver + critique) | plan draft + critique convergence + approval gate |
-| Planning (deep) | `$grill-me` (async adapted) | requirement clarification via Q&A |
-| Execution | `$herdr-impl` (HERDR_ENV=1) / `$tk` + `$review` + `$commit` (fallback) | implement issue; Herdr orchestrator or built-in executor cycle |
+| Planning | `$rough-plan` (grill-me + creative-problem-solver + critique) | rough plan + critique convergence + approval |
+| Planning (research/adhoc) | `$grill-me` | requirement clarification |
+| Execution | `$herdr-impl` (HERDR_ENV=1) / `$tk` + `$review` + `$commit` (fallback) | implement issue |
 | Verify | `herdr-review-loop` (inside `$herdr-impl`) / `$review` (fallback) | review convergence |
-| Human review | `$hunk-present` (Herdr tab hosting; herdr-impl worker reused as fix worker) | diff reading map, hunk comment Q&A, verdict |
+| Human review | `$hunk-present` | diff reading map, hunk comment Q&A, verdict |
 | Completion | `$join` | PR creation |
 | All phases | `$beads` | bd issue CRUD & sync |
 
 ## Guardrails
 
-- **Status-Turn Consistency Invariant**: If the latest Turn-N contains a **Question** (regardless of `input::` value), `status` MUST NOT be `done`. Allowed statuses when a Turn has an unresolved Question: `human_response_required` (during execution) or `in_review` (Phase 3 final check). The `done` transition requires: (a) the latest Turn has `input:: done`, AND (b) the human's response does not request additional work. If the response requests further action, transition to `in_progress` instead.
-- **No silent executor exit**: Every executor session MUST write an Exit Turn before terminating (see Exit Turn Contract). An executor that commits work but terminates without a Turn violates this rule — the task note becomes an incomplete record and the cold resume chain breaks.
-- **Off-topic exchange exception**: If a human message concerns session mechanics, protocol semantics, skill invocation, or other meta-concerns unrelated to the task's subject matter, do NOT write a Turn-N or fire a bd sync for that exchange. Turn-N exists to record task-substantive progress; logging protocol Q&A or tooling tangents pollutes the cold-resume record. This applies to both desk-live interactive turns and desk async dialogue. Note: errors, blockers, or unexpected failures encountered during task execution are task-substantive events — always record these in Turn-N and bd sync even if the triggering conversation was meta in nature.
-- **Stateless workers**: Each agent session terminates after its work unit. No agent waits or polls.
-- **Turn-N `input:: pending` is mandatory**: Signal detection depends on this inline field. Omitting it breaks the resume chain.
-- **Turn-N `agent_instruction::` is always present**: Keep the field even when blank so humans can add note-side follow-up instructions without changing the template shape.
-- All human dialogue is async via task note Turn-N. No synchronous interrupts.
-- **Turn-N ↔ bd Sync Invariant**: Every Turn-N write MUST be paired with a `bd note` append. No Turn may exist without a matching bd note. This applies to all agent roles (planner, executor, reviewer, finisher). Background execution is acceptable but initiation before agent termination is mandatory. See the Turn-N ↔ bd Sync Invariant section for details. **⚠ MOST COMMONLY VIOLATED INVARIANT**: In practice, agents write Turn-N but forget the bd sync. Treat the pair as one atomic operation — never yield or terminate after a Turn-N write without verifying the bd sync was initiated.
-- **Root Session bd Sync Invariant**: When the root desk session (the session that runs `$desk run` or `$desk`) receives task-relevant context from the human — design decisions, clarifications, approval rationale, external review results — it MUST sync a summary to the bd issue via `bd note <bd_issue_id> "[root] <summary>"` + `bd dolt commit` **before** spawning a sub-agent or ending the session. This ensures executor cold resume context includes human decisions that occurred outside Turn-N dialogue.
-- **`$beads` skill mandatory for `bd` commands**: Any agent session that executes `bd` commands MUST follow the `$beads` skill's Session Start Protocol before the first `bd` read or write. At minimum: export `BEADS_DIR` (from task note `beads_dir` or repo `.envrc`), derive `BEADS_DOLT_SERVER_SOCKET="$BEADS_DIR/dolt-server.sock"`, and set `BEADS_DOLT_AUTO_START=0`. Do not issue raw `bd` commands without first establishing transport as defined in `$beads`. This applies to all roles (planner, executor, reviewer, finisher) and to the root desk session.
-- **Question presentation format**: When presenting questions to the user during dialogue (Turn-N questions, planning Q&A, grill-me sessions), use Obsidian callout blocks (`> [!question]`) with bullet-point formatting. Do not compress questions into single lines; each question ID and its content must be on separate bullet lines within the callout for scannability.
-- Dual writes to task notes and bd issues are by design (human-facing view vs agent-recoverable log).
-- bd issue body/notes must be self-contained enough for cold resume after session death.
-- Concurrent agent assignment to all in_progress tasks is permitted. Accept write-contention risk on shared BEADS_DIR.
-- Prefer milestone-progress wording in `current_status_summary`; runtime mechanics belong in the runtime lease fields.
+- **Root session only**: the root session holds the task and is the single writer of the note and bd issue. Workers and reviewers spawned by delegated skills never write either.
+- **Event Gate is a hard gate**: every task-substantive response ends with the event check; when an event occurred, head update + Turn + bd sync land in the same response. Batching or retroactive writes are a violation, except through `--sync`.
+- **Head is truth**: head sections hold current state and the Event Log holds the change history; they must never contradict each other.
+- **No raw logs**: never write verbatim Q&A, transcripts, or per-round narration into the note.
+- **Done gate**: `done` requires no `open` 論点, all Milestones `done`/`skipped`, and an explicit human verdict.
+- **Native ask mode is the default question channel** for plan- or direction-refining Q&A; prose is the fallback.
+- **`$beads` mandatory for `bd` commands**: before the first `bd` read or write in a session, follow the `$beads` Session Start Protocol — export `BEADS_DIR` (from `beads_dir` or `.envrc`), derive `BEADS_DOLT_SERVER_SOCKET="$BEADS_DIR/dolt-server.sock"`, set `BEADS_DOLT_AUTO_START=0`. Never issue raw `bd` with `BEADS_DIR` alone.
+- Dual writes to the note and bd are by design (human-facing view vs agent-recoverable mirror). The bd `design` snapshot must be self-contained enough for cold resume after session death.
+- Prefer milestone-progress wording in `current_status_summary`.
 - Root epic closure always requires a human check gate.
-- Lock files in `.desk/runtime/` are the external truth for agent liveness. Frontmatter `runtime_status` is self-reported.

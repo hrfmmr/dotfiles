@@ -1,34 +1,75 @@
 # Task note templates
 
-## Initial Task Note Structure (Phase 0 step 3)
+## Initial Task Note Structure (Init step 4)
 
 ```markdown
 ---
-(frontmatter)
+(frontmatter — see SKILL.md)
 ---
 
 # <Task Name>
 
-## Planning
+## 現在地
 
-### Snapshot
-<!-- Written after grill-me snapshot is finalized -->
+- **位置**: M0/N (not started)
+- **未決の論点**: D-1, D-2
+- **残TODO**: N件 — 次: <next item>
+- **Next Action (human)**:
+- **Next Action (agent)**:
+- **as of**: Turn-1
 
-### Plan
-<!-- Finalized execution plan -->
+## 設計
+
+### 問題定義
+<!-- one line -->
+
+### 成功基準
+<!-- testable completion conditions -->
+
+### 前提 (Facts)
+<!-- verified facts, constraints, links -->
+
+### 設計方針・構成
+<!-- current design; rewrite in place as it changes -->
 
 ## Milestones
 
 | bd_issue:: | summary:: | milestone_status:: |
 |------------|-----------|-------------------|
 
-## Dialogue
-<!-- Turn-N headings appended here -->
+## 論点
+
+#### D-1 <topic>
+decision_status:: open
+- 問い:
+- 選択肢:
+- 判断:
+- 根拠:
+- 影響先:
+
+## Event Log
+<!-- Turn-N headings appended here, one per progress event -->
+```
+
+## 論点 lifecycle
+
+- `decision_status::` is one of `open | decided | superseded | dropped`. Do not use bare `status::` (collides with frontmatter `status` in Dataview).
+- Decide: fill 判断 / 根拠 / 影響先 and set `decided`.
+- Overturn: set the original to `superseded` and add `→ D-m`; add `D-m` with `supersedes D-n` in its 問い.
+- Drop: set `dropped` with the reason; name the follow-up bd issue if one was opened.
+
+## Turn-N format
+
+```markdown
+### Turn-N <yyyy-MM-dd HH:mm JST> — <event title>
+- <what happened>
+  - <nested detail: finding, pointer to rationale, identifiers (bead IDs, commit SHAs, paths)>
+- Updated: D-2 → decided; M3 → done; status → in_review; 設計 > 設計方針・構成
 ```
 
 ## Turn-N Artifact Callouts
 
-When a Turn produces a linkable artifact, append a dedicated callout block **inside the Turn-N** (after the Agent narrative, before the next Turn heading). This makes artifacts scannable on cold resume.
+When a Turn produces a linkable artifact, append a dedicated callout block at the end of the Turn (after the bullets, before the next Turn heading). This makes artifacts scannable on cold resume.
 
 **Derived note** — learning note, investigation report, design doc:
 ```markdown
@@ -50,5 +91,4 @@ When a Turn produces a linkable artifact, append a dedicated callout block **ins
 
 Rules:
 - One callout per artifact. A single Turn may contain multiple callouts.
-- Place callouts at the **end** of the Agent section, after the narrative text.
-- Use the exact callout type (`note` / `abstract` / `info`) for consistency across desk and desk-live.
+- Use the exact callout type (`note` / `abstract` / `info`) for consistency.
