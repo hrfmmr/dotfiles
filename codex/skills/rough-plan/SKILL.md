@@ -1,6 +1,6 @@
 ---
 name: rough-plan
-description: Approval gate that drafts a rough implementation plan before code changes begin. Replaces desk's plan-first flow for impl tasks. Triggered by $desk run on plan_ready impl tasks, or by invoking $rough-plan directly.
+description: Approval gate that drafts a rough implementation plan before code changes begin. Runs as the planning step of desk impl tasks, or by invoking $rough-plan directly.
 ---
 
 # Rough Plan
@@ -18,15 +18,15 @@ Requirements (What/Why) must already be settled. If unclear, run `$grill-me` fir
 | research | skip | -- |
 | adhoc | skip | -- |
 
-When skipping for triviality, record the skip and its reason as a one-line note in Turn-N.
+When skipping for triviality, record the skip and its reason as a one-line note (in a desk task note: 設計 > 設計方針・構成).
 
 ## desk Integration
 
-This skill replaces desk's plan-first flow.
+This skill is desk's planning step for impl tasks.
 
-- When `$desk run <task>` detects a `plan_ready` impl task, desk invokes rough-plan instead of spawning a planner sub-agent.
-- After rough-plan obtains human approval, desk spawns the executor.
-- The `--no-plan` flag remains valid (bypasses rough-plan, transitions directly to executor).
+- In a desk session, the desk root session invokes rough-plan for an impl task whose plan is not yet approved; open 論点 seeded at Init are settled through this workflow.
+- rough-plan does not write the task note. The desk session records outcomes per its Event Gate: settled 論点, the approved plan in 設計 > 設計方針・構成, Milestones derived from the phases.
+- After human approval, the desk session continues to execution in the same session.
 
 ## Question Channel
 
@@ -35,8 +35,8 @@ Whenever a step needs a human judgment call — Step 2 requirement clarification
 Rules:
 - One question per decision; 2-4 concrete options each, recommended option first.
 - Each option must state the consequence of choosing it, not just a label.
-- Record every question and its selected answer in the task note Turn-N, and in the bd issue when one exists, using the caller's Turn-N format. Native ask mode changes how you *ask*, never whether you *log*.
-- Step 5 approval keeps its Turn-N `input:: pending` gate. In a synchronous context (`$desk-live`) the approval prompt may be issued via native ask, but the written Turn-N record is still required.
+- Do not log raw Q&A. Hand each settled decision (topic, options, choice, rationale) to the caller so a desk session can record it as a 論点 update; outside desk, keep it in the plan.
+- Step 5 approval is a native-ask decision (approve / modify / reject), never a note-side gate.
 
 ## Workflow
 
@@ -160,29 +160,17 @@ Routing:
 
 Fold verified HIGH findings into the plan; converge to no-HIGH before Step 5. MED/LOW findings are recorded for the human and are non-blocking.
 
-Trivial changes may skip this step (consistent with the Applicability trivial-skip rule); record the skip reason in Turn-N.
+Trivial changes may skip this step (consistent with the Applicability trivial-skip rule); record the skip reason alongside the plan-skip note.
 
 ### Step 5: Human Approval
 
-Write the rough plan into a Turn-N in the task note and request approval.
+Present the rough plan in the conversation and ask for approval via native ask (approve / modify / reject). On modify, revise and re-ask. The pre-approval draft is not written to the task note.
 
-Turn-N format:
-```markdown
-### Turn-N
-input:: pending
-agent_instruction::
-
-<rough plan from Step 4>
-
-> Approve, modify, or reject. If you have extra instructions for the next agent session, write them in `agent_instruction::` before changing `input:: pending` to `input:: done`.
-```
-
-bd sync: issue a `bd note` immediately after writing Turn-N (per Turn-N / bd Sync Invariant).
+On approval in a desk session, the desk root session writes the approved plan into 設計 > 設計方針・構成 (link a derived note if the plan is too long to keep the head readable), derives Milestones from the phases / commit order, marks settled 論点 `decided`, and runs its Event Gate.
 
 ### Step 6: Handoff
 
-When the human sets `input:: done`:
-- desk context: transition status to `in_progress` and hand off to executor spawn.
+- desk context: the desk session sets `status: in_progress` (if still `not_started`) and continues to execution.
 - standalone context: begin implementation following the approved plan.
 
 ## Standalone Invocation

@@ -38,7 +38,7 @@ Determine the mode from arguments or user instructions.
 
 - Filename: `{Topic Name}.md`
 - Location: vault root
-- First line: Inherit `#prj-*` tags from the parent task note (when in a desk-live session). Omit if no such tags exist.
+- First line: Inherit `#prj-*` tags from the parent task note (when in a desk session). Omit if no such tags exist.
 
 Structure template:
 
@@ -188,10 +188,10 @@ Writing rules for discuss mode:
   > [[{Note Name}]]
   ```
 - Placement: Near where the topic was mentioned in the original conversation.
-- During a desk-live session, append the callout inside the relevant Turn-N of the task note.
+- During a desk session, the desk session appends the callout inside the Turn-N that records the derived note's creation.
 - Follow the `$obsidian` skill's Linking Policy; avoid excessive links.
 
 ### 6. Integration with Existing Skills
 
 - Comply with the `$obsidian` skill's Linking Policy when creating notes.
-- When invoked during a desk-live session, Turn-N recording is the caller's (desk-live) responsibility. This skill only handles note creation.
+- When invoked during a desk session, Turn-N recording is the caller's (desk) responsibility. This skill only handles note creation.

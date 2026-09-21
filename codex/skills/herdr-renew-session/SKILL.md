@@ -11,7 +11,7 @@ description: >-
   inherits the context. Do NOT fire on context pressure alone; summarizing in place
   is a different job. Requires HERDR_ENV=1, an active desk task note with a bd
   issue, and that this session is the orchestrator. Composes the herdr, herdr-impl,
-  and desk-live skills.
+  and desk skills.
 ---
 
 # herdr-renew-session
@@ -30,7 +30,7 @@ while the predecessor is still alive to fix it.
 2. **A human asked for this explicitly.** Never self-trigger from context pressure —
    compacting in place is the cheaper answer, and this procedure discards a session
    and closes a pane. If you merely *observe* pressure, say so and wait.
-3. **An active desk task note + its bd issue.** This skill is scoped to desk-live
+3. **An active desk task note + its bd issue.** This skill is scoped to desk
    orchestration; the note and issue ARE the durable store. If there is none, stop and
    say the scope does not apply.
 4. **This session is the orchestrator and already has an agent name** (`herdr agent get
@@ -61,8 +61,8 @@ while the predecessor is still alive to fix it.
 - `herdr-impl` — **`## Agent naming (session-unique)`** and **`## Herdr I/O cautions`**.
   Submission, completion detection, prompt-via-file, and naming rules live there.
   Follow them; do not restate them here.
-- `desk-live` / `desk` — Turn-N, frontmatter fields, and the cold-resume contract the
-  successor boots from.
+- `desk` — the task note's head sections (現在地 / 設計 / Milestones / 論点), Event Log,
+  and frontmatter that the successor boots from.
 
 ## Protocol
 
@@ -93,8 +93,8 @@ preconditions (container runtime up? cloud SSO still valid?).
 
 ### 2. Write the durable handoff (two layers)
 
-**Layer 1 — revise the task note's cold-resume material.** Do not append; **correct
-it**. Stale premises are the main failure mode: a successor that reads "sandbox
+**Layer 1 — revise the task note's head sections (現在地 / 設計 / 論点).** Do not
+append; **correct them**. Stale premises are the main failure mode: a successor that reads "sandbox
 unverified / worktree not created" when both are long done takes a wrong first action.
 Re-read what the note currently claims and fix every premise that has moved.
 
@@ -115,11 +115,11 @@ sections, in this order:
 
 Ensure `<worktree>/.local/.gitignore` is `*` so none of this is committable.
 
-### 3. Flip the task note frontmatter to a handover state
+### 3. Put the task note's 現在地 into a handover state
 
-Per `desk-live`: `runtime_status`, `runtime_subagent_role`, `runtime_heartbeat_at`,
-`current_status_summary`. **Lead `current_status_summary` with the policy reversal and
-the handoff path** — it is the first thing a cold resume reads.
+Per `desk`: refresh 現在地 and `current_status_summary` (desk has no `runtime_*` fields).
+**Lead `current_status_summary` and Next Action (agent) with the policy reversal and the
+handoff path** — they are the first thing a cold resume reads.
 
 ### 4. Spawn the successor beside yourself
 
@@ -184,9 +184,9 @@ can issue them afterwards:
    and cannot confirm the name**.
 5. Resume the task.
 
-Then close out as the outgoing session: final Turn-N in the task note, a matching bd
-comment (+ `bd dolt commit`), and a report naming the successor's pane id and temporary
-name. Exit last — submit `/exit` as a prompt after `esc`; **`ctrl+d` does not exit
+Then close out as the outgoing session: record the handover as a desk event (Turn-N, head
+update, and bd sync per desk's Event Gate), and a report naming the successor's pane id and
+temporary name. Exit last — submit `/exit` as a prompt after `esc`; **`ctrl+d` does not exit
 Claude Code** and can resume the turn instead.
 
 ### 8. Successor: take over

@@ -10,7 +10,7 @@ description: >-
   worker), then leave a merge-ready branch for a human to open and merge the PR.
   Worker runs claude sonnet5; reviewer runs codex. Requires HERDR_ENV=1 and an
   existing canonical bd issue that already contains a handoff plan. Composes the
-  herdr, wt, herdr-review-loop, hunk-present, and desk-live skills. Use when asked
+  herdr, wt, herdr-review-loop, hunk-present, and desk skills. Use when asked
   to orchestrate implementation with worker and reviewer panes, delegate a bd
   issue to a Herdr worker and review-loop it to convergence, bridge worker and
   reviewer as an architect, run implement-then-review across panes, or invoke
@@ -37,7 +37,8 @@ review directly; you broker a `worker` pane (implements) and a `reviewer` pane
   desk task note. The `worker` and `reviewer` agents MUST NOT write to bd or task
   notes — their delegation prompts explicitly forbid it. Any 申し送り/handoff from
   worker or reviewer is captured by the orchestrator and recorded as a bd issue
-  **COMMENT** (never in the description/body).
+  **COMMENT** (never in the description/body). In a desk session, record it via
+  desk's Event Gate when it is an event, else as a `bd note`.
 - **bd-id hygiene.** The bd issue id appears ONLY in the branch/worktree name.
   Never in code, commit messages, or PR body. Forbid it in delegation prompts.
 - **human-gates** (orchestrator never performs these): SSO browser auth
@@ -58,7 +59,7 @@ review directly; you broker a `worker` pane (implements) and a `reviewer` pane
 - `herdr-review-loop` — reviewer pane + branch-diff review loop (Step 5–6).
 - `hunk-present` — human review of the branch diff (Step 7): reading map in a dedicated Herdr tab, hunk comment Q&A, verdict.
 - `beads` — bd graph writes when the repo uses a bd-backed issue DB.
-- `desk-live` — Turn-N logging when a desk task note is active (optional; see Logging).
+- `desk` — event recording in the task note when one is active (optional; see Logging).
 
 `mesh` is the in-session sub-agent orchestrator; `herdr-impl` is its Herdr-pane
 counterpart. Reference it for the loop pattern; do not reimplement it.
@@ -226,11 +227,15 @@ Every delegation prompt MUST:
 
 - Write a bd issue COMMENT at each milestone (worktree ready, delegation, worker
   done + verification, each review cycle, HIGH-clear, handoff). Never edit the
-  issue description/body for progress.
+  issue description/body for progress. In a desk session, write per-cycle and
+  per-commit detail as `bd note` instead; desk's Event Gate owns the comments
+  (one per Turn).
 - Do bd writes via the `beads` skill. durability = local `bd dolt commit`
   (push may be a no-op).
-- desk-live Turn-N is OPTIONAL: write Turns only when a desk task note is active.
-  Otherwise run standalone with bd-only logging.
+- desk recording is OPTIONAL: when a desk task note is active, the orchestrator
+  records milestone-level events (milestone transition, PR, review verdict,
+  blocker, design deviation) per desk's Event Gate; per-cycle detail stays in bd
+  notes. Otherwise run standalone with bd-only logging.
 
 ## Failure / timeout handling
 

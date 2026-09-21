@@ -170,7 +170,8 @@ that relay loop when an `apply`/build/test step fails.
 
 ## Logging (orchestrator only)
 
-- When a bd issue / desk task note is active, record a COMMENT (and a desk
-  Turn-N if in a desk-live session) at: investigation delegated, findings +
-  triage, human-approved plan, worker fix verified, hand-off. Never edit an
+- When a bd issue / desk task note is active, record a COMMENT at: investigation
+  delegated, findings + triage, human-approved plan, worker fix verified,
+  hand-off. Record a desk Turn-N (per desk's Event Gate) only for the ones that
+  are events: blocker occurred/resolved, human-approved plan, fix verified. Never edit an
   issue description for progress. Skip silently when no bd issue exists.

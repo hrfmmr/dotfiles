@@ -48,14 +48,14 @@ there are **multiple** critique panes (one per lane).
 
 - `test "${HERDR_ENV:-}" = 1`. If it fails, say you are not in Herdr and stop;
   tell the caller to use `$critique` (in-session) instead.
-- A drafted artifact exists to review (a rough plan Turn, a task-note Plan /
-  Snapshot section, or a design doc). If none exists, stop — there is nothing to
+- A drafted artifact exists to review (a draft rough plan, a task-note 設計
+  section, or a design doc). If none exists, stop — there is nothing to
   critique yet (run `$rough-plan` / `$grill-me` first).
 
 ## Inputs (parameterize; ask only if genuinely ambiguous)
 
-- `artifact` — what to review. Default: the current rough plan (task-note Plan
-  section or the latest plan Turn-N). May be a file path or inline text.
+- `artifact` — what to review. Default: the current rough plan (task-note 設計
+  section, or the draft plan under review). May be a file path or inline text.
 - `lanes` — the review lanes. Default: derive 2-4 lanes from the artifact via
   the `critique` lane-derivation rules (one expert perspective per major domain).
   Present the lanes before spawning panes.

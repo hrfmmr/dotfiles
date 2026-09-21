@@ -158,7 +158,7 @@ When invoked as a derived note from a desk task:
 
 1. **Tag inheritance**: Copy all `#prj-*` tags from the parent task note's first line to the derived note's first line.
 2. **prior/related link**: Add a wikilink to the parent task note in `prior:`.
-3. **Turn-N callout**: Append a derived-note callout in the parent's Turn-N:
+3. **Turn-N callout**: Hand the derived-note callout to the desk session, which appends it in the parent's Turn-N that records the derived note's creation (do not write the task note yourself):
    ```markdown
    > [!note] 派生ノート
    > [[derived-note-name]]
