@@ -120,17 +120,17 @@ Exact template: `references/note-templates.md`.
 
 ## Event Gate
 
-An event is a change a human re-reading the note later would need in order to know where things stand.
+An event is a before/after in the actual design, plan, or implementation — or a correction to what is known about their state (a gap, defect, or inconsistency surfaced) — not a change to how the note presents them. Test it by asking: what did we believe about the design/implementation before this, and what do we believe now? Same belief, different wording → not an event.
 
 **Events** (Turn required):
-- 論点 added, decided, superseded, or dropped (or its options materially changed).
-- 設計 changed substantively.
-- Milestone status transition, or a row added/removed (scope change).
-- Blocker or unexpected failure occurred/resolved. Errors during task execution are always events.
+- 論点 added, decided, superseded, or dropped (or its options materially changed) — including discovering that open questions exist where the note previously (and wrongly) recorded none.
+- 設計 changed substantively: the approach or decision itself changed. Re-presenting an unchanged design — e.g. turning prose into a diagram — is not substantive on its own.
+- Milestone status transition, or a row added/removed because the actual scope of work changed (not because the note only just started tracking work that already existed).
+- Blocker or unexpected failure occurred/resolved, or a defect surfaced in an already-approved artifact (design doc, plan). Errors during task execution are always events.
 - Artifact or external event: PR created/merged, derived note, branch task note, human review verdict.
 - Status change to `in_review` or `done`, or back to `in_progress`. The initial `not_started` → `in_progress` flip rides with whichever event triggers it and gets no Turn of its own.
 
-**Non-events** (write nothing): Q&A or investigation that settled nothing; session mechanics, protocol semantics, skill invocation chatter; a 現在地-only refresh; for impl, per-commit and per-review-cycle detail (bd note only — see Checkpoint).
+**Non-events** (write nothing): Q&A or investigation that settled nothing; session mechanics, protocol semantics, skill invocation chatter; restructuring, reformatting, or migrating the note itself with no change to the underlying design/implementation belief; a 現在地-only refresh; for impl, per-commit and per-review-cycle detail (bd note only — see Checkpoint).
 
 ### Gate procedure
 
@@ -160,13 +160,18 @@ If no event occurred, write nothing. Refresh 現在地 and `current_status_summa
 ### Turn format
 
 ```markdown
-### Turn-N <yyyy-MM-dd HH:mm JST> — <event title>
-- <what happened>
-  - <nested detail: finding, pointer to rationale, identifiers (bead IDs, commit SHAs, paths)>
+### Turn-N <yyyy-MM-dd HH:mm JST> — <the before/after, in one line>
+- <the before/after that made this an event>
+  - <finding 1 — concretely what it is, and what it means if left unaddressed>
+  - <finding 2 — same>
 - Updated: D-2 → decided; M3 → done; status → in_review; 設計 > 設計方針・構成
 ```
 
-- The *why* lives in 論点 (判断 / 根拠); a Turn states what changed and points there.
+- **Title the before/after, not the editing action.** `設計に、解決していない論点が8件あると分かった`, not `note を書き直した` or `設計に図を足した` — the note's own editing is never the subject.
+- **Plain language.** Write so a cold reader gets it on the first pass; do not compress into jargon-dense noun phrases.
+- **One nested bullet per finding, each concrete.** State what it specifically is and the consequence of leaving it unaddressed — not a bare label or D-id. Don't fear the Turn growing to one bullet per 論点 touched; a reader who has to re-derive the consequence from D-XXX is exactly the failure this format exists to prevent.
+- **Detail lives in 論点 (問い / 判断 / 根拠) or the artifact**; the Turn carries the gist and points there — line numbers, full enumerations, and rationale belong in the 論点, not the Turn.
+- **Omit delegation and tooling mechanics** — which skill ran, which sub-agent or role executed it, how the work was routed. State what changed for the design/implementation, not how the work was organized, unless the delegation itself is the blocker.
 - Never record raw Q&A, transcripts, or tool-call chatter.
 - Turns are append-only and numbered monotonically. Fix a mistake with a new Turn.
 - Append artifact callouts at the end of the Turn (formats in `references/note-templates.md`); one per artifact.

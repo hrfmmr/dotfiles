@@ -61,11 +61,14 @@ decision_status:: open
 ## Turn-N format
 
 ```markdown
-### Turn-N <yyyy-MM-dd HH:mm JST> — <event title>
-- <what happened>
-  - <nested detail: finding, pointer to rationale, identifiers (bead IDs, commit SHAs, paths)>
+### Turn-N <yyyy-MM-dd HH:mm JST> — <the before/after, not the editing action>
+- <the before/after that made this an event>
+  - <finding 1 — concretely what it is, and the consequence if left unaddressed>
+  - <finding 2 — same>
 - Updated: D-2 → decided; M3 → done; status → in_review; 設計 > 設計方針・構成
 ```
+
+Writing rules (plain language, one concrete finding per bullet, omit delegation mechanics, defer detail to 論点): see `SKILL.md` `### Turn format`.
 
 ## Turn-N Artifact Callouts
 
