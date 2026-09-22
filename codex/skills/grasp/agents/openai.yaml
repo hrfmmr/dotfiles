@@ -1,0 +1,3 @@
+interface:
+  display_name: "Grasp"
+  short_description: "Guide a reviewer to understand a large design with a map, dialogue, diagrams, and coverage gates"
