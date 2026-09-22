@@ -105,7 +105,7 @@ Exact template: `references/note-templates.md`.
 | section | holds | update style |
 |---------|-------|--------------|
 | `## 現在地` | Derived view: 位置 (Milestone-based, e.g. `M3/5 <name>`), 未決の論点 (D-ids), 残TODO (count + next one), Next Action (human), Next Action (agent), as of (`Turn-N`, the last Turn this view reflects). | Rewrite in place. Refresh with every head update. |
-| `## 設計` | Fixed sub-sections: 問題定義 (one line) / 成功基準 / 前提 (Facts) / 設計方針・構成. | Rewrite in place. |
+| `## 設計` | Fixed sub-sections: 問題定義 (one line) / 成功基準 / 前提 (Facts) / 設計方針・構成 (opens with a whole-picture diagram; see Design Briefing). | Rewrite in place. |
 | `## Milestones` | Dataview table (`bd_issue::`, `summary::`, `milestone_status::` = open \| in_progress \| done \| skipped). | Update rows in place; keep each row's bd child issue consistent (`done` → `bd close`; `skipped` → `bd close --reason skipped`). Rows without a bd issue (adhoc) carry `—`. |
 | `## 論点` | One `#### D-n <topic>` sub-section per substantial decision topic (see below). | Edit in place; overturn by supersede. |
 | `## Event Log` | `### Turn-N` entries, newest last. | Append only. |
@@ -247,6 +247,20 @@ Reconciliation for missed or half-written events.
 - Plan approval is a native-ask decision recorded as an event.
 - Once Milestones are derived, create a bd child issue per row (`bd create --parent <epic-id>` via `$beads`) and fill `bd_issue::`.
 - If the approved plan is too long to keep the head readable, put it in a derived note and link it from 設計方針・構成.
+- Present plans and design changes per Design Briefing.
+
+## Design Briefing
+
+When briefing the human on a design — presenting a plan, explaining a design change, or writing 設計 > 設計方針・構成 — show the shape with diagrams as well as prose. Prose alone leaves the reader to assemble the picture in their head. (`$rough-plan` already requires Big Picture diagrams; apply the same care to every design explanation.)
+
+- **Whole picture first**: open with a minimal structure diagram of what is being built (a few actors or stages) before any detail. A reader who cannot recall the system finds the detail unreadable without it.
+- **A diagram where the explanation is dynamic**: when an explanation covers structure, data flow, time order (who calls whom), state transitions, comparison, or branching, place a diagram right after it, not in a separate appendix. One diagram per topic; do not pack several topics into one. Replace text timelines (`t=100 …`) with a sequence diagram.
+- **Choose by the question**: 構成図 for structure; データフロー or シーケンス図 for flow and time order; 状態遷移図 for states; side-by-side subgraphs for comparison; a flowchart for branching. An adopt/reject choice table reads better as a table.
+- **Static shapes as concrete examples**: show a schema or sample record before using it. Diagrams cover dynamic relations; examples cover static form.
+- **Source and captions**: draw from the source (plan, issue, code) and add a one-line caption citing it. State when values are illustrative and keep them consistent with the design's other numbers. Do not draw a link the source does not state — a diagram fixes an error in place. Label sketches of unbuilt parts as sketches (見取り図).
+- **Notation and check**: use mermaid (Obsidian renders it). Render every diagram with `@mermaid-js/mermaid-cli` and look at the image — syntax that parses can still overflow the frame, scatter the layout, or silently drop text (see the `#` trap below). Keep each diagram to roughly 5–12 nodes with short labels; keep long identifiers, code, and prose out of nodes.
+- **Layout traps**: no long identifiers inside decision diamonds (use edge labels); to place two or more groups side by side, use `flowchart TB` with `direction LR` inside each subgraph and `~~~` between groups; no orphan nodes; no `:` or `;` in sequence-diagram messages; **no `#` in any mermaid text** (`GEN#n` shows as `GEN` — everything after the `#` is dropped, including a second `<br/>` line, and no syntax error is raised).
+- **In the note**: 設計方針・構成 holds the whole-picture diagram and the few diagrams that carry the design. When many are needed, keep them in a derived note linked from 設計方針・構成 so the head stays scannable.
 
 ## Execution
 

@@ -30,7 +30,7 @@
 <!-- verified facts, constraints, links -->
 
 ### 設計方針・構成
-<!-- current design; rewrite in place as it changes -->
+<!-- whole-picture diagram (mermaid) first, then the current design; rewrite in place as it changes -->
 
 ## Milestones
 
