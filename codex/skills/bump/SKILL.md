@@ -195,11 +195,11 @@ When `bump_mode:: auto`, bias toward `branch` if there is any real risk of pollu
 
 For `inline`:
 
-1. **Remove** the `.o0:` line (or the entire line containing the `.o0:` token).
-2. Insert a callout in its place:
+1. **Replace** the `.o0:` line, keeping the human's original ask text — strip only the `.o0:` token itself, never the `request_text` that follows it.
+2. Fold that ask text into the callout so it stays visible in the note:
 
 ```markdown
-> [!note] AI Follow-up
+> [!note] AI Follow-up: <request_text>
 > <concise explanation>
 ```
 
@@ -208,16 +208,16 @@ For `inline`:
 For `branch`:
 
 1. Create a new note in the vault root (see Derived Note Shape below).
-2. **Remove** the `.o0:` line and insert a wikilink in its place:
+2. **Replace** the `.o0:` line with a wikilink that keeps the original ask text visible:
 
 ```markdown
-→ [[Derived Note Title]]
+→ [[Derived Note Title]] — <request_text>
 ```
 
    If the `.o0:` was inside a list item, preserve the list structure:
 
 ```markdown
-    - → [[Derived Note Title]]
+    - → [[Derived Note Title]] — <request_text>
 ```
 
 3. The derived note records the source note, target excerpt, and request text (see Derived Note Shape).
@@ -226,12 +226,12 @@ In both cases, update the queue entry in `.bump/queue/` with `status: done`, `re
 
 ### 4. Close The Loop
 
-- Never leave a handled `.o0:` line in the note — always replace it with the AI response.
-- The human's original request text is preserved in the queue entry and (for branch) in the derived note.
+- Never leave a handled `.o0:` line in the note — always replace it with the AI response, and never drop the human's original ask text in that replacement.
+- The human's original request text is preserved in the note itself (folded into the callout title or wikilink line), in the queue entry, and (for branch) in the derived note.
 - If you create a derived note, ensure the source note links to it and the derived note links back to the source note.
-- If the request cannot be completed, replace the `.o0:` line with a blocked callout:
+- If the request cannot be completed, replace the `.o0:` line with a blocked callout that still names the original ask:
   ```markdown
-  > [!warning] Bump blocked
+  > [!warning] Bump blocked: <request_text>
   > <reason>
   ```
   and set queue status to `blocked`.
@@ -298,6 +298,7 @@ If the source note already carries obvious `#prj-*` or other project-scoping tag
 - Do not treat ordinary `==highlight==` emphasis as a bump request unless `.o0:` is present.
 - **Never write `bump::*` inline fields into the note.** All metadata belongs in `.bump/queue/`.
 - Do not leave `.o0:` in the note after processing — always replace it with the AI response.
+- Do not crush the human's original ask text when replacing the `.o0:` line — keep it visible in the note (callout title for inline, wikilink suffix for branch), not only in the queue entry.
 - Do not dump long answers inline when a branch note is cleaner.
 - Do not overwrite human prose outside the `.o0:` line and the immediately adjacent AI output.
 - Do not create more than one derived note for the same `.o0:` request in a single pass.
