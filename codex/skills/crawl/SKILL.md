@@ -49,6 +49,7 @@ The default is not to create a separate note for every source. Prefer to write t
    - `要するに`
 6. Keep labels short and content-bearing. Avoid abstract placeholders or mechanical headings that make the structure harder to scan.
 7. When the article is primarily valuable as a checklist, response guide, or technical mechanism note, let the summary block reflect that directly even if some labels differ from the default starting shape.
+8. Before finalizing, connect the summary to the vault by applying the concept-linking rules in Linking Rules to the primary concepts the source covers.
 
 ## Input Modes
 
@@ -222,7 +223,10 @@ Append example for an existing note:
 
 - If an existing note name is available, match that exact Wikilink target.
 - In article notes, link only the most important concepts with `[[...]]`.
-- When updating a daily note, add only one article-note Wikilink per topic entry. Do not hang concept notes beneath it.
+- When updating a daily note, add only one article-note Wikilink per topic entry. Do not hang concept notes beneath it as child bullets; inline concept links inside the summary callout follow the concept-linking rules below.
+- Concept linking in summaries: identify the 1-3 concepts, technologies, or products that are central subjects of the source (not passing mentions), and look each one up in the vault before writing the summary. Check for an exact filename match first, then aliases or close title variants.
+- Wikilink the first mention of each matched concept inside the summary block body, using the exact existing note name. Do not put Wikilinks in the callout title line.
+- Link only to notes that already exist. If no note matches, leave the term as plain text; do not create a note and do not leave a dangling link.
 - Do not turn every noun in a paragraph into a Wikilink.
 - Never turn code, CLI commands, URLs, dates, or issue IDs into Wikilinks.
 
