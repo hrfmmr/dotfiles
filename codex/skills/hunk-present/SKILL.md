@@ -1,6 +1,6 @@
 ---
 name: hunk-present
-description: Present a locally agent-generated changeset to a human in Hunk and get their approval. Builds a dependency-ordered reading map as an `--agent-context` sidecar JSON (changeset summary, per-file roles, numbered `1.)` line annotations), hosts the TUI for the user in a dedicated Herdr tab named hunk-PR番号 (the default; falls back to handing over the launch command when Herdr is unavailable), then answers their questions as inline Hunk comments, re-syncs the session after a delegated fix lands (sidecar anchors, reload, in-place replies), and records the approval verdict. Explanation and approval, not critique; never reads or drives the TUI itself. Use when the user says "/hunk-present", wants a change presented or explained in Hunk, wants a reading map or walkthrough of agent-written changes, or wants human sign-off on a local diff before moving on. Trigger on hunk で提示, hunk で解説, 変更の読み方を示して, human approval, 承認をもらう, agent-context sidecar, reading map, herdr pane で提示.
+description: Present a locally agent-generated changeset to a human in Hunk and get their approval. Builds a dependency-ordered reading map as an `--agent-context` sidecar JSON (changeset summary, per-file roles, numbered `1.)` line annotations), hosts the TUI for the user in a dedicated Herdr tab named hunk-PR番号 (the default; falls back to handing over the launch command when Herdr is unavailable), watches for new human comments, then answers their questions as inline Hunk comments, re-syncs the session after a delegated fix lands (sidecar anchors, reload, in-place replies), and records the approval verdict. Explanation and approval, not critique; never reads or drives the TUI itself. Use when the user says "/hunk-present", wants a change presented or explained in Hunk, wants a reading map or walkthrough of agent-written changes, or wants human sign-off on a local diff before moving on. Trigger on hunk で提示, hunk で解説, 変更の読み方を示して, human approval, 承認をもらう, agent-context sidecar, reading map, herdr pane で提示.
 ---
 
 # hunk-present
@@ -100,6 +100,48 @@ When `HERDR_ENV=1`, host the presentation for the user instead of making them la
 2. Name **both** the tab and its pane `hunk-<PR番号|topic>` (`herdr tab rename` / `herdr pane rename`). The user finds it in the sidebar by that name; keep the convention stable across presentations.
 3. Run the launch command there: `herdr pane run <pane> "cd <worktree> && EDITOR=nvim hunk diff <target> --agent-context .local/hunk/agent-context.json --agent-notes"`. Always launch `hunk` with `EDITOR=nvim` so in-TUI edit actions open nvim (the env is fixed at launch; it cannot be added later via `hunk session ...`). Do not steal focus — tell the user the tab name instead.
 4. From here the session is live: interact only via `hunk session ...` (comments, reload). Never read or drive the TUI pane itself.
+5. Start the comment watcher (next section). This is the default, not an option: without it a human comment sits unanswered until the human also says so in chat.
+
+#### Comment watcher (default)
+
+`scripts/watch-user-comments.sh` polls `hunk session comment list --type user --json` every 2s and hands each new human comment to the agent that is presenting. It is a plain script, not an LLM agent: the presenter already holds the context, so it is the one that answers.
+
+- Delivered note ids go in a state file (one per repo, or per `--session <id>`). On the first run, comments that already exist count as seen. A restart reuses the state file, so comments made while no watcher was running still arrive. `--include-existing` clears the state and delivers everything again. Only one watcher runs per state file.
+- At startup it retries for about 30s, because the TUI may not have registered with the daemon yet. If several sessions match the repo, it stops and asks for `--session <id>` (see `hunk session list`).
+- A failed delivery, e.g. the presenter is `blocked` on a permission dialog, is retried with backoff (up to 30s apart). Nothing is marked delivered until it succeeds. After about 20 minutes of failures it gives up; restart it to resume from the state file.
+- When the session is gone, it tells the target and exits.
+
+Pick where it runs by the situation, in this order. Expand `$HERDR_PANE_ID` in the presenter's own shell (double quotes, or paste the literal id): inside the watch pane it would name the watch pane itself, and delivery would never succeed.
+
+| Situation | Where |
+|---|---|
+| `HERDR_ENV=1` (normal) | a small pane split below the TUI in the `hunk-<PR番号>` tab, named `hunk-<PR番号>-watch` |
+| `HERDR_ENV=1` but the split fails (tab too small, etc.) | a background process |
+| no Herdr, Claude Code | the harness `Monitor` tool |
+| no Herdr, other harness | none: there is no push channel, so tell the user to say in chat when they have commented |
+
+```bash
+SCRIPT=<skill-dir>/scripts/watch-user-comments.sh
+ARGS="--repo <worktree> --target $HERDR_PANE_ID --label hunk-<PR番号>"   # expands here, in the presenter
+
+# Pane (default). The TUI keeps 90%; the split does not take focus.
+WATCH=$(herdr pane split <tui-pane> --direction down --ratio 0.9 --cwd <worktree> \
+        | python3 -c 'import json,sys; print(json.load(sys.stdin)["result"]["pane"]["pane_id"])')
+herdr pane rename "$WATCH" hunk-<PR番号>-watch
+herdr pane run "$WATCH" "$SCRIPT $ARGS"
+
+# Background, only when the split fails. Keep the PID for step 6.
+# Spell the arguments out: zsh does not word-split an unquoted $ARGS.
+nohup "$SCRIPT" --repo <worktree> --target "$HERDR_PANE_ID" --label hunk-<PR番号> \
+  > <scratch>/hunk-watch.log 2>&1 & echo $! ; disown
+```
+
+For `Monitor` (no Herdr, Claude Code), run the script **without** `--target`: it prints one line per comment, and `Monitor` turns each line into a notification. Pass `timeout_ms: 1800000` (the default is 5 minutes) and re-arm it when it expires while the presentation is open. Re-arming loses nothing, because the state file carries over.
+
+- `--target` is the presenter's own pane id, not its agent name. Agent names can be lost (`herdr agent list` shows `None`); pane ids do not change.
+- The pane keeps the watcher visible and stoppable, and it ends with the tab. Use the background process only when the split is not possible.
+- The message arrives in the presenter as a user turn prefixed `[hunk-<PR番号> watcher]`; see 5.
+- **Known risk**: `herdr agent prompt` types the text and presses Enter without clearing the input box. If the human has a half-typed message in the presenter pane, the two merge and go out as one turn. This is likely when the presenter is also the agent the human chats with (e.g. a `$herdr-impl` orchestrator). Tell the human about it when you start the watcher.
 
 #### Fix worker spawn contract
 
@@ -109,6 +151,7 @@ When the presentation runs inside a `$herdr-impl` orchestration, **reuse its imp
 - **pane topology**: the TUI pane id and tab id (`hunk-<PR番号>`), and that the TUI pane is read/drive-forbidden
 - **the user comments** to address: either verbatim, or the instruction to run `hunk session comment list --repo <worktree> --type user` itself
 - **who runs 5b**: default is the worker — after push it updates the sidecar anchors, reloads (`hunk session reload --repo <worktree> -- diff <same target> --agent-context .local/hunk/agent-context.json --agent-notes`), and replies on the original comment lines with the commit hash. If the commander keeps 5b, say so explicitly in the brief.
+- **watcher target**: the comment watcher keeps notifying the presenter, which relays new comments to the worker. To have the worker receive them directly instead, restart the watcher with `--target <worker pane>` and say so in the brief.
 
 ### 4b. Fallback: hand over the launch command (no Herdr)
 
@@ -121,10 +164,11 @@ EDITOR=nvim hunk diff --agent-context .local/hunk/agent-context.json
 - Add `--agent-notes` when the notes must be visible on open.
 - Say in one or two lines what the map covers and where to start reading.
 - If a session is already live for this repo (`hunk session list`), do not ask for a relaunch: inject the same notes with one `hunk session comment apply --repo . --stdin` batch, or `hunk session reload --repo . -- diff` first when the loaded content is wrong.
+- Once the user's session is live, start the comment watcher per the no-Herdr rows of the table in 4.
 
 ### 5. Answer questions on Hunk
 
-The main interaction is the human asking and this skill answering, and both sides stay in Hunk:
+The main interaction is the human asking and this skill answering, and both sides stay in Hunk. A `[hunk-<PR番号> watcher]` message is the trigger: it carries the file, line, and a body cut at 300 characters, so re-read the full comments with `comment list` before answering.
 
 ```bash
 hunk session comment list --repo . --type user   # read the human's questions
@@ -155,7 +199,9 @@ Close out with one explicit line:
 
 - **approved** — state that the human approved, and what they approved (target + scope). Stop; the next step is theirs to ask for.
 - **changes requested** — list the requested changes verbatim, with file and line, as the handoff. Do not start fixing in this skill.
-- **no response** — say the presentation is pending review. Do not re-present or poll.
+- **no response** — say the presentation is pending review. Do not re-present or poll; leave the comment watcher running, since it is what brings the next comment in. A watcher message that arrives later, while you are on other work, resumes step 5 for that comment.
+
+On **approved** or **changes requested**, stop the comment watcher: `herdr pane close <watch-pane>`, `kill <PID>` for the background process, or stop the `Monitor` task.
 
 ## Common errors
 
