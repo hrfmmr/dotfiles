@@ -1,0 +1,3 @@
+interface:
+  display_name: "Gdrive Read"
+  short_description: "Read Google Docs/Sheets and search Drive, read-only via gcloud"
