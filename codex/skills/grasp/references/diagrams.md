@@ -11,9 +11,9 @@ Showing only static shapes leaves the reader to draw the relations in their head
 
 | Layer | Where | Role |
 |---|---|---|
-| Overall structure diagram | first entry of the map's Diagrams section | order of nodes and their dependencies at a glance |
-| Node summary diagram | map's Diagrams section, one per node, linked from each node | structure or flow of the node in brief |
-| Per-point diagram | in the dialogue, right after the teacher's answer, outside the callout | the relation being discussed right now |
+| Overall structure diagram | story section part 4, after the reading order | order of nodes and their dependencies at a glance |
+| Node summary diagram | appendix, one per node, linked from story section part 4 | structure or flow of the node in brief |
+| Per-point diagram | in the story section (part 1 flow, part 2 sequences, one per trouble that discusses flow, comparison, or branching) and in the dialogue right after the teacher's answer, outside the callout | the relation being discussed right now |
 
 The layers serve different jobs; keep all three unless the artifact is small. Duplicating a summary diagram inline is allowed but is a known open question.
 
@@ -41,7 +41,7 @@ The layers serve different jobs; keep all three unless the artifact is small. Du
 
 ## Placement
 
-Right after the teacher's answer, outside the callout, with a blank line before and a `>` caption after. Put the concrete static shape (JSON, table) before the diagram when both apply.
+Right after the teacher's answer, outside the callout, with a blank line before and a `>` caption after. In the story section, right after the paragraph or table it illustrates, with the same caption rule. Put the concrete static shape (JSON, table) before the diagram when both apply.
 
 ## Verification (real rendering)
 

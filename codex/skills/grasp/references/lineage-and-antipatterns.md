@@ -1,6 +1,6 @@
 # Lineage and anti-patterns
 
-Why each rule exists. Source of truth: this skill's own design log (a decision log with D-numbers, plus an experiment log), kept outside this repository. D-numbers below refer to that decision log. Update this file when a decision changes a rule.
+Why each rule exists. Source of truth: this skill's own design log (a decision log with D-numbers, plus an experiment log), kept outside this repository. D-numbers below refer to that decision log. Update this file when a decision changes a rule. Rows added after that log stopped carry a date in the D column instead of a D-number.
 
 ## Lineage: symptom, trigger, cause, rule
 
@@ -11,17 +11,20 @@ Why each rule exists. Source of truth: this skill's own design log (a decision l
 | 3 | Hooks on every question are noise | review of D3 | no density rule | judge by the five lenses; 0 to 1 per topic | D4 |
 | 4 | Reading through without hooks is not understanding | review of D3 | smooth explanation creates false understanding | attainment check once after reading, mandatory | D5 |
 | 5 | Diagnosed "amount" as the problem; wrong | user: "the problem is local 'I don't get it' while reading top down" | misread problem | give local breaks a way back (hooks); current-position display is a separate remedy | D6, D7 |
-| 6 | Entering the causal story hides the system's shape | user: "unclear overall design makes topic 2 onward hard" | overestimated the reader's memory | entry node alone shows a low-context overall picture | D8 |
-| 7 | Flat map hides why each node is there | user: "cost of bridging conclusions and content is high" | chained versus parallel not shown | nested map (unpack) | D9 |
+| 6 | Entering the causal story hides the system's shape | user: "unclear overall design makes topic 2 onward hard" | overestimated the reader's memory | entry node alone shows a low-context overall picture (superseded by 17: story section part 1) | D8 |
+| 7 | Flat map hides why each node is there | user: "cost of bridging conclusions and content is high" | chained versus parallel not shown | nested map (unpack) (superseded by 17: parts table and reading order) | D9 |
 | 8 | Core plot handed to a hook; a prerequisites node relapsed into D1 | user: "the root of the design should not be skipped" | wrong hook criterion | hooks for technical prerequisites only; no prerequisites node | D10 |
-| 9 | Map too compressed to digest on first sight | user: "no information gets in" | compression obvious to the writer | a plain-language gloss under each node | D11 |
+| 9 | Map too compressed to digest on first sight | user: "no information gets in" | compression obvious to the writer | a plain-language gloss under each node (superseded by 17: story section) | D11 |
 | 10 | Map's dependency claim contradicted the text | found while writing | re-reading cannot catch memory versus text mismatches | verify dependencies by grepping shared identifiers | D12 |
 | 11 | Upstream decisions such as the entry choice were missing from the map | user: "there must have been issues leading to this structure" | branch points taken from critique-cycle notes; overall picture placed as a premise | decision inventory, coverage check, out-of-scope ledger | D13 |
 | 12 | No procedure checked coverage | user: "self-review for hidden premises" | checks only looked at internal consistency | coverage review as a mandatory gate | D14 |
-| 13 | Map is text only; no picture forms | user: "add diagrams"; later "understanding of the intro became much easier" | only words to show shape | map diagrams (overall and per node) | D15, D16 |
+| 13 | Map is text only; no picture forms | user: "add diagrams"; later "understanding of the intro became much easier" | only words to show shape | map diagrams (overall and per node) (superseded by 17: overall diagram in part 4, node diagrams in the appendix) | D15, D16 |
 | 14 | Table definitions and JSON never shown | user: "I cannot reach understanding" | derivation stories use nouns as known; general knowledge confused with design-specific shapes | concrete first; introduction node per shared object; first-occurrence check | D17 |
 | 15 | Writing many nodes at once added unsourced claims, contradictory numbers, backward references | self-check right after writing | concrete writing invites connective claims the source lacks | source check right after writing; reference direction; ID collision rule | D18 |
 | 16 | Dialogue was words only; high cognitive load | user: "no diagram support in the dialogue"; later "far easier to read" | concrete material limited to static shapes; dynamic relations told in words | diagram on the spot, one per point; three layers | D19, D20 |
+| 17 | The nested map with glosses was unreadable as an entry, and the nodes made no sense without it | user: "even the key points of the map make no sense; if I stumble there, the details are meaningless"; after the rewrite: "reading from the top, picking up premises one at a time, it is very clear what is being explained and how it was decided" | the map listed parts and conclusions without the trouble, the options, and the reasons; a compressed outline is the writer's index, not the reader's entry | story section before the nodes (summary, system, one worked example, troubles with options, choice, and reason, parts table); outline removed; summary diagrams and ledgers to an appendix | 2026-10-14 |
+| 18 | The writer's checks passed, then an independent fact-check found 1 wrong and 7 imprecise claims in the story section | codex fact-check of the first story-section note | plain retelling invites exhaustive "only N" claims, loose counter definitions, trade-offs credited to records that hold only the decision, and dropped threshold conditions | mandatory independent fact-check in Phase 4 with the four error types; unrecorded trade-offs are `[inferred]`; enumerate branches before an exhaustive claim | 2026-10-14 |
+| 19 | Sources cited from `/tmp` vanished after a reboot | fact-check could not open the cited log | temporary location used as a source | cite durable sources; say when a source is temporary | 2026-10-14 |
 
 Four recurring diagnoses:
 
@@ -36,6 +39,8 @@ Four recurring diagnoses:
 - Putting a prerequisites block at the top (D1); collecting prerequisites into a dedicated node (D10, relapse of D1).
 - Writing the map first and noticing too many branch points later (experiment 1); count, cut, then map.
 - Writing the map in compressed terms only (D11); building the map from text alone (D15).
+- Opening with a nested map of parts and conclusions instead of a story of trouble, options, and choice (2026-10-14).
+- Explaining with metaphors or analogies instead of a concrete example (2026-10-14).
 
 **Dialogue and hooks**
 - Stopping at each step to hide the answer (D2).
@@ -58,3 +63,6 @@ Four recurring diagnoses:
 - Fixing a dependency after re-reading alone (D12).
 - Accepting mermaid that only parses (D15).
 - Not comparing what was written with the source (D18); pointing "seen in X" at a later node (D18); mixing source IDs with your own (D18).
+- Writing "only" or "the N cases" without enumerating the code's branches (2026-10-14).
+- Showing an options table's trade-offs as recorded when the record holds only the decision (2026-10-14).
+- Citing files under `/tmp` without saying they are temporary (2026-10-14).

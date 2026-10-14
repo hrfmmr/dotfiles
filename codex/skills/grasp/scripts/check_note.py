@@ -176,7 +176,8 @@ def main() -> int:
     for tok in first_prose:
         # dotted field paths are matched by their last segment (a JSON excerpt shows only the leaf key)
         cand_re[tok] = re.compile(r"(?<![A-Za-z0-9_])" + re.escape(tok.split(".")[-1]) + r"(?![A-Za-z0-9_])")
-    for k in range(lo, hi):
+    # shapes shown before the window (for example in a story section) count as shown
+    for k in range(0, hi):
         line = lines[k]
         if (not in_prose[k]) or line.startswith("|"):
             for tok, rx in cand_re.items():
