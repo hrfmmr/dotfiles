@@ -1,0 +1,3 @@
+interface:
+  display_name: "Herdr Mayor"
+  short_description: "Collect human todos from Herdr commanders and relay the human's instructions back"
