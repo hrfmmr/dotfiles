@@ -12,7 +12,7 @@ description: >-
   "what do I need to do across the agents", "collect human todos from the commanders",
   "relay this to the commander of that issue", or resumes a Mayor session from its
   ledger. Sub-commands: help, start, todo, ask, relay, done, focus, pend, status,
-  restore, resume (e.g. /herdr-mayor todo).
+  restore, handoff, resume (e.g. /herdr-mayor todo).
   Requires HERDR_ENV=1. Composes the herdr skill.
 ---
 
@@ -53,7 +53,8 @@ and the roster is empty), otherwise `todo`. An unknown word: run `help`.
 | `focus <issue or name>...` / `pend <issue or name>...` | "〜を優先に", "〜は後回し" | `mayor.sh priority`, then the Priority section's follow-ups |
 | `status` | "commander の様子は?" | `mayor.sh status`, plus one line per commander that is not idle/acked |
 | `restore` | "herdr を再起動した" | Protocol 6 |
-| `resume` | "Mayor を引き継いで" | The Handoff steps |
+| `handoff` | "Mayor を別の session に移したい", "記憶を外に出して" | The Handoff "leaving" steps: write the handoff file, copy memories, stop the watcher, release the name |
+| `resume` | "Mayor を引き継いで" | The Handoff "taking over" steps |
 
 ### `todo`
 
@@ -229,10 +230,31 @@ Signs: many `gone` / `name_lost` events at once, or most commanders `agent_not_f
 
 ## Handoff
 
-Everything durable is in `$MAYOR_HOME` and the ledger note. A successor session runs
-Protocol 0 after the predecessor releases `mayor` (after a reboot, Protocol 6 first),
-reads the config, roster and ledger, runs `$S/mayor.sh new` for anything unprocessed,
-and re-arms the watcher.
+The roster, inbox and ledger survive any session, but what was decided in conversation
+does not. Moving the Mayor to another session (a different cwd, a context reset, a
+reboot) therefore goes through a written handoff.
+
+**Leaving** (`handoff`):
+
+1. Write `$MAYOR_HOME/handoff.md`: where each source of truth lives, the decisions made
+   with the human that are not in this skill (priorities, relay rules agreed, who may be
+   spawned), each commander's quirks (does not use the inbox, open asks herdr misreports,
+   context pressure, stopped background jobs), lessons learned, and side work done in
+   the session. Point at the ledger for the todo list instead of copying it.
+2. Copy the memories the Mayor relies on into the successor's project memory directory
+   (`~/.claude/projects/<cwd-slug>/memory/`) and index them in its `MEMORY.md`, since
+   memory is per project directory.
+3. Stop the watcher (`kill "$(cat "$MAYOR_HOME/watch.pid")"`), then release the name:
+   `herdr agent rename "$HERDR_PANE_ID" --clear` and relabel the pane (e.g. `mayor-prev`).
+4. When the human wants it, start the successor in a sibling pane with the new cwd,
+   name it `mayor` (name and label), and send it `/herdr-mayor resume`. Stay alive until
+   it recites its position correctly; then the human closes the old pane.
+
+**Taking over** (`resume`): run Protocol 0 (after a reboot, Protocol 6 first), read
+`$MAYOR_HOME/handoff.md` if present, then the config, roster and ledger; run
+`$S/mayor.sh new` for anything unprocessed and `$S/mayor.sh status`; re-arm the watcher;
+and report the current position: each focus issue with its next human todo, plus the
+cautions from the handoff file.
 
 ## Failure modes
 
@@ -243,4 +265,6 @@ and re-arms the watcher.
 | Most commanders `gone` or nameless at once | herdr server stop or OS reboot | Protocol 6 |
 | A commander reports through `herdr agent prompt mayor` | `report.sh` was not permitted | Treat it like an inbox line and write it into the ledger yourself |
 | Notes say an agent is gone | Note fields are not liveness | Decide liveness from `herdr agent list` only |
+| A prompt landed inside the human's half-typed message | `idle` means the agent waits for input, not that nobody is typing; herdr cannot see the input box | Never type into a pane the human is using directly (the Mayor's successor, a commander mid-conversation). Hand instructions over through a file and ask the human to point the agent at it |
+| A question is on screen but the status is `done` or `idle` | Herdr does not always classify an open ask as `blocked`, so the watcher misses it | `todo` reads the panes of focus commanders anyway; never relay to a pane whose screen shows a question |
 | Watcher refuses to start | Another watcher holds `watch.pid` | Leave it running, or stop that process first |
