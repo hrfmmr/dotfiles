@@ -34,24 +34,28 @@ Mayor-to-commander send goes through a status check.
 2. Load the `herdr` skill for CLI rules (names vs labels, read sources, waits).
 3. Scripts: `S=~/.claude/skills/herdr-mayor/scripts` (`mayor.sh` for the Mayor,
    `report.sh` for commanders). State: `$MAYOR_HOME`, default `~/.local/state/herdr-mayor`.
+4. Read any existing `$MAYOR_HOME/handoff.md` before starting monitoring. Honor its
+   runtime restrictions (including a prohibition on `mayor.sh watch`) and select a
+   delivery mode with Protocol 3; a model or client name alone does not prove wakeup support.
 
 ## Sub-commands
 
 Read the first word of the arguments as a sub-command; a natural-language request with
 the same intent maps to the same one. With no arguments, run `start` when no Mayor is
-running here yet (this pane is not `mayor`, or `mayor.sh status` says `watcher=stopped`
-and the roster is empty), otherwise `todo`. An unknown word: run `help`.
+running here yet (this pane is not `mayor`, or the state/roster is not initialized),
+otherwise `todo`. A stopped watcher alone does not mean the Mayor is stopped.
+An unknown word: run `help`.
 
 | Sub-command | Same as asking | Does |
 |---|---|---|
 | `help` | "使い方は?", "何ができる?" | `mayor.sh help` prints this table; show it to the human in their language |
-| `start` | "Mayor を始めて" | Protocols 0–3: take the name, build the roster, brief, watch |
+| `start` | "Mayor を始めて" | Protocols 0–3: take the name, build the roster, brief, select delivery mode |
 | `todo [--all]` | "human check が要るものは?", "いま何をすればいい?" | The `todo` steps below; `--all` adds pend issues |
 | `ask` | "確認を聞いて" | Ask the open focus `confirm` items (Protocol 5) |
 | `relay <issue or name> <text>` | "〜に伝えて" | Relay the text verbatim to the owner (Protocol 5) |
 | `done <key> [note]` | "〜は済んだ" | Move the item to done in the ledger; relay `[mayor 中継] human: <key> は済んだ。<note>` to its owner |
 | `focus <issue or name>...` / `pend <issue or name>...` | "〜を優先に", "〜は後回し" | `mayor.sh priority`, then the Priority section's follow-ups |
-| `status` | "commander の様子は?" | `mayor.sh status`, plus one line per commander that is not idle/acked |
+| `status` | "commander の様子は?" | `mayor.sh status`, Protocol 3 delivery checks, plus one line per commander that is not idle/acked |
 | `restore` | "herdr を再起動した" | Protocol 6 |
 | `handoff` | "Mayor を別の session に移したい", "記憶を外に出して" | The Handoff "leaving" steps: write the handoff file, copy memories, stop the watcher, release the name |
 | `resume` | "Mayor を引き継いで" | The Handoff "taking over" steps |
@@ -69,8 +73,8 @@ and the roster is empty), otherwise `todo`. An unknown word: run `help`.
 4. Present, focus only (pend too with `--all`): urgent first, then per issue with where
    to go, then a line on cross-issue dependencies (a focus step waiting on a pend
    decision), then one line with the pend count.
-5. Ask any focus `confirm` items not asked yet (Protocol 5). Re-arm the watcher first
-   if `status` says it stopped.
+5. Ask any focus `confirm` items not asked yet (Protocol 5). In event mode only,
+   re-arm the watcher first if needed; in pull/live mode follow Protocol 3 instead.
 
 ## Boundaries
 
@@ -128,32 +132,89 @@ $S/mayor.sh relay <name> "[mayor から] この herdr session に Mayor (herdr �
   appears as `blocked` and the human answers there.
 Track who has acked; re-brief anyone silent after their next settled state.
 
-## Protocol 3: Watch
+## Protocol 3: Select delivery and monitor
 
-Arm the watcher in the background and let its exit wake the session:
+Choose from the current client's demonstrated tool behavior and the handoff's
+restrictions. Separate a process raising a notification from an event that supplies
+conversation input and actually resumes the Mayor after its turn ends. Do not infer
+either capability from "Claude" or "Codex", a PID file, or a notification appearing.
+
+| Mode | Choose when | Operation |
+|---|---|---|
+| Event | Background completion is known to resume this conversation, and watch is allowed | Arm `mayor.sh watch` through that supported background tool; retain its task handle and consume its completion |
+| Pull | No permitted, verified conversation wakeup path, and no live request | Drain on each human invocation; an existing notifier may alert the human to invoke `todo` |
+| Turn live | The human requests immediate relay without a permitted, verified wakeup path | Keep this turn open and run the short polling cycle below |
+
+State the selected mode and its coverage. In pull mode, say that notices require the
+human to return to the Mayor; do not promise automatic relay. Do not start an
+indefinite foreground watch to test wakeup, override a watch prohibition, or create
+another notifier merely because `watcher=stopped`.
+
+### Check four independent facts
+
+- **Watcher:** `mayor.sh status` reports only `mayor.sh watch` via `watch.pid`.
+  `watcher=stopped` is expected when watch is disabled; it says nothing about a notifier.
+- **Notifier:** if configured in the handoff, check its own process/PID and purpose.
+  A notify-only loop may call `herdr notification show` without providing conversation
+  input or acknowledging the inbox. It does not establish live relay.
+- **Conversation wakeup:** identify the tool event that resumes this conversation and
+  confirm it works in this client. If unverified, choose pull or turn live.
+- **Unprocessed inbox:** run `$S/mayor.sh new` regardless of the above. A notifier's
+  announced-line marker is independent of the Mayor's `cursor`; a notice is not an ack.
+
+For any process check, preserve permission errors: sandbox `kill -0`/`ps` failures
+with `EPERM` mean liveness is unknown, not stopped. Use permitted inspection and
+verify process identity before calling it running, stopping it, or restarting it.
+
+### Event cycle
 
 ```bash
-$S/mayor.sh watch      # run_in_background; exits with one event per line
+$S/mayor.sh watch      # only through a verified background-completion tool
 ```
 
-Events: `inbox N new line(s)`, `blocked <pane> <name>`, `gone <pane> <name>`,
-`name_lost <pane> <name>`. The watcher already sends a Herdr notification for
-`urgent=yes` lines and newly blocked commanders, and saves the agent names on every
-loop (Protocol 6). On each wake:
+The watcher exits with events: `inbox N new line(s)`, `blocked <pane> <name>`,
+`gone <pane> <name>`, `name_lost <pane> <name>`. It notifies urgent focus lines and
+newly blocked focus commanders, and snapshots names each loop. On completion,
+process the events below and re-arm **before** a native ask. A running watcher
+without a working conversation wakeup path is not event mode.
+
+### Turn-live cycle
+
+1. Identify the awaited commanders and replies, plus any requested deadline. Run
+   `$S/mayor.sh new` immediately; check replies already present before doing independent work.
+2. Process the inbox below. Relay each new focus reply (including a partial answer)
+   or human action in commentary immediately, before side work or other replies. Then persist
+   it in the ledger and ack only the processed `upto`; do not ack an unseen reply.
+3. Read the awaited panes too: use `visible` while working and `recent-unwrapped`
+   for a settled response. An `idle`/`done` status can still hide an open question.
+   Report it and where the human should answer; never type into it.
+4. Repeat after a short wait (normally 5–15 seconds). Keep every blocking tool call,
+   sleep or wait at 60 seconds or less; keep relay waits within the polling interval
+   via `MAYOR_RELAY_WAIT_MS`. Give a commentary update at least every 60 seconds.
+   Check the inbox before and after each bounded piece of independent work; postpone
+   work that would prevent timely relay.
+5. Finish when the requested replies have been relayed, the human asks to stop or
+   hand off, or a tool/session limit prevents further monitoring. If coverage ends
+   with a reply pending, state the last check, what remains, and how to resume. Do not
+   close with "I will relay it" implying monitoring continues without a proven wakeup.
+
+### Process events and polls
 
 1. `inbox`: `$S/mayor.sh new`, process every line (Protocol 4), then
-   `$S/mayor.sh ack <upto>` with the `upto` it printed.
-2. `blocked`: `herdr agent read <pane> --source visible --lines 60`, summarize the
-   question or approval in one or two lines, put it in the ledger as an `answer` item
-   pointing at the pane, and tell the human where to go.
+   `$S/mayor.sh ack <upto>` with the `upto` it printed. In live mode, deliver relevant
+   changes in commentary before side work and ack (the cycle above).
+2. `blocked` or a question found on screen: `herdr agent read <pane> --source visible
+   --lines 60`, summarize the question or approval in one or two lines, put it in the
+   ledger as an `answer` item pointing at the pane, and tell the human where to go.
 3. `name_lost`: restore name and label from the roster (Protocol 1 step 4). For
    `mayor` itself, rerun Protocol 0.
-4. `gone`: the commander exited. Move its workspace to the no-agent section and mark its
-   open items unattended. Keep its roster row: the condition stays in `seen`, so it does
-   not fire again, and an agent restarted in that pane shows up as `name_lost`, which
-   restores the name.
-5. Re-arm the watcher **before** any native ask, so events keep accumulating while
-   the human answers.
+4. `gone`: move the workspace to the no-agent section and mark open items unattended.
+   Keep its roster row: in event mode the condition stays in `seen` to avoid repeats;
+   a restarted agent in that pane produces `name_lost` and the name is restored.
+
+In pull/live mode, use `mayor.sh status` for roster conditions and `mayor.sh snapshot`
+on startup and roster/name changes; these modes do not run the watcher's snapshot loop.
+Apply the same focus/pend escalation rules in every mode.
 
 ## Priority: focus and pend
 
@@ -187,8 +248,18 @@ The ledger note is the source of truth for the human; the inbox is only a queue.
 - Order the human-facing view: urgent first, then items that block an agent
   (`answer`, `confirm`, `approve`), then `operate` / `merge`, then `review` /
   `external` / `other`.
-- After each wake, report to the human only what changed, grouped by issue, each with
-  where to go. Show the full ledger when asked.
+- After each event or poll, report to the human only what changed, grouped by issue,
+  each with where to go. In active live relay, send the awaited reply in commentary
+  immediately; independent work must not delay it. Show the full ledger when asked.
+- Make every human-facing relay self-contained, including update-only reports. Use:
+  `<issue/PR and purpose> → <affected services/monitors/channels and why the check
+  matters> → <confirmed / unconfirmed> → <human's next action and exact place>`.
+  Expand shorthand and counts into the relevant target names and roles; distinguish
+  prerequisites such as channel existence from its registration in an integration.
+  Use only source-supported context; label missing facts unconfirmed and follow up
+  with the commander without delaying the live reply. Include enough background to
+  avoid asking the human to reread a ledger or another conversation, without repeating
+  the full ledger or investigation log. A reference name/link alone is insufficient.
 
 ## Protocol 5: Ask and relay
 
@@ -198,6 +269,10 @@ The ledger note is the source of truth for the human; the inbox is only a queue.
 - A human report or instruction: find the owner from the ledger or roster (ask with
   native ask only if two commanders fit), then relay
   `"[mayor 中継] human: <原文>"`. Never paraphrase into a stronger instruction.
+- Before each send, read the target's visible screen and ensure no question/approval
+  or human draft is open. `mayor.sh relay` checks status only; `idle`/`done` alone do
+  not make typing safe. If still working, defer and recheck after it settles rather
+  than waiting inside the helper. If unsure, hold the relay and guide the human to the pane.
 - On exit 3 or 4, keep the message pending in the ledger and resend after the next
   settled state. Tell the human it is pending.
 - Prefix the Mayor's own messages with `[mayor から]` so commanders can tell them
@@ -240,11 +315,14 @@ reboot) therefore goes through a written handoff.
    with the human that are not in this skill (priorities, relay rules agreed, who may be
    spawned), each commander's quirks (does not use the inbox, open asks herdr misreports,
    context pressure, stopped background jobs), lessons learned, and side work done in
-   the session. Point at the ledger for the todo list instead of copying it.
+   the session. Record the delivery mode, wakeup evidence, notifier path/PID (if any),
+   watch restrictions, and any pending live reply with the last check and stop condition.
+   Point at the ledger for the todo list instead of copying it.
 2. Copy the memories the Mayor relies on into the successor's project memory directory
    (`~/.claude/projects/<cwd-slug>/memory/`) and index them in its `MEMORY.md`, since
    memory is per project directory.
-3. Stop the watcher (`kill "$(cat "$MAYOR_HOME/watch.pid")"`), then release the name:
+3. Stop the watcher owned by this session, if any, after verifying its PID identity.
+   Do not stop an independent notifier merely because the watcher is absent. Release the name:
    `herdr agent rename "$HERDR_PANE_ID" --clear` and relabel the pane (e.g. `mayor-prev`).
 4. When the human wants it, start the successor in a sibling pane with the new cwd,
    name it `mayor` (name and label), and send it `/herdr-mayor resume`. Stay alive until
@@ -252,8 +330,9 @@ reboot) therefore goes through a written handoff.
 
 **Taking over** (`resume`): run Protocol 0 (after a reboot, Protocol 6 first), read
 `$MAYOR_HOME/handoff.md` if present, then the config, roster and ledger; run
-`$S/mayor.sh new` for anything unprocessed and `$S/mayor.sh status`; re-arm the watcher;
-and report the current position: each focus issue with its next human todo, plus the
+`$S/mayor.sh new` for anything unprocessed and `$S/mayor.sh status`; select and verify
+delivery with Protocol 3 rather than unconditionally starting watch. Report the current
+position: each focus issue with its next human todo, delivery mode/coverage, and the
 cautions from the handoff file.
 
 ## Failure modes
@@ -267,4 +346,7 @@ cautions from the handoff file.
 | Notes say an agent is gone | Note fields are not liveness | Decide liveness from `herdr agent list` only |
 | A prompt landed inside the human's half-typed message | `idle` means the agent waits for input, not that nobody is typing; herdr cannot see the input box | Never type into a pane the human is using directly (the Mayor's successor, a commander mid-conversation). Hand instructions over through a file and ask the human to point the agent at it |
 | A question is on screen but the status is `done` or `idle` | Herdr does not always classify an open ask as `blocked`, so the watcher misses it | `todo` reads the panes of focus commanders anyway; never relay to a pane whose screen shows a question |
-| Watcher refuses to start | Another watcher holds `watch.pid` | Leave it running, or stop that process first |
+| Watcher refuses to start | Another watcher holds `watch.pid` | Verify its identity and delivery mode; leave it running or stop only the verified owner |
+| A notice appeared but a reply was not relayed | A notify-only process did not resume the conversation | Drain `new` now; use pull or keep the turn open for live relay |
+| `watcher=stopped` but notifications continue | Watcher and notifier are separate processes | Check notifier, conversation wakeup and unprocessed inbox separately |
+| A PID probe fails with `EPERM` | Sandbox inspection is denied | Report liveness unknown; do not infer stopped or start a duplicate |
