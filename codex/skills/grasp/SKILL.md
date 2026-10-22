@@ -7,7 +7,8 @@ description: >
   teacher-student dialogue, concrete shapes, inline diagrams, coverage gates, and an attainment check.
   Use when the user wants to understand, work through, or be briefed on a big design, ADR, epic,
   plan, or implementation; asks to make sense of it or produce a "reading note";
-  says "guide me through this design" or "briefing before approval"; or asks to explain a design with background, diagrams, and the reasons behind each choice.
+  says "guide me through this design" or "briefing before approval"; or asks to explain a design with background, diagrams, and the reasons for each choice;
+  or says "commented to grasp note" (it watches delivered notes for `.o0:` reader comments).
   Explanation, not critique: do not use for bug hunting or approval decisions (critique, review),
   single-concept explanations (note), or diff-only walkthroughs (crit-explain, hunk-present).
 ---
@@ -42,7 +43,7 @@ Write headings and dialogue in the language of the source material and the reade
 ## Workflow
 
 ```
-Phase 0 interview -> Phase 1 sources -> Phase 2 entry draft -> GATE A -> Phase 3 write nodes -> GATE B -> Phase 4 verify -> Phase 5 finish -> Phase 6 operate
+Phase 0 interview -> Phase 1 sources -> Phase 2 entry draft -> GATE A -> Phase 3 write nodes -> GATE B -> Phase 4 verify -> Phase 5 finish -> Phase 6 operate (watch comments)
                                                                  ^                                                                         |
                                                                  +-------- re-run in diff mode whenever the entry or a node changes -------+
 ```
@@ -115,12 +116,13 @@ Fix every finding before delivering.
 
 - Re-run Gate A as the final pass and fix the coverage table.
 - Show what remains outside approval: pending measurements, intentionally deferred items, undesigned areas, and places where the sources disagree with each other.
-- Add the attainment check once: 5 to 7 questions that ask whether the reader can derive the design. Answers exist in the body; the questions do not. Point each question to the node to go back to.
+- Add the attainment check once: 5 to 7 questions that ask whether the reader can derive the design. The questions do not appear in the body. Point each question to the node to go back to. Under each question, put a model answer in a folded callout (`> [!success]- Model answer`), built only from what the body and the sources say, with provenance labels; include these answers in the Phase 4 independent fact check.
 - Put the provenance-label legend at the end.
 
 ### Phase 6. Operate
 
-- Tell the user where feedback is wanted: place and question, in a table.
+- Tell the user where feedback is wanted: place and question, in a table. Tell them to write comments in the note as `.o0: <request>` lines.
+- Start the comment watch right after delivery: record the baseline of `.o0:` lines (your own hooks) once with `scripts/watch_comments.py --baseline`, then run the watcher in the background. On each batch, classify and process every new comment, replace each comment line with a folded `> [!note]- AI Follow-up: <request text>` callout (one blockquote level deeper than the comment), and restart the watch as soon as every comment has its reply line. Route requests that change the underlying design or plan to its owner flow and return the result to the same callout. Acknowledge only `.o0:` lines you wrote yourself. Stop when the reader approves the artifact or the session ends. Procedure, reply shapes, and the differences from bump: `references/comment-watch.md`.
 - When the user keeps a design log, append an entry whenever the deliberation changes (feedback, verification result, correction). Never rewrite past entries; add a new one that supersedes.
 
 ## Node rules
@@ -131,8 +133,9 @@ Each node has: heading with nest ID; a current-position line (what is establishe
 - **Core plot in the body.** The "why" that drives the story is explained, not delegated to a hook. There is no separate prerequisites node; prerequisites are supplied where they are used.
 - **Concrete first (static shapes).** Before abstract explanation, show the schema, JSON, code, real data, or table. Show a shared object at its introduction node with shape and example; later nodes add only deltas; keep the whole picture in a quick-reference table. The story section may show part of a shape (the fields part 2 needs); the introduction node shows the whole shape. Mark example values as illustrative. When the source does not fix a shape (for example an attribute name), say so with `[inferred]`. Showing concrete shapes exposes gaps and contradictions in the source; report them.
 - **Diagram on the spot (dynamic relations).** Right after the teacher's answer that discusses structure, flow, time, state transitions, comparison, or branching, put one diagram, outside the callout, followed by a one-line caption with the source. One point per diagram. Replace text timelines with diagrams. The appendix's summary diagrams do not replace these.
-- **Hooks.** Only for a concrete technical term, API, SDK, or SaaS feature that the next inference cannot proceed without. Never for the core plot and never for design-specific shapes (table definitions, schemas, data formats, examples): show those in the body. Place a hook where the prerequisite is used, not ahead. At most one per node. Implement it with the `bump` skill's `.o0:` token inside a folded `[!question]-` callout.
+- **Hooks.** Only for a concrete technical term, API, SDK, or SaaS feature that the next inference cannot proceed without. Never for the core plot and never for design-specific shapes (table definitions, schemas, data formats, examples): show those in the body. Place a hook where the prerequisite is used, not ahead. At most one per node. Implement it with the `bump` skill's `.o0:` token inside a folded `[!question]-` callout. These pre-filled lines form the comment watch's baseline, so they are not taken as reader comments until the reader rewrites them or adds an `.o0:` line under the hook.
 - **Provenance and pointers.** Label each "why" with `[recorded]`, `[code]`, or `[inferred]`, and point to the source (section and line, or file and line). Prefix source IDs with the source name (for example `plan-§13-K3`, `epic-D1`); give your own ledger IDs a different prefix (for example `L1`).
+- **Commit walkthrough.** When the note walks a PR commit by commit, give each commit a subsection: one or two sentences on which troubles (story part 3) it serves, the range (`git diff <parent>..<sha>`), then its essential hunks in ```diff blocks with the explanation inserted as comment lines marked `# [解説]` (no `+`/`-` prefix, so they stand apart from the code). Explain per block: the intent, what it does, and why. Do not refer to code by line numbers, explain line by line, or teach the language or framework. For specs, show only the essential cases the same way, annotated with what each covers.
 - **Tone.** Present defect histories as history. Do not turn them into criticism.
 
 ## Output conventions
@@ -147,7 +150,7 @@ Each node has: heading with nest ID; a current-position line (what is establishe
 
 - `unpack`: ID-anchored node numbering and provenance-label discipline.
 - `note` (discuss option): teacher-student callout convention.
-- `bump`: the `.o0:` token that implements hooks.
+- `bump`: the `.o0:` token that implements hooks and reader comments; the comment watch follows its token, settle window, and derived-note rules, and differs in the reply callout (folded) and state location (see `references/comment-watch.md`).
 - `obsidian`: deliberate wikilinks in the vault.
 - `crosscheck`: the mandatory Phase 4 fact-check of the story section and claims (in Herdr; elsewhere use a fresh subagent or the codex CLI), or a blind pass of Gate A step 1 by an agent that sees only the purpose and the axes.
 - `desk` and `bd`: the decision records that Phase 1 reads.
@@ -158,4 +161,5 @@ Each node has: heading with nest ID; a current-position line (what is establishe
 - `references/note-template.md`: reading-note skeleton, story section, ledgers, hook, attainment check, legend.
 - `references/diagrams.md`: three diagram layers, static versus dynamic, choosing a diagram, verification setup, layout rules.
 - `references/checks.md`: the 14 checks, when each runs, script usage, known limits.
+- `references/comment-watch.md`: Phase 6 comment watch: syntax, baseline, watcher lifetime, classification, reply shapes.
 - `references/lineage-and-antipatterns.md`: why each rule exists (symptom, trigger, cause, rule) and the anti-patterns actually hit.

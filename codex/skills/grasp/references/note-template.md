@@ -168,22 +168,59 @@ Use a different ID prefix for your own ledger rows than the sources use (for exa
 **Where this connects next**: <which node this leads to>
 ```
 
+## Commit walkthrough (when the note walks commits)
+
+````markdown
+### C3 <sha> <short title>
+
+`git diff <parent>..<sha>`. Serves d and g: <one or two sentences tying it to the story>.
+
+```diff
++  def record(message_id)
+# [解説] <what this block is for, what it does, and why, in one to three sentences>
++    updated = begin
++      write_send
++    rescue StandardError => e
++      return record_failed(message_id, e)
++    end
+# [解説] (<what was left out>, omitted)
+```
+
+Spec: <what the cases below pin down, in one sentence>
+
+```diff
+# [解説] <why this case is essential>
++  it "answers sent when logging fails after the row was written" do
+```
+````
+
+Lines marked `# [解説]` are the note's own; say so once at the top of the section.
+
 ## Hook
 
 ```markdown
 > [!question]- 🪝 <the technical property assumed as known>
-> Without this, the next step will look like a leap. If you already know it, skip; otherwise write below.
+> Without this, the next step will look like a leap. If you already know it, skip; to ask, rewrite the request below or add your own `.o0:` line under it.
 > .o0: <request the reader can activate>
 ```
 
-Place it where the property is used; at most one per node. The `.o0:` line is a `bump` token. A pre-filled request may read as pending to `bump`; the folded callout is the reader's entrance, so keep the request short and specific.
+Place it where the property is used; at most one per node. The `.o0:` line is a `bump` token. A pre-filled request may read as pending to `bump`; the folded callout is the reader's entrance, so keep the request short and specific. The comment watch baselines pre-filled requests at delivery; a rewritten request or an added `.o0:` line under the hook is taken as the reader's comment (`references/comment-watch.md`).
 
 ## Attainment check
 
 - 5 to 7 questions that ask whether the reader can derive the design, not whether they can name terms.
-- Answers exist in the body; the questions do not appear in the body.
+- The answers exist in the body; the questions do not appear in the body.
 - Append in parentheses the node to go back to for each question.
-- Add it once, after all nodes.
+- Under each question, add a model answer in a folded callout, so the reader opens it only after trying. Answer only from the body and the sources, keep the conditions and the provenance labels, and do not state anything more strongly than the body does:
+
+  ```markdown
+  **Q1.** <question> (back to ③)
+
+  > [!success]- Model answer
+  > <3 to 6 lines with provenance labels>
+  ```
+
+- Add it once, after all nodes. The model answers are in scope of the Phase 4 independent fact check.
 
 ## Provenance-label legend (at the end)
 
