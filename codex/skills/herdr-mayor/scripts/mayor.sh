@@ -13,7 +13,11 @@
 #   mayor.sh new                      unprocessed inbox lines as "<lineno><TAB><priority><TAB><line>", then "upto=<n>"
 #   mayor.sh ack <n>                  mark inbox lines up to <n> processed
 #   mayor.sh watch                    block until something needs the Mayor, print events, exit 0
-#   mayor.sh relay <name> <text>      prompt a commander, refusing while it is blocked
+#   mayor.sh relay [--until-sent [--timeout SEC]] <name> <text>
+#                                     prompt a commander; refuses while it is blocked (exit 3), busy (4),
+#                                     or its input box holds a human draft (5; dim text is only a suggestion).
+#                                     --until-sent retries those three every MAYOR_RELAY_RETRY_SEC (15)
+#                                     until sent or SEC (1800) has passed; run it through the background tool
 #   mayor.sh help                     the skill's sub-command table, read from SKILL.md
 #   mayor.sh status                   roster rows with live status and whether each acked; watcher state
 #   mayor.sh priority <name|issue> focus|pend   set the roster priority (an issue also matches its children)
@@ -304,11 +308,17 @@ cmd_forget() {
   awk -F'\t' -v n="$name" '$1 != n' "$names_f" > "$names_f.tmp" && mv "$names_f.tmp" "$names_f"
 }
 
-cmd_relay() {
-  local name=${1:-} text=${2:-} status
-  [ -n "$name" ] && [ -n "$text" ] || die "usage: mayor.sh relay <name> <text>"
+# Text in the Claude Code input line (the line starting with the prompt mark) that is not dim.
+# Dim (SGR 2) text is a prompt suggestion, not the human's input; reads `agent read --format ansi` on stdin.
+draft_text() {
+  perl -CSD -ne 'if (/^\x{276f}/) { s/^\x{276f}//; s/\x{a0}/ /g; s/\e\[2m.*?(?:\e\[0?m|\e\[22m|$)//g; s/\e\[[0-9;]*m//g; s/^\s+|\s+$//g; $r = $_ } END { print $r if defined $r }'
+}
+
+relay_once() {
+  local name=${1:-} text=${2:-} status draft
+  [ -n "$name" ] && [ -n "$text" ] || die "usage: mayor.sh relay [--until-sent [--timeout SEC]] <name> <text>"
   status=$(herdr agent get "$name" 2>/dev/null | jq -r '.result.agent.agent_status // empty')
-  [ -n "$status" ] || { echo "agent_not_found: $name (restore the name from roster.tsv, then retry)" >&2; exit 2; }
+  [ -n "$status" ] || { echo "agent_not_found: $name (restore the name from roster.tsv, then retry)" >&2; return 2; }
   case "$status" in
     working|unknown)
       herdr agent wait "$name" --timeout "${MAYOR_RELAY_WAIT_MS:-120000}" >/dev/null 2>&1 || true
@@ -316,15 +326,43 @@ cmd_relay() {
   esac
   case "$status" in
     idle|done)
+      draft=$(herdr agent read "$name" --source visible --lines 8 --format ansi 2>/dev/null | draft_text)
+      if [ -n "$draft" ]; then
+        echo "human_draft: $name's input box holds text that is not a prompt suggestion; typing would mix with it. Not sent." >&2
+        return 5
+      fi
       herdr agent prompt "$name" "$text" >/dev/null || die "herdr agent prompt $name failed"
       echo "sent to $name" ;;
     blocked)
       echo "blocked: $name has an open question or approval; keys would land in it. Not sent." >&2
-      exit 3 ;;
+      return 3 ;;
     *)
       echo "busy: $name is still $status; retry later. Not sent." >&2
-      exit 4 ;;
+      return 4 ;;
   esac
+}
+
+cmd_relay() {
+  local until_sent=0 timeout=1800 out rc deadline
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --until-sent) until_sent=1; shift ;;
+      --timeout) timeout=${2:-}; shift 2 || die "--timeout needs seconds" ;;
+      *) break ;;
+    esac
+  done
+  case "$timeout" in ''|*[!0-9]*) die "--timeout needs seconds" ;; esac
+  if [ "$until_sent" = 0 ]; then relay_once "$@"; exit $?; fi
+  deadline=$(( $(date +%s) + timeout ))
+  while :; do
+    out=$(relay_once "$@" 2>&1); rc=$?
+    case $rc in
+      3|4|5)
+        if [ "$(date +%s)" -ge "$deadline" ]; then echo "$out" >&2; echo "timeout: not sent within ${timeout}s (last exit $rc)" >&2; exit "$rc"; fi
+        sleep "${MAYOR_RELAY_RETRY_SEC:-15}" ;;
+      *) echo "$out"; exit "$rc" ;;
+    esac
+  done
 }
 
 sub=${1:-}; [ $# -gt 0 ] && shift

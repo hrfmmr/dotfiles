@@ -25,6 +25,14 @@
 
 - [ ] `<key>` <issue>: <問い> — <A> (推奨) / <B> / <C>
 
+## 中継済みで進行中の依頼
+
+- <human の依頼の要約> — 中継: <日時>、宛先 `<commander>`。完了報告は未受領
+
+## standing rules
+
+- <human が一度決めた運用。例: 『approve』は commit まで含む> (<日付>)
+
 ## 保留 (pend)
 
 human には上げない。focus に移ったら、ここから戻す。

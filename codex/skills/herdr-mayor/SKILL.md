@@ -65,9 +65,12 @@ An unknown word: run `help`.
 1. Drain the inbox: `mayor.sh new`, process (Protocol 4), `mayor.sh ack <upto>`.
 2. `mayor.sh status`. For each focus commander that is `blocked`, not acked, or has
    been asking in its own pane, read it (`herdr agent read <name> --source
-   recent-unwrapped --lines 80`) and copy the requests addressed to the human into the
-   ledger, marked as transcribed by the Mayor. Commanders sometimes ask in their pane
-   instead of the inbox.
+   recent-unwrapped --lines 80`; while it is working that read is refused with
+   `agent_not_idle`, so use `--source visible`) and copy the requests addressed to the
+   human into the ledger, marked as transcribed by the Mayor. Commanders sometimes ask
+   in their pane instead of the inbox, including a closing "please decide" in a report.
+   Check the `done <date>` on the screen: an old screen is stale, so mark those items
+   unconfirmed and ask the commander to re-report the current state.
 3. For items tied to a PR, check `gh pr view <n> -R <repo> --json state`; move merged or
    closed ones to done.
 4. Present, focus only (pend too with `--all`): urgent first, then per issue with where
@@ -87,7 +90,11 @@ An unknown word: run `help`.
   planning, notes, issue records, local edits). Outward or hard-to-undo actions (PR
   comments, push, PR create/close, merge, sending outside) still need the human's
   direct confirmation in the commander's own pane, because a relay is hearsay to that
-  commander. Human-only operations (apply and the like) stay with the human.
+  commander. Human-only operations (apply and the like) stay with the human. Add only
+  facts (paths, keys, locations) to a relay, never a condition the human did not state
+  (for example "do not commit until told"): commanders stall on it. If a commander asks
+  whether an approval includes the next step, ask the human once and keep the answer in
+  the ledger as a standing rule.
 - Keep concrete sensitive values (IDs, CIDRs, account IDs, secrets) out of the ledger.
 
 ## Protocol 0: Take the name
@@ -106,15 +113,25 @@ the workspace in the sidebar; that is expected for the Mayor's own workspace.
 1. `$S/mayor.sh init --ledger <path>`. Ask the human where the ledger note lives only
    if no path is configured; create it from `references/ledger-template.md`.
 2. `$S/mayor.sh survey` lists every pane with workspace, agent name, label, kind, status.
+   Also look at labeled panes and tabs without an agent (for example `hunk-*`) and run
+   `hunk session list`: a human review in flight (a Hunk presentation) is a human todo
+   even though no agent shows it, so put it in the ledger.
 3. Pick one commander per issue workspace: the root agent the human talks to, usually
    a `*-cmd` name or the workspace's first agent pane. Skip workers, reviewers, and
    workspaces that are not issues (dotfiles, scratch, home). Read a pane with
-   `herdr agent read <pane> --source visible` when the role is unclear.
+   `herdr agent read <pane> --source visible` when the role is unclear. A workspace with
+   no live root agent (for example only an empty shell labeled `commander`) must not stay
+   without one: ask the human which live agent becomes its commander.
 4. Give every chosen commander a name, keeping name and label identical:
    - a label exists but the name is gone (session restart): restore the label as the name;
-   - neither exists: derive a short topic name ending in `-cmd`.
+   - neither exists: derive a short topic name ending in `-cmd`;
+   - the human picked an existing agent: name it `commander` (or `<topic>-cmd` when that
+     name is taken in another workspace).
    `herdr agent rename <pane> <name> && herdr pane rename <pane> <name>`, then verify
-   `herdr agent get <name>` resolves to that pane.
+   `herdr agent get <name>` resolves to that pane. To rename later, also update the
+   roster row's name, run `$S/mayor.sh snapshot`, and send the commander a `[mayor から]`
+   notice: its `report.sh` sender becomes the new name, and existing keys keep the old
+   prefix and still work with `done` / `cancel`.
 5. Write `$MAYOR_HOME/roster.tsv` (`pane_id<TAB>name<TAB>issue<TAB>workspace label<TAB>priority`).
    Record workspaces with no live agent in the ledger section for them; do not watch them.
 
@@ -145,8 +162,9 @@ either capability from "Claude" or "Codex", a PID file, or a notification appear
 | Pull | No permitted, verified conversation wakeup path, and no live request | Drain on each human invocation; an existing notifier may alert the human to invoke `todo` |
 | Turn live | The human requests immediate relay without a permitted, verified wakeup path | Keep this turn open and run the short polling cycle below |
 
-State the selected mode and its coverage. In pull mode, say that notices require the
-human to return to the Mayor; do not promise automatic relay. Do not start an
+State the selected mode and its coverage in plain words (what reaches the Mayor, and
+when), not by the mode's name. In pull mode, say that notices require the
+human to return to the Mayor; do not promise automatic notices from commanders. Do not start an
 indefinite foreground watch to test wakeup, override a watch prohibition, or create
 another notifier merely because `watcher=stopped`.
 
@@ -260,6 +278,9 @@ The ledger note is the source of truth for the human; the inbox is only a queue.
   with the commander without delaying the live reply. Include enough background to
   avoid asking the human to reread a ledger or another conversation, without repeating
   the full ledger or investigation log. A reference name/link alone is insufficient.
+- In every human-facing line give the herdr workspace (id and label), tab (id and
+  label), pane id, and the absolute paths of the files involved; mark a path that no
+  longer exists. Describe delivery by what arrives and when, not by internal mode names.
 
 ## Protocol 5: Ask and relay
 
@@ -269,12 +290,20 @@ The ledger note is the source of truth for the human; the inbox is only a queue.
 - A human report or instruction: find the owner from the ledger or roster (ask with
   native ask only if two commanders fit), then relay
   `"[mayor 中継] human: <原文>"`. Never paraphrase into a stronger instruction.
-- Before each send, read the target's visible screen and ensure no question/approval
-  or human draft is open. `mayor.sh relay` checks status only; `idle`/`done` alone do
-  not make typing safe. If still working, defer and recheck after it settles rather
-  than waiting inside the helper. If unsure, hold the relay and guide the human to the pane.
-- On exit 3 or 4, keep the message pending in the ledger and resend after the next
-  settled state. Tell the human it is pending.
+- Before each send, read the target's visible screen with `--format ansi`
+  (`herdr agent read <name> --source visible --lines 8 --format ansi`) and ensure no
+  question/approval or human draft is open. A plain read cannot tell a human's
+  half-typed text from Claude Code's prompt suggestion, the grayed-out next-prompt
+  candidate in the `❯` line. A suggestion is dim (`\x1b[2m`): send anyway (typing dismisses
+  it), and never treat it as the human's instruction or answer. Non-dim text is a human
+  draft: hold. `mayor.sh relay` runs this check (exit 5 on a draft); `idle`/`done` alone
+  do not make typing safe. If unsure, hold the relay and guide the human to the pane.
+- Relay as soon as the human says it; do not wait for a separate "send it" and do not
+  ask again. On exit 3, 4 or 5, write the message in the ledger as pending, then run
+  `$S/mayor.sh relay --until-sent [--timeout SEC] <name> <text>` through the background
+  tool: it retries every `MAYOR_RELAY_RETRY_SEC` (15) until the commander is sendable,
+  then prints the result (default timeout 1800s). When it lands, tell the human and move
+  the ledger entry. Exit 5 clears only when the human sends or clears the draft.
 - Prefix the Mayor's own messages with `[mayor から]` so commanders can tell them
   from relays.
 
@@ -302,6 +331,14 @@ Signs: many `gone` / `name_lost` events at once, or most commanders `agent_not_f
 5. A commander resumed into its old session keeps the brief; a fresh one needs Protocol 2.
 6. `$S/mayor.sh forget <name>` for names that will not come back, so restore stops
    listing them.
+7. Hunk reviews: if `hunk session list` is empty while a `hunk-*` pane exists, the TUI
+   and its comment watcher are gone, and the live comments with them. At the human's
+   request, relaunch the viewer in that labeled pane with the previous command
+   (`cd <repo> && EDITOR=nvim hunk diff <target> --agent-context
+   .local/hunk/agent-context.json --agent-notes`; infer `<target>` from the sidecar's
+   file list against `git diff --cached --name-only`, or from the presenter's
+   transcript). Comments need a presenter agent as the watcher target, so ask the human
+   who. Put the lost comment and answer text in a resume memo so the presenter can repost it.
 
 ## Handoff
 
@@ -344,7 +381,10 @@ cautions from the handoff file.
 | Most commanders `gone` or nameless at once | herdr server stop or OS reboot | Protocol 6 |
 | A commander reports through `herdr agent prompt mayor` | `report.sh` was not permitted | Treat it like an inbox line and write it into the ledger yourself |
 | Notes say an agent is gone | Note fields are not liveness | Decide liveness from `herdr agent list` only |
-| A prompt landed inside the human's half-typed message | `idle` means the agent waits for input, not that nobody is typing; herdr cannot see the input box | Never type into a pane the human is using directly (the Mayor's successor, a commander mid-conversation). Hand instructions over through a file and ask the human to point the agent at it |
+| A prompt landed inside the human's half-typed message | `idle` means the agent waits for input, not that nobody is typing; herdr status cannot see the input box | Read the `❯` line with `--format ansi`; `mayor.sh relay` refuses non-dim text (exit 5). Never type into a pane the human is using directly (the Mayor's successor, a commander mid-conversation). Hand instructions over through a file and ask the human to point the agent at it |
+| A relay was held for a "draft" that the human never typed | A plain read shows Claude Code's prompt suggestion (dim ghost text) as if it were input | Check ANSI: dim means suggestion, so send. To stop suggestions: `/config` Prompt suggestions, `promptSuggestionEnabled: false`, or `CLAUDE_CODE_ENABLE_PROMPT_SUGGESTION=false` (the variable wins) |
+| A relay sat pending although the human had already said it | The turn ended on a refusal (busy / draft) with no retry | Write it pending, run `relay --until-sent` through the background tool, report when it lands |
+| A commander asks whether an approval includes the next step | The relay carried a condition the human never stated | Relay facts only; ask the human once and record the answer as a standing rule |
 | A question is on screen but the status is `done` or `idle` | Herdr does not always classify an open ask as `blocked`, so the watcher misses it | `todo` reads the panes of focus commanders anyway; never relay to a pane whose screen shows a question |
 | Watcher refuses to start | Another watcher holds `watch.pid` | Verify its identity and delivery mode; leave it running or stop only the verified owner |
 | A notice appeared but a reply was not relayed | A notify-only process did not resume the conversation | Drain `new` now; use pull or keep the turn open for live relay |
