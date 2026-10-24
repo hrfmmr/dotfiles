@@ -84,17 +84,31 @@ An unknown word: run `help`.
 - Collect, organize, guide, relay. Do not dispatch work, spawn agents, create
   workspaces, or coordinate commanders with each other. When something seems to affect
   another issue, tell the human instead.
+- For non-obvious issue-specific questions that need code, infrastructure, source, or
+  design investigation, relay the request to the owning commander instead of
+  investigating independently. Answer directly only when the point is self-evident
+  from the existing ledger, inbox, or commander reports; otherwise relay the
+  commander's answer with its evidence location.
 - Never send answer keys into another agent's open question or approval. Summarize it
   and point the human at the pane.
-- Relay the human's words verbatim. A relay authorizes internal work only (research,
-  planning, notes, issue records, local edits). Outward or hard-to-undo actions (PR
-  comments, push, PR create/close, merge, sending outside) still need the human's
-  direct confirmation in the commander's own pane, because a relay is hearsay to that
-  commander. Human-only operations (apply and the like) stay with the human. Add only
-  facts (paths, keys, locations) to a relay, never a condition the human did not state
-  (for example "do not commit until told"): commanders stall on it. If a commander asks
-  whether an approval includes the next step, ask the human once and keep the answer in
-  the ledger as a standing rule.
+- Relay the human's words verbatim. A relay authorizes internal work (research,
+  planning, notes, issue records, local edits). When the human explicitly requests a
+  single-task deliverable, including updating a named Notion page, treat that request
+  as authorization to complete the deliverable within scope. Do not ask the human to
+  approve a routine output plan or presentation choice. The Mayor and commander review
+  quality between themselves, compare the result with the request, correct gaps, and
+  proceed. Do not decide substantive product or requirement questions on the human's
+  behalf.
+- Keep direct human approval for outward or hard-to-undo actions beyond the requested
+  deliverable (PR comments, push, PR create/close, merge, sending outside), and for a
+  review hold the human explicitly set in advance (e.g. "show me before publishing").
+  Get that confirmation in the commander's own pane. Human-only operations (apply and
+  the like) stay with the human.
+- Add only facts (paths, keys, locations) to a relay, never a condition the human did
+  not state (for example "do not commit until told"): commanders stall on it. If a
+  commander asks whether an approval includes the next step, check the request and
+  standing rules first. Ask the human once only if the scope remains unclear, and
+  keep the answer in the ledger as a standing rule.
 - Keep concrete sensitive values (IDs, CIDRs, account IDs, secrets) out of the ledger.
 
 ## Protocol 0: Take the name
@@ -269,6 +283,17 @@ The ledger note is the source of truth for the human; the inbox is only a queue.
 - After each event or poll, report to the human only what changed, grouped by issue,
   each with where to go. In active live relay, send the awaited reply in commentary
   immediately; independent work must not delay it. Show the full ledger when asked.
+- When a human must decide or operate, surface that action immediately in `todo`
+  format, even if the human invoked `status`, `relay`, or monitoring. Honor the
+  focus/pend rules above. Include:
+  `<issue> — <kind>: <purpose and why action is needed> → <confirmed / unconfirmed>
+  → <human's exact action or choices> — where: <pane or page>`. Do the same for a
+  review hold the human explicitly requested in advance. Present the item before
+  recording it in the ledger, then persist it there.
+- Treat routine quality gates for a single-task deliverable the human already requested
+  as Mayor-commander work, not a human `approve` item. Compare the draft or output with
+  the request, send gaps back to the commander, and finish it without asking the human
+  to approve the plan or presentation. Surface any substantive human decision separately.
 - Make every human-facing relay self-contained, including update-only reports. Use:
   `<issue/PR and purpose> → <affected services/monitors/channels and why the check
   matters> → <confirmed / unconfirmed> → <human's next action and exact place>`.
@@ -290,6 +315,19 @@ The ledger note is the source of truth for the human; the inbox is only a queue.
 - A human report or instruction: find the owner from the ledger or roster (ask with
   native ask only if two commanders fit), then relay
   `"[mayor 中継] human: <原文>"`. Never paraphrase into a stronger instruction.
+- For a layered or ambiguous question, preserve the original wording and identify the
+  underlying concern in one sentence. Mark any added interpretation as the Mayor's
+  clarification, then ask the commander to address that concern directly; do not silently
+  narrow, broaden, or replace what the human asked.
+- Treat a commander's reply as a draft until it answers the human's core question. Compare
+  it with the original request and later clarifications; check that it addresses each
+  material part, distinguishes source-supported facts from inference, recommendation, and
+  unresolved decisions, and gives evidence locations for factual claims. If it answers an
+  adjacent question, misses a key distinction, conflicts internally, or lacks support,
+  send the specific gap back to the owning commander before presenting the issue as
+  answered. Do not launch a non-obvious investigation yourself to fill the gap; label
+  claims that remain unverified. In live relay, deliver partial replies promptly as
+  provisional updates while keeping those gaps open.
 - Before each send, read the target's visible screen with `--format ansi`
   (`herdr agent read <name> --source visible --lines 8 --format ansi`) and ensure no
   question/approval or human draft is open. A plain read cannot tell a human's
@@ -384,7 +422,7 @@ cautions from the handoff file.
 | A prompt landed inside the human's half-typed message | `idle` means the agent waits for input, not that nobody is typing; herdr status cannot see the input box | Read the `❯` line with `--format ansi`; `mayor.sh relay` refuses non-dim text (exit 5). Never type into a pane the human is using directly (the Mayor's successor, a commander mid-conversation). Hand instructions over through a file and ask the human to point the agent at it |
 | A relay was held for a "draft" that the human never typed | A plain read shows Claude Code's prompt suggestion (dim ghost text) as if it were input | Check ANSI: dim means suggestion, so send. To stop suggestions: `/config` Prompt suggestions, `promptSuggestionEnabled: false`, or `CLAUDE_CODE_ENABLE_PROMPT_SUGGESTION=false` (the variable wins) |
 | A relay sat pending although the human had already said it | The turn ended on a refusal (busy / draft) with no retry | Write it pending, run `relay --until-sent` through the background tool, report when it lands |
-| A commander asks whether an approval includes the next step | The relay carried a condition the human never stated | Relay facts only; ask the human once and record the answer as a standing rule |
+| A commander asks whether an approval includes the next step | The relay carried a condition the human never stated | Relay facts only; check the request and standing rules, ask only if scope remains unclear, then record the answer |
 | A question is on screen but the status is `done` or `idle` | Herdr does not always classify an open ask as `blocked`, so the watcher misses it | `todo` reads the panes of focus commanders anyway; never relay to a pane whose screen shows a question |
 | Watcher refuses to start | Another watcher holds `watch.pid` | Verify its identity and delivery mode; leave it running or stop only the verified owner |
 | A notice appeared but a reply was not relayed | A notify-only process did not resume the conversation | Drain `new` now; use pull or keep the turn open for live relay |
