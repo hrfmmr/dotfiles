@@ -1,0 +1,4 @@
+interface:
+  display_name: "Reader First"
+  short_description: "Clear explanations without losing detail"
+  default_prompt: "Use $reader-first to turn this material into a clear, patient explanation while preserving its facts, conditions, and caveats."
