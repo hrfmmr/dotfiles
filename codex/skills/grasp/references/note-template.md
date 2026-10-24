@@ -12,7 +12,7 @@
   ### 1 What the system does          cast and flow in one diagram; terms defined where first used
   ### 2 One example, end to end       per-step field table + sequence diagram, success path and one failure path
   ### 3 The troubles and how each was solved
-    #### a. <trouble>                 trouble -> options table -> adopted -> why
+    #### a. <trouble>                 trouble -> options table (an ID per option) -> cases (one per option) -> adopted (by ID) -> why
     #### b. ...
   ### 4 Parts and reading guide       parts table (what / troubles solved / node), reading order, overall structure diagram
 ---
@@ -35,7 +35,7 @@
 > **Assumed reader**: <who; a reader who is the author revisiting later forgets details and the "why">
 > **State**: as of <date>, <target> at <commit or version>. Line numbers refer to it.
 > **Format**: the story section is prose; the nodes are teacher-student dialogue. Callouts are `[!quote] 🧑‍🎓 Student` / `[!abstract] 👨‍🏫 Teacher`. Deliver each node whole and at once. Figures and code sit outside callouts, followed by a one-line caption. Put a diagram on the spot for each dynamic point in the dialogue.
-> **Structure**: the story section first (system, one example, troubles a, b, ... with options and reasons, parts and reading guide), then the nodes. Nodes distinguish chained from parallel. Node summary diagrams and the ledgers are in the appendix.
+> **Structure**: the story section first (system, one example, troubles a, b, ... with ID-labeled options, the adopted ID, and reasons, parts and reading guide), then the nodes. Nodes distinguish chained from parallel. Node summary diagrams and the ledgers are in the appendix.
 > **Prerequisites**: no dedicated prerequisites node. The story section defines terms where they first appear; nodes pick up technical prerequisites with a hook where they are used.
 > **Hook scope**: only a concrete technical term, API, SDK, or SaaS feature that the logic cannot proceed without.
 > **Provenance labels**: `[recorded]` / `[code]` / `[inferred]` (legend at the end).
@@ -85,19 +85,27 @@ This example contains several troubles this change solves: <list>. Part 3 shows 
 
 <one sentence: which troubles an upstream change already solved, and which this change solves>
 
+<one sentence on the option ID shape, for example: a-1-3 is trouble a, first decision, third option>
+
 #### a. <trouble as a question>
 
 **The trouble**: <what goes wrong, made concrete with the part 2 example>
 
-**Options**:
+**Options a-1**:
 
-| Option | Good | Bad |
-|---|---|---|
-| ... | ... | ... |
+| ID | Option | Good | Bad |
+|---|---|---|---|
+| a-1-1 | ... | ... | ... |
+| a-1-2 | ... | ... | ... |
 
 > <caption with source; mark trade-offs the records do not state as [inferred]>
 
-**Adopted**: <what was chosen, with the numbers and rules> [code: ...]
+**Cases a-1** (<the scenario, for example: the part 2 case under each option>; values are illustrative):
+
+- **a-1-1**: <what happens in the scenario under this option; its good point and its bad point both show up>
+- **a-1-2**: <same for the next option>
+
+**Adopted a-1**: a-1-2 <short name; what was chosen, with the numbers and rules> [code: ...]
 
 **Why**: <reason> [recorded: ...]
 
@@ -123,6 +131,34 @@ This example contains several troubles this change solves: <list>. Part 3 shows 
 ```
 
 Heading links need the exact heading text. Keep the appendix diagram headings short: `#### Diagram ①-1 <short title>`.
+
+## Option IDs
+
+Shape: `<trouble letter>-<decision number>-<option number>`. Always write all three parts; a trouble with one decision uses `-1-` (`b-1-1`). The decision label is the first two parts (`a-1`).
+
+| Case | Write |
+|---|---|
+| Options in a table | `**Options b-1**`, an ID column (`b-1-1`, `b-1-2`), then `**Adopted b-1**: b-1-2 <short name>` |
+| Several decisions in one trouble | number the decisions `a-1`, `a-2`; each has its own options and adopted labels; one why follows, citing the IDs it explains |
+| Two-way choice in prose | IDs inline after each option: `**Options a-2**: <option> (a-2-1) or <option> (a-2-2) ...`, then `**Adopted a-2**: a-2-2 <short name>` |
+| Decision that fits one paragraph | `**Decided j-3**: ...`; put option IDs inline where alternatives exist; none when the records name no alternative |
+| Adopted answer combines options | name each: `**Adopted g-1**: g-1-1 and g-1-2 layered; g-1-3 is not used` |
+| Source leaves the choice open | `**Adopted e-2**: undecided; the candidates are e-2-2 and e-2-3` |
+
+- Name the adopted option by ID plus a short name. Never by position ("the third", "the latter") or a bare number.
+- Cite an option by its ID wherever it comes up again: diagram nodes, the why, later nodes, ledgers, attainment answers.
+- Option IDs start with a lowercase letter, so they do not collide with source IDs (`plan-§6`, `epic-D3`) or ledger IDs (`L1`).
+- After delivery, keep IDs stable (reader comments and later nodes cite them). Append a new option at the end; do not renumber.
+
+## Cases
+
+Pros and cons alone do not let the reader picture what happens. After every options table (or prose options), add a case list, before the adopted line.
+
+- One bullet per option ID, the adopted option included, so the reader sees what it costs as well as what it buys.
+- Play each option out in one concrete scenario, the part 2 example by default (its times and field values), and show both the good point and the bad point as things that happen: a message that arrives, a record that is overwritten, a number that is reused. Name the scenario in the label; mark illustrative values.
+- Add no fact, mechanism, or step beyond the options table and the sources. Where the table marks a point `[inferred]` or says the records hold none, the case carries the same mark or says so. Cite a source only for a fact the table does not already carry.
+- A case that restates the table in other words is not a case; replace it with a scenario.
+- A decision labeled `Decided` that names no alternative has no cases. When a premise block already plays the options out (definitions, shapes, a walk-through), the case list covers only the points it did not show and points back to it.
 
 ## Ledgers
 
