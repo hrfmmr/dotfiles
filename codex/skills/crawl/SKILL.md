@@ -1,6 +1,6 @@
 ---
 name: crawl
-description: Collect links from a daily note's `## News` / `## Picks` sections or from an explicitly named note, then write concise Japanese callout summaries directly into the daily note or into already-linked `Clippings/` notes. Use when turning curated links into glanceable structured summaries, refreshing existing clipped notes with a high-signal opening block, or deciding whether a source deserves a separate deep-dive note.
+description: Collect links from a daily note's `## News` / `## Picks` sections or from an explicitly named note, then write concise Japanese callout summaries directly into the daily note or into already-linked `Clippings/` notes. Use when turning curated links into glanceable structured summaries, refreshing existing clipped notes with a high-signal opening block, deciding whether a source deserves a separate deep-dive note, or spinning off explanatory derived notes for key concepts the vault lacks.
 ---
 
 # crawl
@@ -14,7 +14,7 @@ The default is not to create a separate note for every source. Prefer to write t
 
 - Do not over-invest. Capture the source accurately and add only the minimum concept scaffolding needed for future recall.
 - Do not create a separate article note by default. Create one only when the user explicitly asks for a deep-dive note or when the request clearly requires an independent durable note.
-- Do not create or extend concept notes by default. Treat concept-note creation as explicit-only unless the user directly asks for it.
+- Do not extend existing concept notes by default; extending stays explicit-only. In default mode, create a new derived note only for a keystone keyword that no vault note covers, as defined in Concept Note Workflow.
 - Be strictly faithful to the source content; do not introduce external knowledge, personal biases, or unmentioned technical details (e.g., specific tool usage or statistics not in the text) into the summary or logical structure.
 - Standardize summaries around the source's dominant value, not around one generic recap template. A shallow "what happened" recap is insufficient when the article's real value is operational guidance, technical mechanism, or a specific argument.
 - Write all agent-authored summaries and explanatory prose in plain Japanese. Keep titles, product names, service names, code, and URLs in their original form when that is clearer.
@@ -73,7 +73,7 @@ The default is not to create a separate note for every source. Prefer to write t
 - Discover links, retrieve the source, and write or refresh the summary where the reader already is.
 - If a daily-note topic is a bare URL and no existing clipped note is already linked for that topic, insert a top-level callout directly below the source line in the daily note.
 - If a daily-note topic already points to an existing clipped note, target that clipped note first and update only its opening summary block.
-- Do not create a new clipping note or concept note in default mode unless the user explicitly asks for it.
+- Do not create a new clipping note in default mode unless the user explicitly asks for it. Derived notes for keystone keywords follow Concept Note Workflow.
 
 ### 2. Summarize-Only Mode
 
@@ -186,26 +186,24 @@ tags:
 
 ## Concept Note Workflow
 
-1. Do not create concept notes in default mode or summarize-only mode.
-2. Only create or extend a concept note when the user explicitly asks for it or when the request clearly targets concept extraction rather than article summarization.
-3. Before creating a new concept note, check for an equivalent or near-equivalent existing note.
-4. If an existing note already explains the concept well enough, do not create or append anything.
-5. Only when an existing note is empty or thin should you lightly consult primary sources such as official documentation and append a concise explanation.
-6. Use `#ai-agent-note` for new concept notes.
-7. Use `#ai-generated` only when AI adds explanatory text to an existing note.
+1. In summarize-only mode, create no notes.
+2. In default mode, after the summary and link resolution, pick up to 2 keystone keywords per source. A keystone keyword is a term that the source's central argument or mechanism depends on, that the source names without fully explaining, and that a reader would need in order to follow the logical structure. Prefer techniques, data structures, protocols, standards, and mechanisms; skip people, companies, products, and generic words.
+3. Before creating, search the vault for each keyword at the source's specificity (exact name, aliases, qualified variants). If a note covers the same concept, link it and create nothing; a broader parent note does not count as covering it.
+4. For each remaining keyword, create a derived explanatory note by following the `note` skill in standard mode (vault root, filename `{Topic Name}.md`). Scope it to the concept as the source uses it and keep it compact; add a diagram only where a flow or structure needs one.
+5. Keep the summary callout source-faithful. External knowledge belongs only in the derived note, never in the callout.
+6. Tag each new note `#ai-agent-note` and end it with the Refs block below. Link the first mention of the keyword in the summary body to the new note, following the Linking Rules.
+7. Create none when retrieval failed or the source's core claim could not be identified.
+8. Extending an existing note, including filling an empty or thin one, is explicit-only. When the user asks, lightly consult primary sources such as official documentation, append a concise explanation, and mark it `#ai-generated`.
+9. Report the created notes in the response to the user.
 
-Minimal concept note shape:
+Refs block for the end of each derived note:
 
 ```md
-# <Concept Name>
+## Refs
 
-#ai-agent-note
-
-- What: What the concept or tool is
-- Why: What problem it addresses and why it is relevant now
-- Refs:
-  - <official docs>
-  - [[Related Article Note]]
+- Source: <article URL>
+- Appeared in: [[<daily note or clipping note>]]
+- <official docs, when consulted>
 ```
 
 Append example for an existing note:
@@ -224,9 +222,10 @@ Append example for an existing note:
 - If an existing note name is available, match that exact Wikilink target.
 - In article notes, link only the most important concepts with `[[...]]`.
 - When updating a daily note, add only one article-note Wikilink per topic entry. Do not hang concept notes beneath it as child bullets; inline concept links inside the summary callout follow the concept-linking rules below.
-- Concept linking in summaries: identify the 1-3 concepts, technologies, or products that are central subjects of the source (not passing mentions), and look each one up in the vault before writing the summary. Check for an exact filename match first, then aliases or close title variants.
+- Concept linking in summaries: identify the 1-3 concepts, technologies, or products that are central subjects of the source (not passing mentions). State each at the specificity the source uses, including its qualifier (the particular kind, variant, or use of the thing), and look it up in the vault before writing the summary. Search filenames and aliases with a real query rather than guessing a few names: the exact name first, then derived or qualified variants that contain it.
+- Accept a match only when the note covers the same concept as the source's subject. Do not substitute a broader parent or umbrella note (a generic category the concept belongs to) just because it exists; that link is noise and hides the missing precise link. Link a general note only when the source itself discusses that general topic.
 - Wikilink the first mention of each matched concept inside the summary block body, using the exact existing note name. Do not put Wikilinks in the callout title line.
-- Link only to notes that already exist. If no note matches, leave the term as plain text; do not create a note and do not leave a dangling link.
+- Link only to notes that exist at the time of linking. If no note matches at the source's specificity, do not fall back to a looser note and do not leave a dangling link. Keystone keywords get a derived note first (see Concept Note Workflow) and are then linked; for any other unmatched central concept, leave the term as plain text and mention it in the response to the user as a link candidate, not in the note.
 - Do not turn every noun in a paragraph into a Wikilink.
 - Never turn code, CLI commands, URLs, dates, or issue IDs into Wikilinks.
 
@@ -244,7 +243,7 @@ Append example for an existing note:
 - Reading only the summary block should make both the subject and its relevance clear.
 - The summary should preserve the source's main utility. If the source is mainly valuable as a response guide, technical mechanism note, or argument, the summary must make that visible at a glance.
 - The logical structure should reduce cognitive load, not increase it. If the nesting makes the note harder to scan, simplify the labels or the depth.
-- Do not turn concept notes into encyclopedias. Preserve only the minimum that makes the next reread efficient.
+- Do not turn derived notes into encyclopedias. Scope them to the concept as the source uses it, so the next reread is efficient.
 - A summarize-only update should let the reader grasp the article's thesis, value, and next-action shape from the opening block alone.
 
 ## Stop Conditions
