@@ -13,6 +13,7 @@ Present a changeset that a coding agent just produced so a human can understand 
 - **The TUI belongs to the user — never read or drive it** — do not interact with a running `hunk` TUI (no keystrokes, no pane reads of its screen). Launching is a different matter: the default is to *host* the TUI for the user in a dedicated Herdr tab & pane (see 4). Only when no Herdr session is available (`HERDR_ENV` unset) fall back to printing the launch command for the user to run themselves. Never run the TUI in your own pane or consume it as your own output.
 - **Sidecar first** — the normal entry point is a prewritten `--agent-context` JSON, because presentation happens before any session exists. Only touch `hunk session ...` once a live session is confirmed.
 - **Reading map is mandatory** — always produce a changeset-level summary, a one-line role for every changed file, and numbered `1.) 2.) 3.) …` annotations in dependency order. Never an unordered pile of notes.
+- **Briefing before the diff** — the first thing the human sees is a briefing that answers three things: 背景 (why this change is needed), 文脈 (where it sits in the larger work), and いま何をどう変更しようとしているか. **Hunk 0.17.7 does not render the top-level `summary` or `files[].summary` in the diff view** (the former is only stored; the latter only feeds the sidebar search; only `annotations[]` appear, inline beside hunks), so carry the briefing as the first annotations — a few notes numbered `0.)` on the first hunk of the first file in `files[]` — and keep the same text in `summary` for tools that do read it. Re-check this when Hunk is upgraded. Write it as full sentences in prose (a one-line headline in `summary`, the paragraph in `rationale`), not keyword bullets, and generously enough that someone who has not followed the conversation can grasp the whole situation. Cite the Obsidian vault note that holds that context as `<note>.md:L<n>` (or `L<a>-L<b>`, path relative to the vault root) so the human can open the source. If no vault note covers it, say so in the briefing instead of inventing a pointer.
 - **One shot, no convergence loop** — answer what the human asks, record the verdict, stop. Do not loop fix → reload → re-collect; that is `$herdr-review-loop`.
 - **Never edit source here** — this skill writes the sidecar and comments only.
 - **Japanese prose** — write `summary` / `rationale` bodies in Japanese. Keep identifiers, paths, and commands verbatim.
@@ -46,6 +47,7 @@ If the user did not say which, and more than one is plausible, ask before buildi
 - Find the **dependency root** — the definition everything else references — and order outward: prerequisites → root → things attached to it → callers → outputs.
 - **Select core lines**: annotate only the hunks that carry intent, a design decision, a risk, or a thing the human would not spot alone. Skip lockfiles, generated files, and mechanical renames.
 - Give noise files a `summary` only, no annotations, so the human knows what to skip.
+- **Gather the briefing sources**: find the vault note that tracks this work (task note 論点 / Event Log, design note, practice log). Get exact line numbers with `grep -n`, then re-read those lines so each cited `file:line` still says what the briefing claims. Prefer the durable record over chat history.
 
 ### 3. Write the sidecar
 
@@ -58,9 +60,9 @@ Schema:
 | Field | Required | Meaning |
 | --- | --- | --- |
 | `version` | yes | `1` |
-| `summary` | yes | changeset-level overview shown above the diff — background, shape of the change, key points, reading order |
+| `summary` | yes | changeset-level overview (背景 / 文脈 / いま何をどう変更するか with vault note `file:line` sources, then reading order and what is not yet verified). **Not rendered by Hunk 0.17.7** — the human sees the same text only through the `0.)` annotations (see Briefing) |
 | `files[].path` | yes | repo-relative path, matching the diff |
-| `files[].summary` | yes | one-line role of this file in the change |
+| `files[].summary` | yes | one-line role of this file in the change (sidebar search only in Hunk 0.17.7; not displayed) |
 | `files[].annotations[]` | no | inline notes for this file |
 | `annotations[].newRange` | one of | `[start, end]` 1-based inclusive lines on the new side |
 | `annotations[].oldRange` | one of | `[start, end]` on the old side, for deleted lines |
@@ -71,12 +73,18 @@ Schema:
 ```json
 {
   "version": 1,
-  "summary": "## 背景\n…\n\n## 変更の全体像\n…\n\n## 読む順番\n1.) 前提 → 3.) 中心 → 5.) 呼び出し側",
+  "summary": "## 背景\n…（出典: `design-note.md:L40-L52`）\n\n## 文脈（いまどこにいるか）\n…（出典: `task-note.md:L18-L27`）\n\n## いま何をどう変更するか\n…\n\n## 読む順番\n1.) 前提 → 3.) 中心 → 5.) 呼び出し側",
   "files": [
     {
       "path": "src/normalize.ts",
       "summary": "クエリ正規化を一箇所に集約する土台。",
       "annotations": [
+        {
+          "newRange": [1, 3],
+          "summary": "0.) 【ブリーフィング 1/3: 背景】検索の正規化が各所に散らばっていた。",
+          "rationale": "…（背景を数文の段落で。出典: `design-note.md:L40-L52`）",
+          "author": "Claude Code"
+        },
         {
           "newRange": [1, 3],
           "summary": "1.) 空白・大小文字・ダッシュ表記の正規化ヘルパを追加。",
@@ -187,7 +195,7 @@ hunk session comment add --repo . --file <path> (--new-line <n> | --old-line <n>
 One fix round driven by explicit human comments is part of the presentation, not a convergence loop. When the delegated fix is committed and pushed:
 
 1. Verify the commit changed only what the comment asked (e.g. comment-only diff → zero code lines).
-2. Update the sidecar annotations whose `newRange`/`oldRange` shifted — stale anchors silently misplace notes after reload.
+2. Update the sidecar annotations whose `newRange`/`oldRange` shifted — stale anchors silently misplace notes after reload. Re-check the briefing's vault `file:line` citations too when the note was edited.
 3. `hunk session reload --repo <worktree> -- diff <same target> --agent-context .local/hunk/agent-context.json --agent-notes`.
 4. Reply on each original comment line with the commit hash (「削除しました (abc1234)。…」) so the thread closes in place.
 
