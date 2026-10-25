@@ -1,0 +1,3 @@
+interface:
+  display_name: "Clip"
+  short_description: "Dump article URLs into Clippings/"
