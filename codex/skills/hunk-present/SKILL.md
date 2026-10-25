@@ -13,7 +13,8 @@ Present a changeset that a coding agent just produced so a human can understand 
 - **The TUI belongs to the user — never read or drive it** — do not interact with a running `hunk` TUI (no keystrokes, no pane reads of its screen). Launching is a different matter: the default is to *host* the TUI for the user in a dedicated Herdr tab & pane (see 4). Only when no Herdr session is available (`HERDR_ENV` unset) fall back to printing the launch command for the user to run themselves. Never run the TUI in your own pane or consume it as your own output.
 - **Sidecar first** — the normal entry point is a prewritten `--agent-context` JSON, because presentation happens before any session exists. Only touch `hunk session ...` once a live session is confirmed.
 - **Reading map is mandatory** — always produce a changeset-level summary, a one-line role for every changed file, and numbered `1.) 2.) 3.) …` annotations in dependency order. Never an unordered pile of notes.
-- **Briefing before the diff** — the first thing the human sees is a briefing that answers three things: 背景 (why this change is needed), 文脈 (where it sits in the larger work), and いま何をどう変更しようとしているか. **Hunk 0.17.7 does not render the top-level `summary` or `files[].summary` in the diff view** (the former is only stored; the latter only feeds the sidebar search; only `annotations[]` appear, inline beside hunks), so carry the briefing as the first annotations — a few notes numbered `0.)` on the first hunk of the first file in `files[]` — and keep the same text in `summary` for tools that do read it. Re-check this when Hunk is upgraded. Write it as full sentences in prose (a one-line headline in `summary`, the paragraph in `rationale`), not keyword bullets, and generously enough that someone who has not followed the conversation can grasp the whole situation. Cite the Obsidian vault note that holds that context as `<note>.md:L<n>` (or `L<a>-L<b>`, path relative to the vault root) so the human can open the source. If no vault note covers it, say so in the briefing instead of inventing a pointer.
+- **Briefing before the diff** — the first thing the human sees is a briefing that answers three things: 背景 (why this change is needed), 文脈 (where it sits in the larger work), and いま何をどう変更しようとしているか. **Hunk 0.17.7 does not render the top-level `summary` or `files[].summary` in the diff view** (the former is only stored; the latter only feeds the sidebar search; only `annotations[]` appear, inline beside hunks), so carry the briefing as the first annotations — a few notes numbered `0.)` on the first hunk of the first file in `files[]` — and keep the same text in `summary` for tools that do read it. Re-check this when Hunk is upgraded. Write it as full sentences in prose (a one-line headline in `summary`, the paragraph in `rationale`), not keyword bullets, and generously enough that someone who has not followed the conversation can grasp the whole situation. Cite the Obsidian vault note that holds that context as `<note>.md:L<n>` (or `L<a>-L<b>`, path relative to the vault root) so the human can open the source. If no vault note covers it, say so in the briefing instead of inventing a pointer. Where 3b says a picture explains faster than prose, the 文脈 and いま何をどう変更するか notes also carry a box-art diagram in their `rationale`.
+- **Box art for Hunk is U+2800-padded, always** — Hunk collapses runs of ordinary whitespace (U+0020, U+00A0, U+2002, U+3000) into one space, which shifts the right border of every box; only the braille blank (U+2800) survives. Produce every diagram with this skill's `scripts/mermaid_to_boxart.py` (default `--pad braille`), never with crit-explain's copy, never with hand-typed spaces, and never inside a code fence (Hunk prints fences literally). Details and measurements in 3b.
 - **One shot, no convergence loop** — answer what the human asks, record the verdict, stop. Do not loop fix → reload → re-collect; that is `$herdr-review-loop`.
 - **Never edit source here** — this skill writes the sidecar and comments only.
 - **Japanese prose** — write `summary` / `rationale` bodies in Japanese. Keep identifiers, paths, and commands verbatim.
@@ -48,6 +49,7 @@ If the user did not say which, and more than one is plausible, ask before buildi
 - **Select core lines**: annotate only the hunks that carry intent, a design decision, a risk, or a thing the human would not spot alone. Skip lockfiles, generated files, and mechanical renames.
 - Give noise files a `summary` only, no annotations, so the human knows what to skip.
 - **Gather the briefing sources**: find the vault note that tracks this work (task note 論点 / Event Log, design note, practice log). Get exact line numbers with `grep -n`, then re-read those lines so each cited `file:line` still says what the briefing claims. Prefer the durable record over chat history.
+- **Decide the briefing diagrams** (3b): for the 文脈 note and the いま何をどう変更するか note, settle now whether each gets a diagram, so the sidecar is written once.
 
 ### 3. Write the sidecar
 
@@ -67,7 +69,7 @@ Schema:
 | `annotations[].newRange` | one of | `[start, end]` 1-based inclusive lines on the new side |
 | `annotations[].oldRange` | one of | `[start, end]` on the old side, for deleted lines |
 | `annotations[].summary` | yes | the note body, prefixed `N.)` |
-| `annotations[].rationale` | no | the WHY behind the note |
+| `annotations[].rationale` | no | the WHY behind the note; the briefing's box-art diagram goes at its end (3b) |
 | `annotations[].author` | no | attribution label, e.g. `"Claude Code"` |
 
 ```json
@@ -87,6 +89,18 @@ Schema:
         },
         {
           "newRange": [1, 3],
+          "summary": "0.) 【ブリーフィング 2/3: 文脈】検索は search.ts を経由し、API 側が呼ぶ。",
+          "rationale": "…（文脈を数文の段落で。構成が要点なら 3b のとおり末尾に図を足す。出典: `task-note.md:L18-L27`）",
+          "author": "Claude Code"
+        },
+        {
+          "newRange": [1, 3],
+          "summary": "0.) 【ブリーフィング 3/3: いま何をどう変更するか】search.ts の手前に正規化ヘルパを足す。",
+          "rationale": "…（変更の段落）\n\n┌──────────────┐\n│\u2800normalize.ts\u2800│\n│\u2800NEW:\u2800正規化\u2800\u2800│\n└──────────────┘\n\u2800\u2800\u2800\u2800\u2800\u2800\u2800┌┘\n…（`mermaid_to_boxart.py --json` の出力をそのまま貼る）",
+          "author": "Claude Code"
+        },
+        {
+          "newRange": [1, 3],
           "summary": "1.) 空白・大小文字・ダッシュ表記の正規化ヘルパを追加。",
           "rationale": "後続の検索層が正規化済みトークンだけを前提にできるため、同種の整形ロジックが各所に散らない。",
           "author": "Claude Code"
@@ -100,13 +114,40 @@ Schema:
 - Do not copy secrets, tokens, keys, or credential-like material from the diff into the sidecar or any command line.
 - Keep every `path` exactly as the diff reports it; unmatched paths silently lose their notes.
 
+### 3b. Diagrams in the briefing
+
+A diagram goes at the end of the `rationale` of the briefing's 文脈 note (how the pieces are arranged today) and its いま何をどう変更するか note (what this change adds or rewires). Not in 背景, and not in the per-file `1.) …` notes, which stay line-level WHAT/WHY. The top-level `summary` is never displayed, so it may leave the diagrams out.
+
+**When to draw** (`[解釈]`: a heuristic, not measured; the test is whether the picture says something prose cannot say as fast). Decide per note:
+
+- Draw when any holds: three or more components whose relations matter (call, data, or event flow; module wiring; resource dependencies); a procedure of three or more ordered stages; the change adds, removes, or re-wires a node or edge in such a structure.
+- Skip when any holds: the change is in one file or one small region; it is mechanical (rename, format, version bump, lockfile, generated files); the structure is two things or a single line that a sentence carries; the picture would only restate the file order the reading map already gives. When unsure, skip.
+- The 文脈 diagram is the "before". In the 変更 note draw the "after" and mark additions and changes with ASCII label prefixes `NEW:` / `CHG:`. Only when edges are removed or re-pointed, draw a labelled 変更前 / 変更後 pair in the 変更 note instead (each at most ~15 lines).
+
+**How to draw**
+
+1. Flow or structure → write a mermaid `flowchart` to a scratch file (not the repo) and run `python3 <skill-dir>/scripts/mermaid_to_boxart.py map.mmd`. Keep it to about 7 nodes, short labels, and about 30 lines tall (`[解釈]`; 5 chained nodes already take 27 lines, and the human's pane measured 124 × 59). The layout is top-down only, subgraph borders are not drawn, edges are not de-crossed, and a node with several outgoing edges draws its branch point with `│` where `├` or `┐` belongs (all inherited from crit-explain's script): read the printed art once and simplify the graph if it is hard to follow.
+2. Sequence, state, or anything that is not a flowchart → draw it by hand with ordinary spaces in a scratch file, then pass it through `--raw` (same padding, width check, and JSON escaping).
+3. Width: when the art is wider than `--max-width` (default 100 display columns) the script exits 2 with the reason on stderr and prints nothing. Split the diagram or cut nodes; do not raise the limit or switch to `--pad space` to get past it. In labels prefer ASCII over `→` and similar East-Asian-ambiguous characters (the script warns).
+
+**How to embed** — run the script with `--json` and paste its single line into the `rationale` string after the prose and a `\n\n`. It already holds `\n` for newlines and `\u2800` for the padding. Do not retype, re-indent, or fence the diagram. Then run `python3 <skill-dir>/scripts/mermaid_to_boxart.py --check .local/hunk/agent-context.json`; it must exit 0 (no ordinary space or code fence on a diagram line, none wider than the limit). A live answer with a diagram (step 5) uses the same fragment inside `comment apply --stdin`.
+
+**Why** (Hunk 0.17.7, `[実測]` in a pseudo terminal at 124 columns):
+
+- Runs of ordinary whitespace collapse to one space and a leading run vanishes, so a space-padded box loses its right border. U+2800 is kept, including at the start of a line.
+- `rationale` is not rendered as markdown: `#`, `**`, backticks, and code fences appear as typed.
+- In stack layout a note's text is as wide as the window minus 12 columns, so a W-column diagram fits when the window is at least W+12 (100 columns needs 112). In a narrower window the line hard-wraps and the box breaks. The default limit of 100 assumes the human's 124-column pane; for a narrower pane pass `--max-width <pane width − 12>`.
+- In split layout notes occupy only the right half (56 text columns at 124), and auto picks split on a wide window (160), so step 4 pins `--mode stack`. The layout is fixed at launch: `hunk session reload` keeps it, and `--mode` on reload does not change it.
+- Live comments (`comment add`, `comment apply`) render the same way as sidecar notes.
+- Seen by the human (2026-10-25, their terminal): a U+2800-padded box shows its right border as one straight line. Not verified: the width of the box-drawing and arrow glyphs themselves in that terminal's font (the pseudo terminal only checks character cells), and whether Hunk newer than 0.17.7 (0.24.1 exists) behaves the same. After a Hunk upgrade re-measure with `uv run --with pyte python3 <skill-dir>/scripts/check_hunk_render.py` (a private, throwaway Hunk on a temp repo in a pseudo terminal; it never touches the human's session), together with the briefing placement note under Briefing before the diff.
+
 ### 4. Host the TUI in a dedicated Herdr tab (default)
 
 When `HERDR_ENV=1`, host the presentation for the user instead of making them launch it:
 
 1. Create a dedicated tab in the current workspace (`herdr tab create`) — the TUI wants the full pane.
 2. Name **both** the tab and its pane `hunk-<PR番号|topic>` (`herdr tab rename` / `herdr pane rename`). The user finds it in the sidebar by that name; keep the convention stable across presentations.
-3. Run the launch command there: `herdr pane run <pane> "cd <worktree> && EDITOR=nvim hunk diff <target> --agent-context .local/hunk/agent-context.json --agent-notes"`. Always launch `hunk` with `EDITOR=nvim` so in-TUI edit actions open nvim (the env is fixed at launch; it cannot be added later via `hunk session ...`). Do not steal focus — tell the user the tab name instead.
+3. Run the launch command there: `herdr pane run <pane> "cd <worktree> && EDITOR=nvim hunk diff <target> --mode stack --agent-context .local/hunk/agent-context.json --agent-notes"`. Always launch `hunk` with `EDITOR=nvim` so in-TUI edit actions open nvim (the env is fixed at launch; it cannot be added later via `hunk session ...`). Always pass `--mode stack`: notes then use the full pane width, while split and auto (which picks split on a wide pane) confine them to the right half and hard-wrap the briefing diagrams (see 3b; `[実測]`, Hunk 0.17.7). The layout is fixed at launch too. Do not steal focus — tell the user the tab name instead.
 4. From here the session is live: interact only via `hunk session ...` (comments, reload). Never read or drive the TUI pane itself.
 5. Start the comment watcher (next section). This is the default, not an option: without it a human comment sits unanswered until the human also says so in chat.
 
@@ -166,12 +207,12 @@ When the presentation runs inside a `$herdr-impl` orchestration, **reuse its imp
 When `HERDR_ENV` is unset (or the user asks to run it themselves), print the command and let them run it in their terminal:
 
 ```bash
-EDITOR=nvim hunk diff --agent-context .local/hunk/agent-context.json
+EDITOR=nvim hunk diff --mode stack --agent-context .local/hunk/agent-context.json
 ```
 
 - Add `--agent-notes` when the notes must be visible on open.
 - Say in one or two lines what the map covers and where to start reading.
-- If a session is already live for this repo (`hunk session list`), do not ask for a relaunch: inject the same notes with one `hunk session comment apply --repo . --stdin` batch, or `hunk session reload --repo . -- diff` first when the loaded content is wrong.
+- If a session is already live for this repo (`hunk session list`), do not ask for a relaunch: inject the same notes with one `hunk session comment apply --repo . --stdin` batch, or `hunk session reload --repo . -- diff` first when the loaded content is wrong. That session keeps the layout it was launched with; if it was not launched with `--mode stack`, say so before sending diagrams, since split would wrap them.
 - Once the user's session is live, start the comment watcher per the no-Herdr rows of the table in 4.
 
 ### 5. Answer questions on Hunk
@@ -196,7 +237,7 @@ One fix round driven by explicit human comments is part of the presentation, not
 
 1. Verify the commit changed only what the comment asked (e.g. comment-only diff → zero code lines).
 2. Update the sidecar annotations whose `newRange`/`oldRange` shifted — stale anchors silently misplace notes after reload. Re-check the briefing's vault `file:line` citations too when the note was edited.
-3. `hunk session reload --repo <worktree> -- diff <same target> --agent-context .local/hunk/agent-context.json --agent-notes`.
+3. `hunk session reload --repo <worktree> -- diff <same target> --agent-context .local/hunk/agent-context.json --agent-notes`. No `--mode` here: reload keeps the layout the session was launched with (`[実測]`). If a briefing diagram's nodes changed, regenerate it and re-run `--check` first.
 4. Reply on each original comment line with the commit hash (「削除しました (abc1234)。…」) so the thread closes in place.
 
 A second round of fixes belongs to `$herdr-review-loop`, not here.
