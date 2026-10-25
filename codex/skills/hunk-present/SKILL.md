@@ -13,7 +13,7 @@ Present a changeset that a coding agent just produced so a human can understand 
 - **The TUI belongs to the user — never read or drive it** — do not interact with a running `hunk` TUI (no keystrokes, no pane reads of its screen). Launching is a different matter: the default is to *host* the TUI for the user in a dedicated Herdr tab & pane (see 4). Only when no Herdr session is available (`HERDR_ENV` unset) fall back to printing the launch command for the user to run themselves. Never run the TUI in your own pane or consume it as your own output.
 - **Sidecar first** — the normal entry point is a prewritten `--agent-context` JSON, because presentation happens before any session exists. Only touch `hunk session ...` once a live session is confirmed.
 - **Reading map is mandatory** — always produce a changeset-level summary, a one-line role for every changed file, and numbered `1.) 2.) 3.) …` annotations in dependency order. Never an unordered pile of notes.
-- **Briefing before the diff** — the first thing the human sees is a briefing that answers three things: 背景 (why this change is needed), 文脈 (where it sits in the larger work), and いま何をどう変更しようとしているか. **Hunk 0.17.7 does not render the top-level `summary` or `files[].summary` in the diff view** (the former is only stored; the latter only feeds the sidebar search; only `annotations[]` appear, inline beside hunks), so carry the briefing as the first annotations — a few notes numbered `0.)` on the first hunk of the first file in `files[]` — and keep the same text in `summary` for tools that do read it. Re-check this when Hunk is upgraded. Write it as full sentences in prose (a one-line headline in `summary`, the paragraph in `rationale`), not keyword bullets, and generously enough that someone who has not followed the conversation can grasp the whole situation. Cite the Obsidian vault note that holds that context as `<note>.md:L<n>` (or `L<a>-L<b>`, path relative to the vault root) so the human can open the source. If no vault note covers it, say so in the briefing instead of inventing a pointer. Where 3b says a picture explains faster than prose, the 文脈 and いま何をどう変更するか notes also carry a box-art diagram in their `rationale`.
+- **Briefing before the diff** — the first thing the human sees is a briefing that answers three things: 背景 (why this change is needed), 文脈 (where it sits in the larger work), and いま何をどう変更しようとしているか. **Hunk 0.17.7 does not render the top-level `summary` or `files[].summary` in the diff view** (the former is only stored; the latter only feeds the sidebar search; only `annotations[]` appear, inline beside hunks), so carry the briefing as the first annotations — a few notes numbered `0.)` on the first hunk of the first file in `files[]` — and keep the same text in `summary` for tools that do read it. Re-check this when Hunk is upgraded. Write each note as one claim plus its breakdown (3a): a one-sentence headline in `summary`, a nested plain-text outline in `rationale` instead of a paragraph, every line a full statement rather than a bare keyword, and generous enough that someone who has not followed the conversation can grasp the whole situation. Cite the Obsidian vault note that holds that context as `<note>.md:L<n>` (or `L<a>-L<b>`, path relative to the vault root) so the human can open the source. If no vault note covers it, say so in the briefing instead of inventing a pointer. Where 3b says a picture explains faster than prose, the 文脈 and いま何をどう変更するか notes also carry a box-art diagram in their `rationale`.
 - **Box art for Hunk is U+2800-padded, always** — Hunk collapses runs of ordinary whitespace (U+0020, U+00A0, U+2002, U+3000) into one space, which shifts the right border of every box; only the braille blank (U+2800) survives. Produce every diagram with this skill's `scripts/mermaid_to_boxart.py` (default `--pad braille`), never with crit-explain's copy, never with hand-typed spaces, and never inside a code fence (Hunk prints fences literally). Details and measurements in 3b.
 - **One shot, no convergence loop** — answer what the human asks, record the verdict, stop. Do not loop fix → reload → re-collect; that is `$herdr-review-loop`.
 - **Never edit source here** — this skill writes the sidecar and comments only.
@@ -83,20 +83,26 @@ Schema:
       "annotations": [
         {
           "newRange": [1, 3],
-          "summary": "0.) 【ブリーフィング 1/3: 背景】検索の正規化が各所に散らばっていた。",
-          "rationale": "…（背景を数文の段落で。出典: `design-note.md:L40-L52`）",
+          "summary": "0.) 【ブリーフィング 1/4: 背景】検索の正規化が各所に散らばっていた。",
+          "rationale": "- 散らばり: クエリの整形が、呼び出し元ごとに別々に書かれている [確認]\n  - 影響: 同じ入力でも、経路によって検索結果がそろわない\n- 出典 [記録]\n  - `design-note.md:L40-L52`",
           "author": "Claude Code"
         },
         {
           "newRange": [1, 3],
-          "summary": "0.) 【ブリーフィング 2/3: 文脈】検索は search.ts を経由し、API 側が呼ぶ。",
-          "rationale": "…（文脈を数文の段落で。構成が要点なら 3b のとおり末尾に図を足す。出典: `task-note.md:L18-L27`）",
+          "summary": "0.) 【ブリーフィング 2/4: 文脈】検索層の整理の 1 本目で、呼び出し側は触らない。",
+          "rationale": "- 位置: 検索層の整理の 1 本目の commit\n  - 前提: 呼び出し側の API は変えない\n- 次: 呼び出し側を正規化済みの入力に切り替えるのは、次の commit\n- 出典 [記録]\n  - `task-note.md:L18-L27`",
           "author": "Claude Code"
         },
         {
           "newRange": [1, 3],
-          "summary": "0.) 【ブリーフィング 3/3: いま何をどう変更するか】search.ts の手前に正規化ヘルパを足す。",
-          "rationale": "…（変更の段落）\n\n┌──────────────┐\n│\u2800normalize.ts\u2800│\n│\u2800NEW:\u2800正規化\u2800\u2800│\n└──────────────┘\n\u2800\u2800\u2800\u2800\u2800\u2800\u2800┌┘\n…（`mermaid_to_boxart.py --json` の出力をそのまま貼る）",
+          "summary": "0.) 【ブリーフィング 3/4: いま何をどう変更するか】search.ts の手前に正規化ヘルパを足す。",
+          "rationale": "- 足すもの: `normalize.ts` を新規に作る\n  - 空白・大小文字・ダッシュ表記をそろえる関数を置く\n  - 帰結: 後続の検索層は、正規化済みのトークンだけを前提にできる\n- 触らないもの: `search.ts` と呼び出し側\n\n図: NEW: が、この commit で足すもの\n┌──────────────┐\n│\u2800normalize.ts\u2800│\n│\u2800NEW:\u2800正規化\u2800\u2800│\n└──────────────┘\n\u2800\u2800\u2800\u2800\u2800\u2800\u2800┌┘\n…（`mermaid_to_boxart.py --json` の出力をそのまま貼る）",
+          "author": "Claude Code"
+        },
+        {
+          "newRange": [1, 3],
+          "summary": "0.) 【ブリーフィング 4/4: 読む順番と未確認】読むのは 1.) の 1 件。未確認は 1 つ。",
+          "rationale": "- 読む順番: 1.) の 1 件だけ (`normalize.ts` の新規ファイル全体)\n- 確認したこと [確認]\n  - 型検査とテストが通る\n- 未確認 [未確認]\n  - 全角ダッシュが実データに現れるか。本番ログで確かめる",
           "author": "Claude Code"
         },
         {
@@ -111,12 +117,54 @@ Schema:
 }
 ```
 
+- The `rationale` strings above indent with ordinary spaces, the natural way to write them; `--harden` (3a) turns that indent into U+2800 before launch.
 - Do not copy secrets, tokens, keys, or credential-like material from the diff into the sidecar or any command line.
 - Keep every `path` exactly as the diff reports it; unmatched paths silently lose their notes.
 
+### 3a. The briefing as a nested outline
+
+Each `0.)` note makes one claim and breaks it down: the claim is the headline, the breakdown an outline under it. The four notes are 背景, 文脈, いま何をどう変更するか, and 読む順番と未確認 (numbered `1/4` … `4/4`). The outline rules come from `$unpack` (R1 depth, applied to indent levels; R3 peers; R4 connectives with content; R5 stand-alone claim lines; R7 no padding; the Expansion test; epistemic labels). Its IDs and ID freeze (R2), topic budget, frames, set shape, chain test, and prose pivots are left out: a briefing is four short notes read once from the top, not a multi-topic read, and a follow-up comment can quote the line instead of an ID (`[解釈]`). A worked before/after is in `references/briefing-outline-example.md`.
+
+**Shape of a note** (`[解釈]`; the headline/body split follows how Hunk draws `summary` and `rationale`)
+
+- `summary` is the claim: one sentence that stands alone. Reading only the four headlines must still give the gist of the briefing (Skip test). A headline longer than the note wraps, which is harmless.
+- `rationale` is the breakdown, as plain text. No paragraph.
+- Only for 文脈 and 変更, when 3b says to draw: a blank line, a one-line caption, then the diagram (caption example: `図: NEW: が、この commit で足すもの`).
+
+**Outline grammar**
+
+- One idea per line, marker `- `, two cells of indent per level, three levels at most (R1). A fourth level means the note should be split.
+- Nest by logic, not by order of mention. A child is something its parent needs: a reason, a premise, a consequence, an exception, an example, or a part of it. Siblings are peers (R3); do not flatten "A, so B, but C" into three siblings: B goes under A (`帰結:`), C under B (`ただし:`).
+- Name the relation when it is not plain part-of, and put the real content after the colon: `理由:` `前提:` `帰結:` `ただし:` `例:` `出典:` (R4). A line that only holds children and says nothing is dropped.
+- Every line is a complete statement that reads without its children (R5), in plain words rather than a bare keyword. The children answer "why may I believe this" and can be skipped.
+- Expand a line only when its children give a premise the human's judgment depends on, a magnitude (a number, a count, a scope), or a failure condition (what would make it wrong); otherwise leave it as one line (Expansion test). A child that restates its parent is padding (R7).
+- Label what the human may doubt, with one ladder for the whole briefing: `[記録]` a note or doc says so (cite `file:L<n>`), `[確認]` checked in this change (a command ran, the code was read), `[解釈]` the agent's inference, `[未確認]` not checked yet (say when it will be). An unlabeled line is visible in the diff itself.
+- Keep every line within 100 display columns including the indent (a Japanese character counts 2); move the rest into a child line. Do not use `→` or other East-Asian-ambiguous characters; the relation labels carry the logic. Do not align with runs of spaces.
+
+**What the level-1 lines are** (`[解釈]`)
+
+- 背景: the goal this change serves, what already stands, the decision it follows and who made it, the sources.
+- 文脈: what is decided, what is only the agent's reading and not yet approved, what comes before and after.
+- 変更: what is added, changed, or left alone; each new term the human must learn; the review involvement level; the sources.
+- 読む順番と未確認: the order of the `1.)` … `N.)` notes; what was checked and how; what was not run; each unverified item and when it will be checked.
+
+**Authoring flow** — write the `rationale` strings with ordinary spaces (two per level), then run both commands; `--check` must exit 0 before launch:
+
+```bash
+python3 <skill-dir>/scripts/mermaid_to_boxart.py --harden .local/hunk/agent-context.json
+python3 <skill-dir>/scripts/mermaid_to_boxart.py --check .local/hunk/agent-context.json
+```
+
+`--harden` rewrites the file in place (leading spaces and tabs of every `rationale` line, and every space on a diagram line, become U+2800 written as `\u2800`; running it twice changes nothing). `--check` also flags a line that starts with ordinary whitespace, a run of spaces inside a line, an indent that is odd or deeper than three levels, and a briefing line wider than `--max-width`.
+
+**Why** (Hunk 0.17.7, `[実測]` in a pseudo terminal; re-measure with `scripts/check_hunk_render.py`, see 3b):
+
+- A leading run of ordinary spaces vanishes, so an outline indented with spaces comes out flat. An indent made of U+2800 is kept at every level.
+- A line wider than the note's text width wraps, and the continuation starts at column 0 with no hanging indent, so the nesting of a wrapped line is lost. At 124 columns the width is 112; in a 100-column window it is 88. Keep lines short, and for a pane narrower than 112 columns pass `--max-width <pane width − 12>`.
+
 ### 3b. Diagrams in the briefing
 
-A diagram goes at the end of the `rationale` of the briefing's 文脈 note (how the pieces are arranged today) and its いま何をどう変更するか note (what this change adds or rewires). Not in 背景, and not in the per-file `1.) …` notes, which stay line-level WHAT/WHY. The top-level `summary` is never displayed, so it may leave the diagrams out.
+A diagram goes at the end of the `rationale` (after the outline, a blank line, and a one-line caption) of the briefing's 文脈 note (how the pieces are arranged today) and its いま何をどう変更するか note (what this change adds or rewires). Not in 背景, and not in the per-file `1.) …` notes, which stay line-level WHAT/WHY. The top-level `summary` is never displayed, so it may leave the diagrams out.
 
 **When to draw** (`[解釈]`: a heuristic, not measured; the test is whether the picture says something prose cannot say as fast). Decide per note:
 
@@ -130,7 +178,7 @@ A diagram goes at the end of the `rationale` of the briefing's 文脈 note (how 
 2. Sequence, state, or anything that is not a flowchart → draw it by hand with ordinary spaces in a scratch file, then pass it through `--raw` (same padding, width check, and JSON escaping).
 3. Width: when the art is wider than `--max-width` (default 100 display columns) the script exits 2 with the reason on stderr and prints nothing. Split the diagram or cut nodes; do not raise the limit or switch to `--pad space` to get past it. In labels prefer ASCII over `→` and similar East-Asian-ambiguous characters (the script warns).
 
-**How to embed** — run the script with `--json` and paste its single line into the `rationale` string after the prose and a `\n\n`. It already holds `\n` for newlines and `\u2800` for the padding. Do not retype, re-indent, or fence the diagram. Then run `python3 <skill-dir>/scripts/mermaid_to_boxart.py --check .local/hunk/agent-context.json`; it must exit 0 (no ordinary space or code fence on a diagram line, none wider than the limit). A live answer with a diagram (step 5) uses the same fragment inside `comment apply --stdin`.
+**How to embed** — run the script with `--json` and paste its single line into the `rationale` string after the outline, a `\n\n`, and the caption line with its `\n`. It already holds `\n` for newlines and `\u2800` for the padding. Do not retype, re-indent, or fence the diagram. Then run `python3 <skill-dir>/scripts/mermaid_to_boxart.py --check .local/hunk/agent-context.json`; it must exit 0 (no ordinary space or code fence on a diagram line, none wider than the limit). A live answer with a diagram (step 5) uses the same fragment inside `comment apply --stdin`.
 
 **Why** (Hunk 0.17.7, `[実測]` in a pseudo terminal at 124 columns):
 
@@ -237,7 +285,7 @@ One fix round driven by explicit human comments is part of the presentation, not
 
 1. Verify the commit changed only what the comment asked (e.g. comment-only diff → zero code lines).
 2. Update the sidecar annotations whose `newRange`/`oldRange` shifted — stale anchors silently misplace notes after reload. Re-check the briefing's vault `file:line` citations too when the note was edited.
-3. `hunk session reload --repo <worktree> -- diff <same target> --agent-context .local/hunk/agent-context.json --agent-notes`. No `--mode` here: reload keeps the layout the session was launched with (`[実測]`). If a briefing diagram's nodes changed, regenerate it and re-run `--check` first.
+3. `hunk session reload --repo <worktree> -- diff <same target> --agent-context .local/hunk/agent-context.json --agent-notes`. No `--mode` here: reload keeps the layout the session was launched with (`[実測]`). If a briefing diagram's nodes changed, regenerate it; after any sidecar edit re-run `--harden` and `--check` before reloading.
 4. Reply on each original comment line with the commit hash (「削除しました (abc1234)。…」) so the thread closes in place.
 
 A second round of fixes belongs to `$herdr-review-loop`, not here.

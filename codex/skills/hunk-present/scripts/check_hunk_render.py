@@ -2,9 +2,11 @@
 """Re-measure how Hunk draws box-art notes, in a pseudo terminal, on a throwaway repo.
 
 Why
-    SKILL.md relies on Hunk 0.17.7 facts: runs of ordinary whitespace collapse,
-    U+2800 survives, rationale is not markdown, and in stack layout a note's
-    text is (window - 12) columns wide. Run this after a Hunk upgrade.
+    SKILL.md relies on Hunk 0.17.7 facts: runs of ordinary whitespace collapse
+    and a leading run vanishes, U+2800 survives (also as an outline indent),
+    rationale is not markdown, in stack layout a note's text is (window - 12)
+    columns wide, and a wrapped line continues at column 0 with no hanging
+    indent. Run this after a Hunk upgrade.
 
 What it touches
     Its own `hunk diff --staged` on a temporary git repo under a temp dir,
@@ -51,6 +53,14 @@ SAMPLE_FLOW = (
     ' EB --> L["CHG: 通知 Lambda<br/>失敗を DLQ へ"]\n L --> SNS["SNS topic<br/>アラート通知"]\n'
     ' L -.-> DLQ["NEW: SQS DLQ"]'
 )
+
+
+B = boxart.BRAILLE_BLANK
+OUTLINE = ["- 親の主張", "  - 子: 理由", "    - 孫: 出典"]
+
+
+def indented(lines, blank):
+    return "\n".join(blank * (len(l) - len(l.lstrip(" "))) + l.lstrip(" ") for l in lines)
 
 
 def raw_box(width):
@@ -146,6 +156,8 @@ def write_sample(root, text_width):
         ("1.) braille padding: every right border should line up", pad(flow)),
         ("2.) plain spaces (broken on purpose, for comparison)", flow),
         (f"3.) widest box that fits a pane of {text_width + 12} columns", pad(raw_box(text_width))),
+        ("4.) outline indented with U+2800: three levels should be visible", indented(OUTLINE, B)),
+        ("5.) outline indented with spaces (broken on purpose): the levels vanish", indented(OUTLINE, " ")),
     ]
     repo = make_repo(root, notes)
     print(f"cd {repo} && hunk diff --staged --mode stack --agent-context ctx.json --agent-notes")
@@ -170,6 +182,9 @@ def main():
         "markdown": ("**bold** `code`\n```", "rationale is shown as typed, not as markdown"),
         "fit": (pad(raw_box(text_width)), f"art {text_width} columns wide fits (window - 12)"),
         "wrap": (pad(raw_box(text_width + 1)), f"art {text_width + 1} columns wide wraps"),
+        "indent": (indented(OUTLINE, B), "outline indent made of U+2800 is kept at every level"),
+        "plainindent": (indented(OUTLINE, " "), "outline indent made of spaces vanishes"),
+        "hanging": (B * 2 + "- " + " ".join(["word"] * (text_width // 5 + 4)), "a wrapped line continues at column 0, no hanging indent"),
     }
     with tempfile.TemporaryDirectory() as root:
         repo = make_repo(root, [(name, rationale) for name, (rationale, _) in probes.items()])
@@ -188,6 +203,9 @@ def main():
         "markdown": lambda a, s, b: s,
         "fit": lambda a, s, b: a and s,
         "wrap": lambda a, s, b: b is not None and not s,
+        "indent": lambda a, s, b: a and s,
+        "plainindent": lambda a, s, b: b is not None and not s and [l.lstrip(B) for l in b] == [l.lstrip() for l in OUTLINE],
+        "hanging": lambda a, s, b: b is not None and len(b) == 2 and b[0].startswith(B) and not b[1].startswith(B),
     }
     changed = 0
     for name, (_, label) in probes.items():

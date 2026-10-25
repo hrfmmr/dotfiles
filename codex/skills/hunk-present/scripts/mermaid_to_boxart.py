@@ -12,7 +12,8 @@ Provenance
     Copied from crit-explain/scripts/mermaid_to_boxart.py (itself a local
     reimplementation of the idea in
     https://github.com/simonw/tools/blob/main/grok-mermaid.html) and extended
-    with --pad, --max-width, --json, --raw and --check. crit-explain keeps its own copy.
+    with --pad, --max-width, --json, --raw, --check and --harden. crit-explain keeps
+    its own copy.
 
 Supported subset
     - header: `flowchart TD|TB|BT|LR|RL` or `graph ...`
@@ -30,6 +31,7 @@ Usage
     python3 mermaid_to_boxart.py [diagram.mmd] [--pad braille|space]
                                  [--max-width COLS] [--json] [--raw]
     python3 mermaid_to_boxart.py --check sidecar.json [--max-width COLS]
+    python3 mermaid_to_boxart.py --harden sidecar.json
     A leading ```mermaid fence and trailing ``` are stripped automatically.
     stdin is read when no file is given. Exit 2 when the diagram is wider than
     --max-width (default 100; 0 disables); nothing is printed to stdout then.
@@ -38,7 +40,13 @@ Usage
     --json prints a fragment to paste inside a JSON string value: newlines as
     \\n and U+2800 as \\u2800. --check scans a sidecar and exits 1 on any
     diagram line that still holds an ordinary space, a code fence, or a line
-    wider than --max-width.
+    wider than --max-width. It also exits 1 on a rationale line that starts
+    with ordinary whitespace (Hunk drops it), and, in a briefing note (summary
+    starting with 0.)), on a line wider than --max-width (Hunk wraps it with no
+    hanging indent) or indented other than 2 or 4 U+2800 cells (3 levels at most).
+    --harden rewrites the sidecar in place: the leading ordinary whitespace of
+    every rationale line (tab = 2) and every space on a diagram line become
+    U+2800, written as an escape; it is safe to run twice.
 """
 import argparse
 import json
@@ -436,10 +444,61 @@ def check(args):
                 problems.append(f"{where}: ordinary whitespace in diagram line {l!r} (Hunk collapses it)")
             elif args.max_width and dwidth(l) > args.max_width:
                 problems.append(f"{where}: diagram line is {dwidth(l)} columns, over {args.max_width}")
+    outlines = 0
+    for f in ctx.get("files", []):
+        for i, a in enumerate(f.get("annotations", [])):
+            where = f"{f.get('path')} annotations[{i}]"
+            briefing = a.get("summary", "").startswith("0.)")
+            for l in a.get("rationale", "").splitlines():
+                if not l.strip() or any(is_drawn(c) for c in l):
+                    continue
+                if l[0] in " \t":
+                    problems.append(f"{where}: line starts with ordinary whitespace, which Hunk drops (run --harden): {l.strip()[:30]!r}")
+                if re.search(r"[ \t\u00a0\u2002\u3000]{2,}", l.lstrip(" \t")):
+                    problems.append(f"{where}: a run of spaces inside a line collapses to one in Hunk: {l.strip()[:30]!r}")
+                if not briefing:
+                    continue
+                outlines += 1
+                indent = len(l) - len(l.lstrip(BRAILLE_BLANK))
+                if indent % 2 or indent > 4:
+                    problems.append(f"{where}: indent is {indent} cells; use 2 per level, 3 levels at most: {l.strip()[:30]!r}")
+                if args.max_width and dwidth(l) > args.max_width:
+                    problems.append(f"{where}: briefing line is {dwidth(l)} columns, over {args.max_width}; Hunk wraps it with no hanging indent: {l.strip()[:30]!r}")
     for p in problems:
         print(p, file=sys.stderr)
-    print(f"boxart --check: {diagrams} diagram block(s), {len(problems)} problem(s)")
+    print(f"boxart --check: {diagrams} diagram block(s), {outlines} briefing line(s), {len(problems)} problem(s)")
     return 1 if problems else 0
+
+
+def harden_text(text):
+    out = []
+    for l in text.split("\n"):
+        l = l.rstrip(" \t")
+        if any(is_drawn(c) for c in l):
+            l = l.replace(" ", BRAILLE_BLANK)
+        else:
+            body = l.lstrip(" \t")
+            lead = l[: len(l) - len(body)]
+            l = BRAILLE_BLANK * sum(2 if c == "\t" else 1 for c in lead) + body
+        out.append(l)
+    return "\n".join(out)
+
+
+def harden(args):
+    with open(args.harden, encoding="utf-8") as fh:
+        ctx = json.load(fh)
+    changed = 0
+    for f in ctx.get("files", []):
+        for a in f.get("annotations", []):
+            if "rationale" in a:
+                new = harden_text(a["rationale"])
+                changed += new != a["rationale"]
+                a["rationale"] = new
+    text = json.dumps(ctx, ensure_ascii=False, indent=2).replace(BRAILLE_BLANK, "\\u2800")
+    with open(args.harden, "w", encoding="utf-8") as fh:
+        fh.write(text + "\n")
+    print(f"boxart --harden: {changed} rationale(s) rewritten in {args.harden}")
+    return 0
 
 
 def main(argv):
@@ -449,8 +508,11 @@ def main(argv):
     ap.add_argument("--max-width", type=int, default=100, help="display columns; 0 disables")
     ap.add_argument("--json", action="store_true", help="escape for a JSON string value")
     ap.add_argument("--raw", action="store_true", help="input is an already drawn picture, not mermaid")
-    ap.add_argument("--check", metavar="SIDECAR", help="validate diagrams inside a sidecar JSON")
+    ap.add_argument("--check", metavar="SIDECAR", help="validate diagrams and briefing outlines inside a sidecar JSON")
+    ap.add_argument("--harden", metavar="SIDECAR", help="rewrite a sidecar in place: indents and diagram spaces to U+2800")
     args = ap.parse_args(argv[1:])
+    if args.harden:
+        return harden(args)
     return check(args) if args.check else convert(args)
 
 
