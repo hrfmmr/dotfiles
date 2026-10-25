@@ -91,7 +91,9 @@ This example contains several troubles this change solves: <list>. Part 3 shows 
 
 **The trouble**: <what goes wrong, made concrete with the part 2 example>
 
-**Options a-1**:
+**Options a-1**: <one sentence: what is being decided>
+
+<premise block, only when the cells use a term or shape the story has not defined: one-sentence definitions as a list, the shapes involved, a short walk-through of what the options change>
 
 | ID | Option | Good | Bad |
 |---|---|---|---|
@@ -149,6 +151,15 @@ Shape: `<trouble letter>-<decision number>-<option number>`. Always write all th
 - Cite an option by its ID wherever it comes up again: diagram nodes, the why, later nodes, ledgers, attainment answers.
 - Option IDs start with a lowercase letter, so they do not collide with source IDs (`plan-§6`, `epic-D3`) or ledger IDs (`L1`).
 - After delivery, keep IDs stable (reader comments and later nodes cite them). Append a new option at the end; do not renumber.
+
+## Premise before the options
+
+A table cell is a bad place to meet a term for the first time: the reader cannot stop to look it up, and the row reads as a leap. Before writing an options table, list the terms, identifiers, and shapes its cells use, and check where each was defined in the story section.
+
+- A term the story section has not defined goes into a premise block between the `Options` label and the table: a short list of one-sentence definitions (with a provenance label), then the shapes the options differ on (JSON, a small table), then a walk-through that plays the difference out once.
+- A definition that exists only in a later node, in a hook, or in a clause far above does not count. Design-specific shapes are shown here, not pushed to a hook or another note.
+- When the premise block already plays the options out, the case list covers only the points it did not show and points back to it.
+- Mark a definition `[inferred]` when it is the note's own gloss; do not narrow a source's term (for example "work record" is the whole GEN item, not only its progress fields).
 
 ## Cases
 
