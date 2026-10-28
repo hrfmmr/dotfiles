@@ -37,6 +37,9 @@ Mayor-to-commander send goes through a status check.
 4. Read any existing `$MAYOR_HOME/handoff.md` before starting monitoring. Honor its
    runtime restrictions (including a prohibition on `mayor.sh watch`) and select a
    delivery mode with Protocol 3; a model or client name alone does not prove wakeup support.
+5. Write every reply to the human by `references/human-report-format.md`: reader-first
+   prose (load the `reader-first` skill for `todo` and `status`), a box diagram per focus
+   issue in `todo` and `status`, and the closing block in every reply.
 
 ## Sub-commands
 
@@ -50,12 +53,12 @@ An unknown word: run `help`.
 |---|---|---|
 | `help` | "使い方は?", "何ができる?" | `mayor.sh help` prints this table; show it to the human in their language |
 | `start` | "Mayor を始めて" | Protocols 0–3: take the name, build the roster, brief, select delivery mode |
-| `todo [--all]` | "human check が要るものは?", "いま何をすればいい?" | The `todo` steps below; `--all` adds pend issues |
+| `todo [--all]` | "human check が要るものは?", "いま何をすればいい?" | The `todo` steps below, laid out by `references/human-report-format.md`; `--all` adds pend issues |
 | `ask` | "確認を聞いて" | Ask the open focus `confirm` items (Protocol 5) |
 | `relay <issue or name> <text>` | "〜に伝えて" | Relay the text verbatim to the owner (Protocol 5) |
 | `done <key> [note]` | "〜は済んだ" | Move the item to done in the ledger; relay `[mayor 中継] human: <key> は済んだ。<note>` to its owner |
 | `focus <issue or name>...` / `pend <issue or name>...` | "〜を優先に", "〜は後回し" | `mayor.sh priority`, then the Priority section's follow-ups |
-| `status` | "commander の様子は?" | `mayor.sh status`, Protocol 3 delivery checks, plus one line per commander that is not idle/acked |
+| `status` | "commander の様子は?" | `mayor.sh status`, Protocol 3 delivery checks, plus one line per commander that is not idle/acked; laid out like `todo` by `references/human-report-format.md` |
 | `restore` | "herdr を再起動した" | Protocol 6 |
 | `handoff` | "Mayor を別の session に移したい", "記憶を外に出して" | The Handoff "leaving" steps: write the handoff file, copy memories, stop the watcher, release the name |
 | `resume` | "Mayor を引き継いで" | The Handoff "taking over" steps |
@@ -73,9 +76,12 @@ An unknown word: run `help`.
    unconfirmed and ask the commander to re-report the current state.
 3. For items tied to a PR, check `gh pr view <n> -R <repo> --json state`; move merged or
    closed ones to done.
-4. Present, focus only (pend too with `--all`): urgent first, then per issue with where
-   to go, then a line on cross-issue dependencies (a focus step waiting on a pend
-   decision), then one line with the pend count.
+4. Present, focus only (pend too with `--all`), by `references/human-report-format.md`:
+   a short conclusion, urgent first, then one section per presented issue with its box
+   diagram (an issue with no open items gets one line and no diagram),
+   whose turn it is and where to go, then a line on cross-issue dependencies (a focus
+   step waiting on a pend decision), one line with the pend count, and the closing
+   block that groups the waiting items by whose turn it is.
 5. Ask any focus `confirm` items not asked yet (Protocol 5). In event mode only,
    re-arm the watcher first if needed; in pull/live mode follow Protocol 3 instead.
 
@@ -283,29 +289,40 @@ The ledger note is the source of truth for the human; the inbox is only a queue.
 - After each event or poll, report to the human only what changed, grouped by issue,
   each with where to go. In active live relay, send the awaited reply in commentary
   immediately; independent work must not delay it. Show the full ledger when asked.
-- When a human must decide or operate, surface that action immediately in `todo`
-  format, even if the human invoked `status`, `relay`, or monitoring. Honor the
-  focus/pend rules above. Include:
-  `<issue> — <kind>: <purpose and why action is needed> → <confirmed / unconfirmed>
-  → <human's exact action or choices> — where: <pane or page>`. Do the same for a
+  Write each report in reader-first prose and end it with the closing block of
+  `references/human-report-format.md` (current position, the Mayor's next move, and
+  the waiting items grouped by whose turn it is); a bare `<issue>: あなたの判断` is
+  never enough. Diagrams belong to `todo` and `status` only.
+- When a human must decide or operate, surface that action immediately as an
+  `あなたの番` item of the closing block (no diagram), even if the human invoked
+  `status`, `relay`, or monitoring. Honor the focus/pend rules above. The item carries
+  the kind and purpose (why action is needed), confirmed / unconfirmed with its source,
+  the human's exact action or the decision with its choices, and the place
+  (`<workspace label>:<agent name>` or page), on the template's lines. Do the same for a
   review hold the human explicitly requested in advance. Present the item before
   recording it in the ledger, then persist it there.
 - Treat routine quality gates for a single-task deliverable the human already requested
   as Mayor-commander work, not a human `approve` item. Compare the draft or output with
   the request, send gaps back to the commander, and finish it without asking the human
   to approve the plan or presentation. Surface any substantive human decision separately.
-- Make every human-facing relay self-contained, including update-only reports. Use:
-  `<issue/PR and purpose> → <affected services/monitors/channels and why the check
-  matters> → <confirmed / unconfirmed> → <human's next action and exact place>`.
+- Make every human-facing relay self-contained, including update-only reports. Cover,
+  in reader-first prose rather than one arrow-joined line: the issue or PR and its
+  purpose, the affected services, monitors or channels and why the check matters,
+  confirmed / unconfirmed, and the human's next action with its exact place.
   Expand shorthand and counts into the relevant target names and roles; distinguish
   prerequisites such as channel existence from its registration in an integration.
   Use only source-supported context; label missing facts unconfirmed and follow up
   with the commander without delaying the live reply. Include enough background to
   avoid asking the human to reread a ledger or another conversation, without repeating
   the full ledger or investigation log. A reference name/link alone is insufficient.
-- In every human-facing line give the herdr workspace (id and label), tab (id and
-  label), pane id, and the absolute paths of the files involved; mark a path that no
-  longer exists. Describe delivery by what arrives and when, not by internal mode names.
+- In every human-facing line, name each herdr location as `<workspace label>:<agent
+  name>` (for example `u31.6-cognito詳細検討:cognito-cmd`); for a pane without an agent,
+  use its pane label (for example `<workspace label>:hunk-#194`). The human finds panes
+  by the workspace label in the sidebar, and an id such as `w3D:pC` does not show which
+  workspace it is, so never give a bare pane or tab id as the place to go. Rewrite a pane
+  id in an inbox `where` into this form from the roster. Also give the absolute paths of
+  the files involved; mark a path that no longer exists. Describe delivery by what
+  arrives and when, not by internal mode names.
 
 ## Protocol 5: Ask and relay
 

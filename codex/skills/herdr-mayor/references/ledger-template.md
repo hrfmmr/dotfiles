@@ -2,7 +2,7 @@
 
 > [!info] この台帳
 > Mayor (herdr 名 `mayor`) が各 commander から集めた「human がすること」の一覧。正本はこのノート。
-> commander からの受け口は `$MAYOR_HOME/inbox.md`。具体的な値 (ID・CIDR・秘密) は書かない。詳しくは「どこで」の pane で commander に聞く。
+> commander からの受け口は `$MAYOR_HOME/inbox.md`。具体的な値 (ID・CIDR・秘密) は書かない。詳しくは「どこで」の pane で commander に聞く。場所は `<workspace の label>:<agent 名>` で書く (pane ID だけでは workspace が分からない)。
 > 更新: <YYYY-MM-DD HH:MM> (inbox <n> 行目まで反映)
 
 > [!important] 優先
@@ -16,10 +16,10 @@
 
 ## focus の issue
 
-### <issue ID> <issue の短い名前> — `<commander>` (<pane>)
+### <issue ID> <issue の短い名前> — `<workspace の label>:<commander>`
 
 - [ ] `<key>` <kind>: <何を> — どこで: <where> — 完了: <done_when>
-- [ ] `<commander>:pane-<短い名前>` <kind> (Mayor が pane から転記): <何を> — どこで: <pane>
+- [ ] `<commander>:pane-<短い名前>` <kind> (Mayor が pane から転記): <何を> — どこで: <workspace の label>:<commander>
 
 ## Mayor が聞く確認 (focus)
 
@@ -37,13 +37,13 @@
 
 human には上げない。focus に移ったら、ここから戻す。
 
-### <issue ID> <issue の短い名前> — `<commander>` (<pane>)
+### <issue ID> <issue の短い名前> — `<workspace の label>:<commander>`
 
 - [ ] `<key>` <kind>: <何を>
 
 ## commander 一覧
 
-| issue | commander | pane | 優先 | 規約 |
+| issue | commander | 場所 (workspace の label:agent 名) | 優先 | 規約 |
 |---|---|---|---|---|
 
 ## agent のいない workspace

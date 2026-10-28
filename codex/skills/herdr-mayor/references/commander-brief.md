@@ -28,7 +28,7 @@ stdout に key が出る。済んだときに使うので控えておく。
 | `other` | どれにも当たらないもの |
 
 - `--urgent yes` は 2 つの場合に限る。本番の障害・本番への影響に関わるとき、または human が動くまで agent の作業が止まっているとき。
-- `--where` には、human がどこへ行けばよいかが分かるものを書く。pane ID (例 `w3D:p1`)、PR の URL、ノート名など。
+- `--where` には、human がどこへ行けばよいかが分かるものを書く。自分の pane なら `<workspace の label>:<自分の herdr 名>` (例 `u31.6-cognito詳細検討:cognito-cmd`。label は `herdr workspace get "$HERDR_WORKSPACE_ID"` で分かる)、PR の URL、ノート名など。pane ID だけ (例 `w3D:p1`) では、human にはどの workspace か分からない。
 - `--what` には、ID・CIDR・アカウント ID・IP・秘密の値などの具体を書かない。一覧は人が読むノートに転記される。具体は「pane で説明する」と書けば足りる。
 - 今ある human todo が 1 件も無いときは、何も書かなくてよい (初回の `ack` は除く)。
 - 最終報告の文面で human に判断・確認を求めるときも、同じ内容を `report.sh` で 1 件書く (pane の文面だけだと Mayor が拾えない)。
