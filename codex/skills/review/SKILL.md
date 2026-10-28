@@ -1,6 +1,6 @@
 ---
 name: review
-description: "Critical review gate for a target PR or current working artifact. Emit structured findings and decision (`approve|request_changes`) compatible with mesh Round E."
+description: "Critical review gate for a target PR or current working artifact. Emit structured findings and decision (`approve|request_changes`) compatible with mesh Round E. Runs the four review lanes sequentially in a single agent by default; fans out one sub-agent per lane only on explicit request (`--multi-agent`)."
 ---
 
 # Review
@@ -32,6 +32,9 @@ Run a critical third-party review and return a strict decision artifact.
   - `artifact-report` requires `--artifact <id>`
   - reject mismatched mode/target combinations instead of guessing intent
 
+## Optional inputs
+- `--multi-agent`: run each review lane in its own sub-agent, in parallel. Treat an explicit caller request for per-lane sub-agents the same way. Without it, use the single-agent default.
+
 ## Output contract (required)
 - `decision: approve|request_changes`
 - `findings` (array)
@@ -39,20 +42,20 @@ Run a critical third-party review and return a strict decision artifact.
 
 ## Execution Model
 - Act as the review orchestrator for the requested target.
-- Prefer in-session spawned reviewer subagents, one per review lane, running in parallel against the same target.
-- If subagent spawning is unavailable, run the same lanes sequentially in the current session and preserve the same lane artifact contract.
+- Default (single agent): run every review lane sequentially in one reviewer agent and preserve the lane artifact contract. Do not spawn sub-agents, other agents, parallel reviews, or workflows, so token usage does not spike. The reviewer agent is the current session, or the one reviewer sub-agent a caller delegated the whole review to.
+- Opt-in (multi-agent): only with `--multi-agent` or an explicit caller request for per-lane sub-agents, spawn one reviewer sub-agent per lane and run them in parallel against the same target. If sub-agent spawning is unavailable, fall back to the single-agent default.
 - Reviewer subagents must not modify files, apply patches, or post comments directly.
 - Only the orchestrator may emit the final `decision/findings/summary` artifact or post PR review comments.
 
 ### Execution Flow
 1. Resolve the review scope from `--mode` and its required target input.
 2. Gather the target context once and pass the same scope to every lane.
-3. Fan out lane reviews in parallel when possible.
+3. Run the lanes one after another (default), or fan them out in parallel with `--multi-agent`.
 4. Normalize, deduplicate, and rank findings centrally.
 5. Emit one final artifact; in `pr-comment` mode, reconcile matching AI-authored inline comments so each canonical finding converges to at most one live thread before posting any new comments.
 
 ### Review Lanes
-Launch these lanes by default:
+Run these lanes in both modes:
 - `correctness`: bugs, spec deviations, regressions
 - `security-performance`: security, abuse, performance, scalability
 - `tests-conventions`: missing tests, coverage gaps, test strategy gaps, code-level convention deviations
@@ -60,7 +63,7 @@ Launch these lanes by default:
 
 Lane rules:
 - Give every lane the same target context and the same output schema.
-- Keep lanes independent; do not let one lane rewrite another lane's findings.
+- Keep lanes independent; do not let one lane rewrite another lane's findings. In the single-agent default, close one lane's findings and summary before starting the next, and do not drop or soften an earlier lane's finding while reviewing a later lane.
 - Allow a lane to return zero findings when its perspective is clean.
 - Require `technical-judgment` to check whether the change follows existing architectural conventions such as layering, module boundaries, extension points, naming patterns, and whether any deviation is intentional and justified.
 
@@ -85,8 +88,8 @@ Lane contract rules:
 - Final `summary` must synthesize cross-lane conclusions in 1-5 lines and explicitly say when no material issues were found.
 
 ### Retry and Fallback
-- If one lane returns no response, retry that lane once.
-- If one lane still fails, continue in sequential fallback for the failed lane before giving up.
+- With `--multi-agent`, if one lane sub-agent returns no response, retry that lane once.
+- If that lane still fails, run it sequentially in the current session before giving up.
 - If a lane output is unparsable, request one strict reformat using the lane output contract.
 - If a lane still cannot produce a valid artifact after fallback, fail the review rather than silently dropping that lane.
 - If aggregation cannot produce valid `decision/findings/summary`, fail the review rather than emitting a partial artifact.
@@ -97,9 +100,7 @@ Lane contract rules:
 For `--mode pr-comment`, post one inline review comment per aggregated finding using this template, anchored to the corresponding changed diff line:
 
 ~~~md
-AI agent review comment: generated by Codex.
-
-[{severity}][{label}] {finding_id}
+[{model}:{effort}] [{severity}][{label}] {finding_id}
 
 Issue: {issue}
 Evidence: {evidence}
@@ -119,7 +120,7 @@ Template rules:
 - Anchor each comment to the changed file and changed diff line that best matches the finding.
 - Sort posted findings by severity (`Critical > High > Medium > Low`), then `finding_id`.
 - If `findings` is empty, post no PR review comments.
-- The first line of every posted comment must explicitly state that it is an AI agent review comment.
+- Start every posted comment with the marker `[<model>:<effort>]`, for example `[gpt-6.1-sol:xhigh]`: the running model and its reasoning-effort level as the harness reports them. If one of them is not exposed, omit only that part (`[gpt-6.1-sol]`); never guess. Do not add words such as `agent` or `AI` to the marker, and do not add a separate "AI agent review comment" line.
 - Keep each inline comment focused on the anchored finding only; the overall `decision` and `summary` stay in the returned artifact.
 - Never leave more than one live inline review thread for the same canonical finding on the same diff line.
 - If a finding cannot be anchored to a changed diff line with confidence, do not post it as a PR comment; keep it only in the returned artifact for caller handling.
