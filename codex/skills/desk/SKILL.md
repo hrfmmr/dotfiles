@@ -2,7 +2,7 @@
 name: desk
 description: >
   Interactive task protocol driven by Obsidian task notes. The root session holds the task and dialogues with the user in real time; the task note keeps a fixed top-of-note view (現在地 / 設計 / Milestones / 論点) plus an Event Log that gains a Turn-N only when real progress occurs, mirrored to a bd issue.
-  Use when user says "$desk", "desk", "$desk new", "$desk --sync" (alias "--flush"), "$desk-live", "desk-live", "create task", "start task", "resume work", or wants to start, resume, or update a desk-managed task note (planning Q&A, design decisions, milestone progress) for impl/research/adhoc tasks.
+  Use when user says "$desk", "desk", "$desk new", "$desk --sync" (alias "--flush"), "$desk-live", "desk-live", "create task", "start task", "resume work", or wants to start, resume, or update a desk-managed task note (planning Q&A, design decisions, milestone progress) for impl/research/adhoc tasks. Also the default entry for any multi-step task (investigation, implementation, document production), per the root AGENTS.md "Task Start" rule, even when the user does not name it.
 ---
 
 # Desk
@@ -28,7 +28,7 @@ Delegate concrete work to existing skills ($wt / $rough-plan / $grill-me / $tk /
 
 ## Prerequisites
 
-- cwd is an Obsidian vault root (works with any vault).
+- The note lives in an Obsidian vault (works with any vault). Resolve the vault root in this order: cwd when it is a vault root (contains `.obsidian/`); the `DESK_VAULT` environment variable when set; otherwise ask the human which vault, once. Every "vault root" below means this directory. Read and write the note and the daily note by absolute path, so a session started in a repo or any other cwd works without moving into the vault. The vault location is never recorded in this skill or in `AGENTS.md`.
 - For impl/research tasks, `BEADS_DIR` must be defined in the target repo's `.envrc`.
 - When task frontmatter contains `beads_dir`, treat it as the source of truth for beads transport: derive `BEADS_DOLT_SERVER_SOCKET="$beads_dir/dolt-server.sock"` and `BEADS_DOLT_AUTO_START=0` before invoking `$beads` or raw `bd`. Never run raw `bd` with `BEADS_DIR` alone — it auto-starts a stale Dolt instance and existing issues appear missing.
 
