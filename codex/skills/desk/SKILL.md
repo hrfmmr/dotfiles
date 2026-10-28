@@ -13,6 +13,8 @@ Interactive task protocol on an Obsidian task note. The root session holds the t
 
 The task note is the human's state view. A fixed block at the top always answers "which phase are we in, which decisions remain, what is left, what should the human do next". Below it, an Event Log gains a Turn-N only when a real progress event occurs. The bd issue mirrors the same state so an agent can recover cold.
 
+The note is read cold — by the human after days away, and by a successor agent that never saw the conversation. So the 背景, 現況, and 判断ポイント are written as natural-language explanation (see Writing for the cold reader), not as labels, IDs, and fragments. The fixed fields index the prose; they do not replace it.
+
 Delegate concrete work to existing skills ($wt / $rough-plan / $grill-me / $tk / $review / $commit / $join / $beads / $herdr-impl / $hunk-present).
 
 ### Architecture
@@ -82,11 +84,12 @@ task_type: ""              # required: impl | research | adhoc
 
 ### `current_status_summary` Contract
 
-- One line describing the critical-path progress in milestone context: what meaningful unit of work is underway, blocked, or just completed.
+- A headline, not a history: one or two plain sentences (one YAML line, roughly 150 characters) that tell a cold reader where the critical path stands in milestone context — what meaningful unit of work is underway, blocked, or just completed, and on whom it waits.
+- It shows in a Dataview cell, so it must make sense without the note: no bare D-ids, PR numbers, or timestamps, and no internal names a cold reader cannot place. Detail belongs in 現在地, the Event Log, or bd.
 - Refresh it whenever 現在地 is refreshed.
 - Do not use orchestration mechanics as the summary body.
 - Good: `Milestone 2/4 complete. Roundup derivation passed; awaiting E2E re-confirmation.`
-- Bad: `Resumed session`, `Set up hook`.
+- Bad: `Resumed session`, `Set up hook`; a run-on that lists every PR, merge time, and check result.
 
 ### Status Transitions
 
@@ -104,19 +107,36 @@ Exact template: `references/note-templates.md`.
 
 | section | holds | update style |
 |---------|-------|--------------|
-| `## 現在地` | Derived view: 位置 (Milestone-based, e.g. `M3/5 <name>`), 未決の論点 (D-ids), 残TODO (count + next one), Next Action (human), Next Action (agent), as of (`Turn-N`, the last Turn this view reflects). | Rewrite in place. Refresh with every head update. |
-| `## 設計` | Fixed sub-sections: 問題定義 (one line) / 成功基準 / 前提 (Facts) / 設計方針・構成 (opens with a whole-picture diagram; see Design Briefing). | Rewrite in place. |
+| `## 現在地` | Derived view. Opens with 状況, a prose paragraph (2–5 sentences) after which a cold reader can say what the task is, where it stands, and what waits on whom. Then the index fields: 位置 (Milestone-based, e.g. `M3/5 <name>`), 未決の論点 (D-id with its topic in words), 残TODO (count + next one), Next Action (human), Next Action (agent) — each field only what is still open —, as of (`Turn-N`, the last Turn this view reflects). | Rewrite in place. Refresh with every head update. |
+| `## 設計` | Fixed sub-sections: 背景 (prose: why the task exists and what hurts without it) / 問題定義 (one line) / 成功基準 / 前提 (Facts) / 設計方針・構成 (opens with a whole-picture diagram; see Design Briefing). | Rewrite in place. |
 | `## Milestones` | Dataview table (`bd_issue::`, `summary::`, `milestone_status::` = open \| in_progress \| done \| skipped). | Update rows in place; keep each row's bd child issue consistent (`done` → `bd close`; `skipped` → `bd close --reason skipped`). Rows without a bd issue (adhoc) carry `—`. |
 | `## 論点` | One `#### D-n <topic>` sub-section per substantial decision topic (see below). | Edit in place; overturn by supersede. |
 | `## Event Log` | `### Turn-N` entries, newest last. | Append only. |
 
 **論点 entry**: `decision_status:: open | decided | superseded | dropped`, then 問い / 選択肢 / 判断 / 根拠 / 影響先. Use `decision_status::` (never bare `status::`) so it cannot collide with the frontmatter `status` in Dataview.
 
+- Write each field as explanation. 問い says what must be decided and why it matters now; 選択肢 is one nested bullet per option (what it is, its benefit, what it costs; a single proposal is written as one bullet and says no alternative was considered, never padded with invented options); 判断 on an `open` entry says 未決 and gives the recommendation, its reason, and what is still unknown, so the human can decide from the note alone; 根拠 separates confirmed fact, source statement, and inference. Template and worked example: `references/writing-for-recap.md`.
 - Overturning a decided 論点: mark the original `superseded → D-m` and add `D-m` (noting `supersedes D-n`). Never overwrite the trail.
 - Closing a 論点 without deciding: `dropped`, with the reason; if it is carried to a separate bd issue, name that issue.
 - Grain: substantial topics — a decision that would change design, plan, or scope. Not per-file or per-function nitpicks.
 
 **grill-me mapping**: `$grill-me` Snapshot fields land as Problem statement / Success criteria / Facts → 設計; Decisions / Open questions → 論点.
+
+### Writing for the cold reader
+
+The note is read after days away by the human, or by a successor agent with no memory of the conversation. It must let that reader recap the 背景 (why the task exists), the 現況 (where it stands and what waits on whom), and the 判断ポイント (what is undecided, the options, the recommendation) without asking anyone. Write every explanatory part — 背景, 現在地 状況, 前提, 設計方針・構成 prose, 論点, Turn findings, and the bd `design` snapshot — in natural language per `$reader-first`. Load it once per session before the first note write; its preserve-the-facts checks apply whenever you rewrite existing text.
+
+- **Fields index the prose; they do not replace it.** 位置 / 未決の論点 / 残TODO / Next Action stay short and scannable, but each is a sentence or a nested list, never a run-on string of clauses, and holds only what is still open. Finished items, merge times, per-check results, and command output belong in the Event Log, bd, or an artifact.
+- **No bare identifiers.** A D-id, milestone id, PR or ticket number, pane or tool name, or abbreviation carries what it is in words wherever a cold reader meets it (every mention in 現在地; the first mention elsewhere). Bare ids are fine only in `Updated:` lines and Dataview fields. Find the meaning in the note, its Turns, linked notes, or bd; if you cannot, do not guess — leave the id, say it is unexplained, and ask the human.
+- **Say who, what, and why.** Prefer a sentence with a subject and a verb over stacked noun phrases and parentheses. Give the reason and the condition under which it does not hold, not only the conclusion.
+- **Explain before comparing.** State what is being compared and why the choice matters now; give each option its own bullet; state a rejected option's reason where it is rejected.
+- **Keep certainty visible.** Say in plain words what was confirmed (and how), what a source states, what is inference, what is unconfirmed, and what is planned versus done (確認した範囲では / 資料では / 推測です / 未確認です). Never harden 推奨 into 採用済み or 未確認 into 問題なし.
+- **Compression is the enemy, not length.** Scannability comes from structure — labelled fields, a short lead paragraph, headings, diagrams — not from cutting explanation. When the head grows too long, move supporting detail (long evidence, per-check tables) to a derived note, but keep in the head everything needed to grasp the current state and each open decision.
+- **Register is separate from style.** A new note follows `$reader-first` (丁寧なですます調). An existing note keeps the register it already uses, so one rewritten section does not speak in a different voice from the rest; the structure and explanation rules above apply either way.
+- **Existing notes.** Do not mass-rewrite. Rewrite a section in this style when you next update it, after listing its numbers, conditions, and uncertainties so none is lost. Take an item out of a field only when a Turn, bd, or an artifact already records it (search the Event Log); if nothing does, keep it in the head — never delete the only record. A rewording-only pass is a non-event (no Turn); bd catches up at the next event. A note without 背景 or the 状況 paragraph is not drift: add them when you next touch the head.
+- **Recap test, before yielding a head or Turn write**: from only the text you wrote, could a cold reader say what the task is and why it exists, where it stands, what waits on whom, and what is undecided? If not, rewrite the part that fails.
+
+Per-section recipes, anti-patterns seen in real notes, and before/after examples: `references/writing-for-recap.md`.
 
 ## Event Gate
 
@@ -130,7 +150,7 @@ An event is a before/after in the actual design, plan, or implementation — or 
 - Artifact or external event: PR created/merged, derived note, branch task note, human review verdict.
 - Status change to `in_review` or `done`, or back to `in_progress`. The initial `not_started` → `in_progress` flip rides with whichever event triggers it and gets no Turn of its own.
 
-**Non-events** (write nothing): Q&A or investigation that settled nothing; session mechanics, protocol semantics, skill invocation chatter; restructuring, reformatting, or migrating the note itself with no change to the underlying design/implementation belief; a 現在地-only refresh; for impl, per-commit and per-review-cycle detail (bd note only — see Checkpoint).
+**Non-events** (write nothing): Q&A or investigation that settled nothing; session mechanics, protocol semantics, skill invocation chatter; restructuring, rewording, reformatting, or migrating the note itself with no change to the underlying design/implementation belief; a 現在地-only refresh; for impl, per-commit and per-review-cycle detail (bd note only — see Checkpoint).
 
 ### Gate procedure
 
@@ -148,7 +168,7 @@ At the end of every task-substantive response, run the event check. If an event 
    EOF
    ```
 
-   The `&&` chain makes the comment a reliable marker: it exists only if the `design` replace succeeded. The `design` snapshot is self-contained: 現在地 (as of this event; between events bd may lag and the note is authoritative), 設計 (all four sub-sections), then 論点 (decided: 判断 + 根拠 in one line; superseded: the chain; open: 問い). On a milestone transition, also update the bd child issue (see Milestones).
+   The `&&` chain makes the comment a reliable marker: it exists only if the `design` replace succeeded. The `design` snapshot is self-contained: 現在地 (as of this event; between events bd may lag and the note is authoritative), 設計 (every sub-section, 背景 included), then 論点 (each entry in the note's own sentences — decided: 判断 and 根拠; superseded: the chain; open: 問い, the options, and the recommendation). Do not squeeze prose into labels or IDs: a successor agent restores the task from this field alone. On a milestone transition, also update the bd child issue (see Milestones).
 
    - **Verify replace semantics** on the first write in a session that replaces a non-empty `design` (known from Open's `bd show` or your earlier write): run that write in the foreground, then `bd show <bd_issue_id> --json` and require `design` to equal the snapshot exactly (not old + new). If not, stop writing `design` and tell the human. A write over an empty `design` proves nothing.
    - **Failure path**: check the background result when it finishes. On failure retry only the failed command (before re-running the comment, check that bd does not already have it), then tell the human and leave the drift for the next Open or `--sync` to repair.
@@ -168,7 +188,7 @@ If no event occurred, write nothing. Refresh 現在地 and `current_status_summa
 ```
 
 - **Title the before/after, not the editing action.** `設計に、解決していない論点が8件あると分かった`, not `note を書き直した` or `設計に図を足した` — the note's own editing is never the subject.
-- **Plain language.** Write so a cold reader gets it on the first pass; do not compress into jargon-dense noun phrases.
+- **Plain language.** Write so a cold reader gets it on the first pass; do not compress into jargon-dense noun phrases. A D-id or PR number never stands alone: name its topic in words on first mention in the Turn (the `Updated:` line is the one place bare ids are fine).
 - **One nested bullet per finding, each concrete.** State what it specifically is and the consequence of leaving it unaddressed — not a bare label or D-id. Don't fear the Turn growing to one bullet per 論点 touched; a reader who has to re-derive the consequence from D-XXX is exactly the failure this format exists to prevent.
 - **Detail lives in 論点 (問い / 判断 / 根拠) or the artifact**; the Turn carries the gist and points there — line numbers, full enumerations, and rationale belong in the 論点, not the Turn.
 - **Omit delegation and tooling mechanics** — which skill ran, which sub-agent or role executed it, how the work was routed. State what changed for the design/implementation, not how the work was organized, unless the delegation itself is the blocker.
@@ -198,7 +218,7 @@ After each successful `$commit`: `bd note <bd_issue_id> "<sha>: <change summary>
 3. If `bd_issue_id` is set, first establish bd transport per the `$beads` Session Start Protocol, then run `bd show <bd_issue_id>`.
 4. If `git_working_tree` is set, cd to it.
 5. Run the Drift check and repair what it finds.
-6. Present 現在地 (especially Next Action) and begin the dialogue. Write nothing else on open.
+6. Open with a short recap in natural language drawn from 背景, 現在地, and the open 論点 — what the task is and why it exists, where it stands, and what the human has to decide or do now (the Next Action) — then begin the dialogue. Write nothing else on open.
 
 ### 2. Loop
 
@@ -242,7 +262,7 @@ Reconciliation for missed or half-written events.
    - **impl/research**: confirm `target_repo` → resolve `BEADS_DIR` from `.envrc` → derive socket vars → create the worktree via `$wt` (propose path/branch candidates, obtain approval) → create the bd epic via `$beads`.
    - **adhoc**: no worktree or bd issue; leave the fields empty.
 3. **Seed 論点**: research the source issue and repo read-only, list the topics that need a decision, and present them via native ask for the human to add, remove, or merge. Fix the result as placeholders (`decision_status:: open`, other fields blank) so later work knows where each conclusion belongs.
-4. Create the note at vault root from `references/note-templates.md`: fill 問題定義 and 前提 with what is known, leave the rest as placeholders, draft Milestones as a rough critical path, set `status: not_started`.
+4. Create the note at vault root from `references/note-templates.md`: fill 背景, 問題定義, and 前提 with what is known (背景 and each seeded 問い in sentences), leave the rest as placeholders, draft Milestones as a rough critical path, set `status: not_started`.
 5. Treat creation as an event: write Turn-1 (`Task initialized`) and run the bd sync. Before the first `design` write, read `bd show`; fold any existing `design` content into 設計, because the replace would discard it.
 
 ## Planning
@@ -309,6 +329,7 @@ A note without `## 現在地` (old `## Planning` / `## Dialogue` layout, possibl
 | Init | `$beads` | bd epic issue creation |
 | Planning | `$rough-plan` (grill-me + creative-problem-solver + critique) | rough plan + critique convergence + approval |
 | Planning (research/adhoc) | `$grill-me` | requirement clarification |
+| Every note write | `$reader-first` | background / state / decision prose a cold reader can recap |
 | Execution | `$herdr-impl` (HERDR_ENV=1) / `$tk` + `$review` + `$commit` (fallback) | implement issue |
 | Verify | `herdr-review-loop` (inside `$herdr-impl`) / `$review` (fallback) | review convergence |
 | Human review | `$hunk-present` | diff reading map, hunk comment Q&A, verdict |
@@ -321,6 +342,7 @@ A note without `## 現在地` (old `## Planning` / `## Dialogue` layout, possibl
 - **Event Gate is a hard gate**: every task-substantive response ends with the event check; when an event occurred, head update + Turn + bd sync land in the same response. Batching or retroactive writes are a violation, except through `--sync`.
 - **Head is truth**: head sections hold current state and the Event Log holds the change history; they must never contradict each other.
 - **No raw logs**: never write verbatim Q&A, transcripts, or per-round narration into the note.
+- **Cold-reader prose**: 背景, 現況, and 判断ポイント are explained in sentences, not stored as IDs, labels, or run-on fields; run the recap test before yielding a head or Turn write.
 - **Done gate**: `done` requires no `open` 論点, all Milestones `done`/`skipped`, and an explicit human verdict.
 - **Native ask mode is the default question channel** for plan- or direction-refining Q&A; prose is the fallback.
 - **`$beads` mandatory for `bd` commands**: before the first `bd` read or write in a session, follow the `$beads` Session Start Protocol — export `BEADS_DIR` (from `beads_dir` or `.envrc`), derive `BEADS_DOLT_SERVER_SOCKET="$BEADS_DIR/dolt-server.sock"`, set `BEADS_DOLT_AUTO_START=0`. Never issue raw `bd` with `BEADS_DIR` alone.

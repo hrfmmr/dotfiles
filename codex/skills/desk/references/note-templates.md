@@ -11,14 +11,19 @@
 
 ## 現在地
 
+<!-- 状況: 2〜5 文の文章。何の課題で、これまでに何が分かり・決まり、いまどこで進んでいる／止まっているか、次に誰が何をするか。この段落だけで言えるように書く -->
+
 - **位置**: M0/N (not started)
-- **未決の論点**: D-1, D-2
-- **残TODO**: N件 — 次: <next item>
-- **Next Action (human)**:
+- **未決の論点**: D-1 <topic in words>, D-2 <topic in words>
+- **残TODO**: N件 — 次: <next item, as a sentence>
+- **Next Action (human)**: <what to do, where, why it is needed, how to know it is done — only what is still open; nested bullets when more than one>
 - **Next Action (agent)**:
 - **as of**: Turn-1
 
 ## 設計
+
+### 背景
+<!-- prose: who is in trouble, what happens now, why it matters, and why this task exists. Facts the reader needs before 問題定義 -->
 
 ### 問題定義
 <!-- one line -->
@@ -27,7 +32,7 @@
 <!-- testable completion conditions -->
 
 ### 前提 (Facts)
-<!-- verified facts, constraints, links -->
+<!-- verified facts, constraints, links — each fact as a sentence saying what is known, how it was confirmed, and when; see references/writing-for-recap.md -->
 
 ### 設計方針・構成
 <!-- whole-picture diagram (mermaid) first, then the current design; rewrite in place as it changes -->
@@ -39,19 +44,23 @@
 
 ## 論点
 
-#### D-1 <topic>
+#### D-1 <topic — named so the reader sees what is being decided>
 decision_status:: open
-- 問い:
+- 問い: <what must be decided, why it matters now, what changes depending on the answer>
 - 選択肢:
-- 判断:
-- 根拠:
-- 影響先:
+  - A <name>: <what it is; its benefit; what it costs or risks>
+  - B <name>: <same>
+- 判断: <open: 未決。推奨とその理由、まだ分かっていないこと / decided: the chosen option and who decided>
+- 根拠: <confirmed facts, source statements, and inference, kept apart>
+- 影響先: <what this decision changes>
 
 ## Event Log
 <!-- Turn-N headings appended here, one per progress event -->
 ```
 
 ## 論点 lifecycle
+
+Field-writing rules (explanation, one bullet per option, certainty kept visible) and a worked example: `references/writing-for-recap.md`.
 
 - `decision_status::` is one of `open | decided | superseded | dropped`. Do not use bare `status::` (collides with frontmatter `status` in Dataview).
 - Decide: fill 判断 / 根拠 / 影響先 and set `decided`.
