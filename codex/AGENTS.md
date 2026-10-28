@@ -9,12 +9,29 @@ Use Double Diamond to avoid converging too early: separate "are we solving the r
 
 ## Skill routing
 
+We use skill prefix as `$` for referring skill name.
+
 - Discover/Define: `$grill-me`, `$tk`(advice-mode)
 - Develop: `$creative-problem-solver` (five-tier portfolio)
 - Planning: `$rough-plan`, `$critique`, `$herdr-critique-loop`
 - Issue tracking: `$beads`
 - Deliver: `$herdr-impl`
 - Skill authoring/maintenance: `$ms`, `$refine`
+
+## Human-Facing Documents
+
+When writing or rewriting a document for a human reader, use `$reader-first` by default, even when the request does not name it.
+
+- Scope: vault notes, Notion pages, reports, plans, and design documents. Chat replies (see Response Format), commit messages, and code comments are out of scope.
+- When a skill with its own format applies (`$report`, `$grasp`, `$unpack`, `$hunk-present`, `$crit-explain`, `$desk`, and similar), follow that skill for structure and fields, and use `$reader-first` for the prose inside each section.
+
+## Task Start
+
+When you start a task, create a `$desk` note first and work from it, even when the request does not name `$desk`. A task is multi-step work: investigation, implementation, or document production. Pick the task type (`impl`, `research`, `adhoc`) by the work.
+
+- Do not create a note for pure Q&A, for a self-evident fix to one file of a few lines, for a non-interactive run (`claude -p`, `codex exec`), or for an agent that another agent started to do part of a task (worker, reviewer, sub-agent).
+- If the task already has a desk note, open it with `$desk` instead of creating another.
+- The note lives in the Obsidian vault, whatever cwd the session started in. `$desk` resolves the vault.
 
 ## Issue Tracking
 
