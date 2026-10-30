@@ -2,17 +2,17 @@
 name: herdr-mayor
 description: >-
   Act as the Mayor of a Herdr session: stand between the human and the commander
-  agents of many parallel issue workspaces, collect everything the human must do or
-  decide (apply, merge, review, approvals, open questions, outside contacts) into one
-  ledger grouped by issue, guide the human to where each one is answered, and relay
-  the human's reports and instructions verbatim to the commander that owns the issue.
-  Aggregation and relay only; it never dispatches work, starts agents, or answers
-  another agent's question on the human's behalf. Use when the user asks for a Mayor,
-  coordinator, or human-todo aggregator across Herdr workspaces, says /herdr-mayor,
-  "what do I need to do across the agents", "collect human todos from the commanders",
-  "relay this to the commander of that issue", or resumes a Mayor session from its
-  ledger. Sub-commands: help, start, todo, ask, relay, done, focus, pend, status,
-  restore, handoff, resume (e.g. /herdr-mayor todo).
+  agents of many parallel issue workspaces, track everything the human must do or
+  decide (apply, merge, review, approvals, open questions), guide the human to where
+  each one is answered, and relay the human's instructions verbatim to the commander
+  that owns the issue. Focus commanders ask the human in the Plannotator Inbox, which
+  the Mayor watches. Aggregation and relay only; it never dispatches work or answers on
+  the human's behalf, and creates a new workspace and commander only on the human's
+  explicit request (intake). Use when the user asks for a Mayor or human-todo
+  aggregator across Herdr workspaces, says /herdr-mayor, "what do I need to do across
+  the agents", "relay this to the commander of that issue", "add a workspace for this
+  task", or resumes a Mayor session. Sub-commands: help, start, todo, ask, relay, done,
+  focus, pend, status, intake, restore, handoff, resume.
   Requires HERDR_ENV=1. Composes the herdr skill.
 ---
 
@@ -25,21 +25,27 @@ owning their issues; the Mayor only moves information between them and the human
 The hard part is delivery, not bookkeeping. `herdr agent prompt` types keys into the
 target pane, so a prompt sent while that agent shows a question lands inside the
 question. The Mayor itself asks the human through native ask, so commanders must not
-type into the Mayor either. Commanders therefore write to a file inbox, and every
-Mayor-to-commander send goes through a status check.
+type into the Mayor either. Focus commanders therefore ask the human in the Plannotator
+Inbox, which returns each answer straight to the asking session; the others write to a
+file inbox; and every Mayor-to-commander send goes through a status check.
 
 ## Preconditions
 
 1. `test "${HERDR_ENV:-}" = 1`. If it fails, say the session is not inside Herdr and stop.
 2. Load the `herdr` skill for CLI rules (names vs labels, read sources, waits).
-3. Scripts: `S=~/.claude/skills/herdr-mayor/scripts` (`mayor.sh` for the Mayor,
-   `report.sh` for commanders). State: `$MAYOR_HOME`, default `~/.local/state/herdr-mayor`.
+3. Scripts: `S=~/.claude/skills/herdr-mayor/scripts` (`mayor.sh`, `watch-plannotator.sh`
+   and `switch-to-inbox.sh` for the Mayor, `report.sh` for commanders). State:
+   `$MAYOR_HOME`, default `~/.local/state/herdr-mayor`; each commander's Inbox project is
+   the folder `$MAYOR_HOME/inbox-projects/<issue>--<title>`, listed in `inbox-projects.tsv`.
 4. Read any existing `$MAYOR_HOME/handoff.md` before starting monitoring. Honor its
    runtime restrictions (including a prohibition on `mayor.sh watch`) and select a
    delivery mode with Protocol 3; a model or client name alone does not prove wakeup support.
 5. Write every reply to the human by `references/human-report-format.md`: reader-first
    prose (load the `reader-first` skill for `todo` and `status`), a box diagram per focus
    issue in `todo` and `status`, and the closing block in every reply.
+6. Load the Inbox tool (`ToolSearch` `select:mcp__plannotator__plannotator_inbox`) and
+   `references/inbox.md`. Write only in the Mayor's own Inbox project; never delete a
+   project or thread, or edit files under `~/.plannotator/inbox`.
 
 ## Sub-commands
 
@@ -54,19 +60,22 @@ An unknown word: run `help`.
 | `help` | "使い方は?", "何ができる?" | `mayor.sh help` prints this table; show it to the human in their language |
 | `start` | "Mayor を始めて" | Protocols 0–3: take the name, build the roster, brief, select delivery mode |
 | `todo [--all]` | "human check が要るものは?", "いま何をすればいい?" | The `todo` steps below, laid out by `references/human-report-format.md`; `--all` adds pend issues |
-| `ask` | "確認を聞いて" | Ask the open focus `confirm` items (Protocol 5) |
+| `ask` | "確認を聞いて" | Ask the open focus `confirm` items from the file inbox (Protocol 5) |
 | `relay <issue or name> <text>` | "〜に伝えて" | Relay the text verbatim to the owner (Protocol 5) |
-| `done <key> [note]` | "〜は済んだ" | Move the item to done in the ledger; relay `[mayor 中継] human: <key> は済んだ。<note>` to its owner |
+| `done <key or Inbox item> [note]` | "〜は済んだ" | Relay `[mayor 中継] human: <item> は済んだ。<note>` to its owner, naming the Inbox project, thread and question for an Inbox item; move a ledger item to done |
 | `focus <issue or name>...` / `pend <issue or name>...` | "〜を優先に", "〜は後回し" | `mayor.sh priority`, then the Priority section's follow-ups |
 | `status` | "commander の様子は?" | `mayor.sh status`, Protocol 3 delivery checks, plus one line per commander that is not idle/acked; laid out like `todo` by `references/human-report-format.md` |
+| `intake <request>` | "このタスクの workspace を足して", "新しい commander を立てて" | Only on the human's explicit request: Protocol 7 (brief, workspace and commander, Inbox project once the issue ID is fixed) |
 | `restore` | "herdr を再起動した" | Protocol 6 |
-| `handoff` | "Mayor を別の session に移したい", "記憶を外に出して" | The Handoff "leaving" steps: write the handoff file, copy memories, stop the watcher, release the name |
+| `handoff` | "Mayor を別の session に移したい", "記憶を外に出して" | The Handoff "leaving" steps: write the handoff file, copy memories, stop the watchers, release the name |
 | `resume` | "Mayor を引き継いで" | The Handoff "taking over" steps |
 
 ### `todo`
 
-1. Drain the inbox: `mayor.sh new`, process (Protocol 4), `mayor.sh ack <upto>`.
-2. `mayor.sh status`. For each focus commander that is `blocked`, not acked, or has
+1. Drain the file inbox: `mayor.sh new`, process (Protocol 4), `mayor.sh ack <upto>`.
+2. Read the Inbox of each focus project in `inbox-projects.tsv` (`references/inbox.md`,
+   "Reading"). Its open questions and action items are the human's turn.
+3. `mayor.sh status`. For each focus commander that is `blocked`, not acked, or has
    been asking in its own pane, read it (`herdr agent read <name> --source
    recent-unwrapped --lines 80`; while it is working that read is refused with
    `agent_not_idle`, so use `--source visible`) and copy the requests addressed to the
@@ -74,22 +83,25 @@ An unknown word: run `help`.
    in their pane instead of the inbox, including a closing "please decide" in a report.
    Check the `done <date>` on the screen: an old screen is stale, so mark those items
    unconfirmed and ask the commander to re-report the current state.
-3. For items tied to a PR, check `gh pr view <n> -R <repo> --json state`; move merged or
-   closed ones to done.
-4. Present, focus only (pend too with `--all`), by `references/human-report-format.md`:
+4. For ledger items tied to a PR, check `gh pr view <n> -R <repo> --json state`; move
+   merged or closed ones to done.
+5. Present, focus only (pend too with `--all`), by `references/human-report-format.md`:
    a short conclusion, urgent first, then one section per presented issue with its box
    diagram (an issue with no open items gets one line and no diagram),
    whose turn it is and where to go, then a line on cross-issue dependencies (a focus
    step waiting on a pend decision), one line with the pend count, and the closing
    block that groups the waiting items by whose turn it is.
-5. Ask any focus `confirm` items not asked yet (Protocol 5). In event mode only,
-   re-arm the watcher first if needed; in pull/live mode follow Protocol 3 instead.
+6. Ask any focus `confirm` items not asked yet (Protocol 5). In event mode only,
+   re-arm the watchers first if needed; in pull/live mode follow Protocol 3 instead.
 
 ## Boundaries
 
-- Collect, organize, guide, relay. Do not dispatch work, spawn agents, create
-  workspaces, or coordinate commanders with each other. When something seems to affect
-  another issue, tell the human instead.
+- Collect, organize, guide, relay. Do not dispatch work or coordinate commanders with
+  each other. When something seems to affect another issue, tell the human instead.
+- Create a workspace or start a new agent only through `intake` (Protocol 7), when the
+  human explicitly asks to add that task; the work, including filing its issue, belongs
+  to the commander. Restarting a commander into its own session to give it the Inbox
+  tool (`switch-to-inbox.sh`, Protocol 2 step 3) is the only other start.
 - For non-obvious issue-specific questions that need code, infrastructure, source, or
   design investigation, relay the request to the owning commander instead of
   investigating independently. Answer directly only when the point is self-evident
@@ -108,8 +120,8 @@ An unknown word: run `help`.
 - Keep direct human approval for outward or hard-to-undo actions beyond the requested
   deliverable (PR comments, push, PR create/close, merge, sending outside), and for a
   review hold the human explicitly set in advance (e.g. "show me before publishing").
-  Get that confirmation in the commander's own pane. Human-only operations (apply and
-  the like) stay with the human.
+  The commander gets that confirmation from the human directly, in its own pane or as an
+  Inbox question. Human-only operations (apply and the like) stay with the human.
 - Add only facts (paths, keys, locations) to a relay, never a condition the human did
   not state (for example "do not commit until told"): commanders stall on it. If a
   commander asks whether an approval includes the next step, check the request and
@@ -157,10 +169,17 @@ the workspace in the sidebar; that is expected for the Mayor's own workspace.
 
 ## Protocol 2: Brief the commanders
 
-Send each commander the brief once, through the relay helper:
+`references/commander-brief.md` is the commanders' protocol: a focus commander with the
+Inbox tool and a project folder uses the Plannotator Inbox; others, and every notice to
+the Mayor (a fixed issue ID, a delegation, the ack), use `report.sh`.
+
+1. Give each focus commander whose issue ID is fixed an Inbox project with
+   `$S/mayor.sh project <name> <issue>` (`references/inbox.md`, "Projects"). Never create
+   one under a provisional ID that a tracker issue will replace.
+2. Send each commander the brief once, through the relay helper:
 
 ```bash
-$S/mayor.sh relay <name> "[mayor から] この herdr session に Mayor (herdr 名 mayor) が入りました (human の依頼)。~/.claude/skills/herdr-mayor/references/commander-brief.md を読んで、以後それに従ってください。あなたの herdr 名は <name>、担当 issue は <issue> として扱います。読んだら、今ある human todo を report.sh で 1 件ずつ書き、最後に --kind ack を 1 行書いてください (--what に件数)。返信は不要です。"
+$S/mayor.sh relay <name> "[mayor から] この herdr session には Mayor (herdr 名 mayor) がいます (human の依頼)。~/.claude/skills/herdr-mayor/references/commander-brief.md を読んで、以後それに従ってください。あなたの herdr 名は <name>、担当 issue は <issue>、Inbox の project のフォルダは <絶対パス、無ければ「まだ無い」> です。読んだら、今ある human todo を規約の出し先に出し、最後に report.sh で --kind ack を 1 行書いてください (--what に件数と出し先)。返信は不要です。"
 ```
 
 - Exit 3 (`blocked`): the commander has a question open. Note it, brief it later.
@@ -168,6 +187,9 @@ $S/mayor.sh relay <name> "[mayor から] この herdr session に Mayor (herdr �
 - A commander may ask its own human to confirm adopting the protocol. That is fine; it
   appears as `blocked` and the human answers there.
 Track who has acked; re-brief anyone silent after their next settled state.
+
+3. A focus commander whose session predates the Inbox tool cannot load it: restart it
+   with `$S/switch-to-inbox.sh <name> <issue>` (`references/inbox.md`).
 
 ## Protocol 3: Select delivery and monitor
 
@@ -178,8 +200,8 @@ either capability from "Claude" or "Codex", a PID file, or a notification appear
 
 | Mode | Choose when | Operation |
 |---|---|---|
-| Event | Background completion is known to resume this conversation, and watch is allowed | Arm `mayor.sh watch` through that supported background tool; retain its task handle and consume its completion |
-| Pull | No permitted, verified conversation wakeup path, and no live request | Drain on each human invocation; an existing notifier may alert the human to invoke `todo` |
+| Event | Background completion is known to resume this conversation, and watch is allowed | Arm `mayor.sh watch` and the Inbox watcher through that supported background tool; retain their task handles and consume their completions |
+| Pull | No permitted, verified conversation wakeup path, and no live request | Drain the file inbox and read the Inbox on each human invocation; an existing notifier may alert the human to invoke `todo` |
 | Turn live | The human requests immediate relay without a permitted, verified wakeup path | Keep this turn open and run the short polling cycle below |
 
 State the selected mode and its coverage in plain words (what reaches the Mayor, and
@@ -216,10 +238,16 @@ newly blocked focus commanders, and snapshots names each loop. On completion,
 process the events below and re-arm **before** a native ask. A running watcher
 without a working conversation wakeup path is not event mode.
 
+An Inbox answer returns only to the session that asked, so also arm
+`MAYOR_SESSION=<this session id> $S/watch-plannotator.sh` (`references/inbox.md`,
+"Watching"): exactly one run, never a rebuilt read mark (`plannotator-seen*`). On its
+completion, read the changed threads, update the summary (Protocol 4), and re-arm.
+
 ### Turn-live cycle
 
 1. Identify the awaited commanders and replies, plus any requested deadline. Run
-   `$S/mayor.sh new` immediately; check replies already present before doing independent work.
+   `$S/mayor.sh new` and read the awaited Inbox threads immediately; check replies already
+   present before doing independent work.
 2. Process the inbox below. Relay each new focus reply (including a partial answer)
    or human action in commentary immediately, before side work or other replies. Then persist
    it in the ledger and ack only the processed `upto`; do not ack an unseen reply.
@@ -270,19 +298,29 @@ The human may name the issues to focus on. Record it in the roster's fifth colum
   a production outage or production impact (notify with `herdr notification show`
   yourself). Hold every other pend urgent.
 - Tell each pend commander once, with a `[mayor から]` message, that its human todos are
-  held, so it does not wait on an answer that will not come soon.
+  held and now go to `report.sh`, so it does not wait on an answer that will not come soon.
 - When priorities change, move items between the ledger sections and ask the newly
-  focused `confirm` items.
+  focused `confirm` items. A commander back in focus returns to the Inbox (Protocol 2
+  steps 1 and 3, or a `[mayor から]` notice to switch by its brief).
 
 ## Protocol 4: Keep the ledger
 
-The ledger note is the source of truth for the human; the inbox is only a queue.
+Where each Inbox commander's issue stands lives in the Plannotator Inbox: its open
+questions and action items are the human's turn, and the Mayor does not copy them into
+the ledger. The ledger records what passes through the Mayor (relays, the human's
+decisions, standing rules) and stays the source of truth for the items that arrive by
+`report.sh` from pend and tool-less commanders. The file inbox is only a queue.
 
-- Inbox fields are ` | `-separated `key=value` pairs (`from issue key kind urgent where
-  what done_when`, plus `q options rec` for `confirm`).
+- File inbox fields are ` | `-separated `key=value` pairs (`from issue key kind urgent
+  where what done_when`, plus `q options rec` for `confirm`).
 - New item: add under its issue; urgent ones also go in the urgent table.
   `done` / `cancel`: move the item with that key to the done section.
   `ack`: mark the commander briefed; no item.
+  `other` with a fixed issue ID or a delegation: `references/intake.md` step 5 or 6;
+  saying the Inbox tool does not load: Protocol 2 step 3.
+- Add a message to the Mayor's Inbox summary whenever an item enters or leaves the
+  human's turn, a cross-issue finding appears, or a new commander starts
+  (`references/inbox.md`); a read with no such change stays in the chat.
 - Order the human-facing view: urgent first, then items that block an agent
   (`answer`, `confirm`, `approve`), then `operate` / `merge`, then `review` /
   `external` / `other`.
@@ -298,9 +336,10 @@ The ledger note is the source of truth for the human; the inbox is only a queue.
   `status`, `relay`, or monitoring. Honor the focus/pend rules above. The item carries
   the kind and purpose (why action is needed), confirmed / unconfirmed with its source,
   the human's exact action or the decision with its choices, and the place
-  (`<workspace label>:<agent name>` or page), on the template's lines. Do the same for a
-  review hold the human explicitly requested in advance. Present the item before
-  recording it in the ledger, then persist it there.
+  (`<workspace label>:<agent name>`, the Inbox project and thread, or page), on the
+  template's lines. Do the same for a review hold the human explicitly requested in
+  advance. Present a file inbox or pane item before recording it in the ledger, then
+  persist it there; an Inbox item stays in the Inbox.
 - Treat routine quality gates for a single-task deliverable the human already requested
   as Mayor-commander work, not a human `approve` item. Compare the draft or output with
   the request, send gaps back to the commander, and finish it without asking the human
@@ -326,12 +365,16 @@ The ledger note is the source of truth for the human; the inbox is only a queue.
 
 ## Protocol 5: Ask and relay
 
-- `confirm` items: ask the human with native ask (up to four per call, the commander's
-  options, recommended first). Relay the answer:
+- `confirm` items (file inbox only; Inbox commanders ask in the Inbox): ask the human
+  with native ask (up to four per call, the commander's options, recommended first).
+  Relay the answer:
   `$S/mayor.sh relay <name> "[mayor 中継] human: <key> への回答: <選んだ選択肢と、添えられた文言そのまま>"`.
 - A human report or instruction: find the owner from the ledger or roster (ask with
   native ask only if two commanders fit), then relay
   `"[mayor 中継] human: <原文>"`. Never paraphrase into a stronger instruction.
+- When a relay answers an Inbox item, add its project, thread and `<message id>/<key>`;
+  for a new request, say it answers no Inbox item (`references/inbox.md`).
+- End a message sent to every commander with 返信不要, or every one of them replies.
 - For a layered or ambiguous question, preserve the original wording and identify the
   underlying concern in one sentence. Mark any added interpretation as the Mayor's
   clarification, then ask the commander to address that concern directly; do not silently
@@ -395,6 +438,12 @@ Signs: many `gone` / `name_lost` events at once, or most commanders `agent_not_f
    transcript). Comments need a presenter agent as the watcher target, so ask the human
    who. Put the lost comment and answer text in a resume memo so the presenter can repost it.
 
+## Protocol 7: Intake a new task
+
+Only when the human explicitly asks to add a task with its own workspace and commander,
+follow `references/intake.md` (brief, workspace and commander, Inbox project once the
+issue ID is fixed). It also covers a commander's delegation to a new workspace.
+
 ## Handoff
 
 The roster, inbox and ledger survive any session, but what was decided in conversation
@@ -408,12 +457,13 @@ reboot) therefore goes through a written handoff.
    spawned), each commander's quirks (does not use the inbox, open asks herdr misreports,
    context pressure, stopped background jobs), lessons learned, and side work done in
    the session. Record the delivery mode, wakeup evidence, notifier path/PID (if any),
-   watch restrictions, and any pending live reply with the last check and stop condition.
-   Point at the ledger for the todo list instead of copying it.
+   the Inbox watcher (task handle or PID, `MAYOR_SESSION`), watch restrictions, and any
+   pending live reply with the last check and stop condition. Point at the ledger and the
+   Inbox for the todo list instead of copying it.
 2. Copy the memories the Mayor relies on into the successor's project memory directory
    (`~/.claude/projects/<cwd-slug>/memory/`) and index them in its `MEMORY.md`, since
    memory is per project directory.
-3. Stop the watcher owned by this session, if any, after verifying its PID identity.
+3. Stop the watchers owned by this session, if any, after verifying their PID identity.
    Do not stop an independent notifier merely because the watcher is absent. Release the name:
    `herdr agent rename "$HERDR_PANE_ID" --clear` and relabel the pane (e.g. `mayor-prev`).
 4. When the human wants it, start the successor in a sibling pane with the new cwd,
@@ -422,10 +472,11 @@ reboot) therefore goes through a written handoff.
 
 **Taking over** (`resume`): run Protocol 0 (after a reboot, Protocol 6 first), read
 `$MAYOR_HOME/handoff.md` if present, then the config, roster and ledger; run
-`$S/mayor.sh new` for anything unprocessed and `$S/mayor.sh status`; select and verify
-delivery with Protocol 3 rather than unconditionally starting watch. Report the current
-position: each focus issue with its next human todo, delivery mode/coverage, and the
-cautions from the handoff file.
+`$S/mayor.sh new` for anything unprocessed, `$S/mayor.sh status`, and the Inbox reads of
+`todo` step 2; select and verify delivery with Protocol 3 rather than unconditionally
+starting watch. Run the Inbox watcher with this session's id as `MAYOR_SESSION`, only
+after the predecessor's run has exited. Report the current position: each focus issue
+with its next human todo, delivery mode/coverage, and the cautions from the handoff file.
 
 ## Failure modes
 
@@ -445,3 +496,4 @@ cautions from the handoff file.
 | A notice appeared but a reply was not relayed | A notify-only process did not resume the conversation | Drain `new` now; use pull or keep the turn open for live relay |
 | `watcher=stopped` but notifications continue | Watcher and notifier are separate processes | Check notifier, conversation wakeup and unprocessed inbox separately |
 | A PID probe fails with `EPERM` | Sandbox inspection is denied | Report liveness unknown; do not infer stopped or start a duplicate |
+| An Inbox answer, thread, watcher or summary went wrong | See the Inbox failure modes | `references/inbox.md`, "Failure modes" |

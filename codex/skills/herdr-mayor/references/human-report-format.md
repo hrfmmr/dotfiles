@@ -17,6 +17,10 @@ rules in every reply. The points that matter most here:
   abbreviation into what it is at its first use; the key may follow in backticks.
 - For each item, say what it is, why it matters (what it unblocks), what is confirmed
   and from which source, what is unconfirmed, the exact action, and where.
+- Where an item waits in the Plannotator Inbox, the place is the Inbox, written as
+  `Inbox「<project folder name>」›「<thread name>」` (for example
+  `Inbox「u31.12--予備試験環境の構築」›「u31.12: PR 205 のレビュー」`). The human answers
+  there and the answer goes straight to the commander, so do not send them to the pane.
 - Never leave a bare label such as `あなたの判断` or `<issue>: 待ち`. Name the decision
   and its options, or the action and its place.
 - Keep facts, numbers, conditions and uncertainty from the commander's report; mark the
@@ -39,7 +43,8 @@ rules in every reply. The points that matter most here:
      question open on screen) and anything stale.
 4. **issue をまたぐ依存**: one line per focus step that waits on another issue.
 5. **保留**: one line with the pend count.
-6. **status only**: how notices reach the Mayor (Protocol 3), in plain words.
+6. **status only**: how notices reach the Mayor (Protocol 3, both the file inbox and the
+   Plannotator Inbox), in plain words.
 7. The closing block.
 
 ## Box diagram (`todo` and `status` only)
@@ -50,9 +55,10 @@ the prose; every fact in it also appears in the text.
 - Shape: a single top-down chain of three to five boxes:
   `済: <last finished step>` → `いま <誰>の番` → `次 <誰>: <step>` → optional `その次`.
   In the `いま` box, write each action as a numbered line and a short place on the next
-  line (`<agent name> の pane`, a page title, or a PR number). Workspace labels are often
-  too long for the 100-column limit and may hold parentheses, so the full
-  `<workspace label>:<agent name>` goes in the prose under the diagram, not in the box.
+  line (`Inbox: <thread name>`, `<agent name> の pane`, a page title, or a PR number).
+  Workspace labels are often too long for the 100-column limit and may hold parentheses,
+  so the full `<workspace label>:<agent name>` goes in the prose under the diagram, not
+  in the box.
 - Ball holders: `あなた`, `担当` (the commander), or `外の人` (named, e.g. a reviewer).
 - Several actions in the same step, even with different owners: put them as numbered
   lines inside one box, prefixing the owner when it differs. Do not draw two parents
@@ -109,7 +115,7 @@ appendix. Group the waiting items by whose turn it is, the human's turn first.
      なぜ: <目的、または何が止まっているか>
      確かさ: <確認済み (出典) / 未確認 (理由)>
      解けると: <誰が何を進められるか>
-     どこで: <workspace label>:<agent name>、ページ、または絶対パス
+     どこで: Inbox「<project>」›「<スレッド>」、<workspace label>:<agent name>、ページ、または絶対パス
 ■ 担当の番 (<n> 件)
   - <issue の名前>: <agent> が <作業中の作業、または頼まれた報告のし直し>。終わると <次に起きること>
 ■ 外の人の返事待ち (<n> 件)

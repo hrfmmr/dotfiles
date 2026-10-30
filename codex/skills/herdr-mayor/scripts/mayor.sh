@@ -7,6 +7,10 @@
 #   seen        conditions the watcher already reported (blocked / gone / name_lost)
 #   config      ledger=<path to the human-facing ledger note>
 #   herdr-names.tsv  every named agent ever seen: name kind ws_label tab pane pane_label cwd session last_seen
+#   inbox-projects/  one folder per Plannotator Inbox project, <issue>--<title>; outside git, so the folder
+#               name is the project name. Never delete one (the human does, in the Inbox Settings)
+#   inbox-projects.tsv  agent name <TAB> issue <TAB> project folder name; an agent's last row is its
+#               current project, earlier rows (an older issue ID) hold threads that still finish there
 #
 #   mayor.sh init [--ledger <path>]   create the state dir (keeps existing files)
 #   mayor.sh survey                   every agent: ws, ws label, pane, name, label, kind, status
@@ -24,6 +28,9 @@
 #   mayor.sh snapshot                 merge the live agent names into herdr-names.tsv
 #   mayor.sh restore [--apply]        after a herdr restart, plan (or apply) the names back onto panes
 #   mayor.sh forget <name>            drop a name from herdr-names.tsv
+#   mayor.sh project <name> <issue> [title]   create the commander's Inbox project folder <issue>--<title>,
+#                                     record it as the agent's current row in inbox-projects.tsv and set the
+#                                     roster issue; the title defaults to the workspace label without its ID
 #
 # Herdr keeps workspace, tab and pane labels across a server stop or reboot, but agent
 # names belong to the agent process and are gone. herdr-names.tsv is the copy that
@@ -301,6 +308,41 @@ cmd_restore() {
   if [ "$apply" = 1 ]; then sync_roster; cmd_snapshot; fi
 }
 
+# An issue ID that changes (a provisional ID filed in the tracker) gets a new folder and a new
+# row; the old folder and row stay for the threads already there. A title change alone needs
+# no new folder.
+cmd_project() {
+  need_home
+  local name=${1:-} issue=${2:-} title=${3:-} label ws folder tsv=$home/inbox-projects.tsv
+  [ -n "$name" ] && [ -n "$issue" ] || die "usage: mayor.sh project <name> <issue> [title]"
+  if [ -z "$title" ]; then
+    ws=$(herdr agent get "$name" 2>/dev/null | jq -r '.result.agent.workspace_id // empty')
+    [ -z "$ws" ] || label=$(herdr workspace get "$ws" 2>/dev/null | jq -r '.result.workspace.label // empty')
+    [ -n "${label:-}" ] || label=$(awk -F'\t' -v n="$name" '!/^#/ && $2 == n { print $4 }' "$roster" 2>/dev/null)
+    [ -n "${label:-}" ] || die "no workspace label for $name; pass a title"
+    # <issue>--<title>; a label still carrying a provisional ID drops it up to "--" (it may
+    # itself start with "<issue>-"); only a label without "--" falls back to <issue>-<title>.
+    title=${label#"$issue"--}
+    if [ "$title" = "$label" ]; then
+      case "$label" in *--*) title=${label#*--} ;; *) title=${label#"$issue"-} ;; esac
+    fi
+  fi
+  title=$(printf '%s' "$title" | tr '\t\n' '  ' | sed 's#/#・#g; s/^[[:space:]]*//; s/[[:space:]]*$//')
+  [ -n "$title" ] || die "empty title"
+  folder="$issue--$title"
+  mkdir -p "$home/inbox-projects/$folder" || die "cannot create $home/inbox-projects/$folder"
+  touch "$tsv"
+  # One row per agent and issue, moved to the end so the agent's last row is its current project.
+  awk -F'\t' -v OFS='\t' -v n="$name" -v i="$issue" -v f="$folder" '
+    !($1 == n && $2 == i) { print } END { print n, i, f }
+  ' "$tsv" > "$tsv.tmp" && mv "$tsv.tmp" "$tsv"
+  if [ -f "$roster" ]; then
+    awk -F'\t' -v OFS='\t' -v n="$name" -v i="$issue" '!/^#/ && $2 == n { $3 = i } { print }' \
+      "$roster" > "$roster.tmp" && mv "$roster.tmp" "$roster"
+  fi
+  printf '%s\n' "$home/inbox-projects/$folder"
+}
+
 cmd_forget() {
   need_home
   local name=${1:-}
@@ -388,5 +430,6 @@ case "$sub" in
   snapshot) cmd_snapshot ;;
   restore) cmd_restore "$@" ;;
   forget) cmd_forget "$@" ;;
-  *) sed -n '2,29p' "$0" | sed 's/^# \{0,1\}//' >&2; exit 2 ;;
+  project) cmd_project "$@" ;;
+  *) sed -n '2,34p' "$0" | sed 's/^# \{0,1\}//' >&2; exit 2 ;;
 esac
