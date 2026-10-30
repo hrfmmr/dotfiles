@@ -324,6 +324,15 @@ relay_once() {
       herdr agent wait "$name" --timeout "${MAYOR_RELAY_WAIT_MS:-120000}" >/dev/null 2>&1 || true
       status=$(herdr agent get "$name" 2>/dev/null | jq -r '.result.agent.agent_status // empty') ;;
   esac
+  # Herdr often reports an open question as idle/done, so read the screen for the
+  # question UI itself; typing into it would select an answer on the human's behalf.
+  case "$status" in
+    idle|done)
+      if herdr agent read "$name" --source visible --lines 60 2>/dev/null \
+          | grep -qE 'Enter to select|Esc to cancel|Do you want to|Submit answers|Tab to switch questions|to navigate'; then
+        status=blocked
+      fi ;;
+  esac
   case "$status" in
     idle|done)
       draft=$(herdr agent read "$name" --source visible --lines 8 --format ansi 2>/dev/null | draft_text)
