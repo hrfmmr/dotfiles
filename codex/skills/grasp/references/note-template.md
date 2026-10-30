@@ -38,7 +38,7 @@
 > **Structure**: the story section first (system, one example, troubles a, b, ... with ID-labeled options, the adopted ID, and reasons, parts and reading guide), then the nodes. Nodes distinguish chained from parallel. Node summary diagrams and the ledgers are in the appendix.
 > **Prerequisites**: no dedicated prerequisites node. The story section defines terms where they first appear; nodes pick up technical prerequisites with a hook where they are used.
 > **Hook scope**: only a concrete technical term, API, SDK, or SaaS feature that the logic cannot proceed without.
-> **Provenance labels**: `[recorded]` / `[code]` / `[inferred]` (legend at the end).
+> **Provenance labels**: `【recorded】` / `【code】` / `【inferred】` (legend at the end).
 ```
 
 ## Story section
@@ -100,16 +100,16 @@ This example contains several troubles this change solves: <list>. Part 3 shows 
 | a-1-1 | ... | ... | ... |
 | a-1-2 | ... | ... | ... |
 
-> <caption with source; mark trade-offs the records do not state as [inferred]>
+> <caption with source; mark trade-offs the records do not state as 【inferred】>
 
 **Cases a-1** (<the scenario, for example: the part 2 case under each option>; values are illustrative):
 
 - **a-1-1**: <what happens in the scenario under this option; its good point and its bad point both show up>
 - **a-1-2**: <same for the next option>
 
-**Adopted a-1**: a-1-2 <short name; what was chosen, with the numbers and rules> [code: ...]
+**Adopted a-1**: a-1-2 <short name; what was chosen, with the numbers and rules> 【code: ...】
 
-**Why**: <reason> [recorded: ...]
+**Why**: <reason> 【recorded: ...】
 
 <one diagram when the item discusses flow, comparison, or branching>
 
@@ -159,7 +159,7 @@ A table cell is a bad place to meet a term for the first time: the reader cannot
 - A term the story section has not defined goes into a premise block between the `Options` label and the table: a short list of one-sentence definitions (with a provenance label), then the shapes the options differ on (JSON, a small table), then a walk-through that plays the difference out once.
 - A definition that exists only in a later node, in a hook, or in a clause far above does not count. Design-specific shapes are shown here, not pushed to a hook or another note.
 - When the premise block already plays the options out, the case list covers only the points it did not show and points back to it.
-- Mark a definition `[inferred]` when it is the note's own gloss; do not narrow a source's term (for example "work record" is the whole GEN item, not only its progress fields).
+- Mark a definition `【inferred】` when it is the note's own gloss; do not narrow a source's term (for example "work record" is the whole GEN item, not only its progress fields).
 
 ## Cases
 
@@ -167,7 +167,7 @@ Pros and cons alone do not let the reader picture what happens. After every opti
 
 - One bullet per option ID, the adopted option included, so the reader sees what it costs as well as what it buys.
 - Play each option out in one concrete scenario, the part 2 example by default (its times and field values), and show both the good point and the bad point as things that happen: a message that arrives, a record that is overwritten, a number that is reused. Name the scenario in the label; mark illustrative values.
-- Add no fact, mechanism, or step beyond the options table and the sources. Where the table marks a point `[inferred]` or says the records hold none, the case carries the same mark or says so. Cite a source only for a fact the table does not already carry.
+- Add no fact, mechanism, or step beyond the options table and the sources. Where the table marks a point `【inferred】` or says the records hold none, the case carries the same mark or says so. Cite a source only for a fact the table does not already carry.
 - A case that restates the table in other words is not a case; replace it with a scenario.
 - A decision labeled `Decided` that names no alternative has no cases. When a premise block already plays the options out (definitions, shapes, a walk-through), the case list covers only the points it did not show and points back to it.
 
@@ -200,7 +200,7 @@ Use a different ID prefix for your own ledger rows than the sources use (for exa
 > <question that is the entrance to a branch point>
 
 > [!abstract] 👨‍🏫 Teacher
-> [recorded] <answer with provenance label> [recorded: <source pointer>]
+> 【recorded】 <answer with provenance label> 【recorded: <source pointer>】
 
 <concrete shape first: table, JSON, code>
 
@@ -273,9 +273,9 @@ Place it where the property is used; at most one per node. The `.o0:` line is a 
 
 | Label | Meaning |
 |---|---|
-| `[recorded]` | Stated in a PR, ADR, dialogue log, design document, or decision record |
-| `[code]` | Verifiable from code, tests, or execution results |
-| `[inferred]` | Not in records or code; a candidate to confirm with the author |
+| `【recorded】` | Stated in a PR, ADR, dialogue log, design document, or decision record |
+| `【code】` | Verifiable from code, tests, or execution results |
+| `【inferred】` | Not in records or code; a candidate to confirm with the author |
 
 Input priority for the "why": author's records, then commits and review history, then code and tests, then inference.
 

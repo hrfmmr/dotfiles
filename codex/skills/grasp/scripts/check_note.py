@@ -61,7 +61,7 @@ def main() -> int:
     text = Path(args.note).read_text(encoding="utf-8")
     lines, blocks, in_prose, dangling = parse(text)
     errors: list[str] = []
-    warns: dict[str, list[str]] = {k: [] for k in ("figure adjacency", "text timeline", "dynamic answer without diagram", "identifier shape", "reference direction")}
+    warns: dict[str, list[str]] = {k: [] for k in ("figure adjacency", "text timeline", "dynamic answer without diagram", "identifier shape", "reference direction", "square-bracket label")}
 
     if dangling is not None:
         errors.append(f"unbalanced code fence: block opened at line {dangling + 1} never closed")
@@ -192,8 +192,14 @@ def main() -> int:
 
     hooks = sum(1 for l in lines if l.startswith("> .o0:"))
     # English defaults plus the Japanese labels the template used before D23's rename; count either spelling.
-    label_aliases = {"recorded": ("recorded", "記録"), "code": ("code", "コード"), "inferred": ("inferred", "推測")}
-    labels = {name: sum(text.count(f"[{tok}") for tok in toks) for name, toks in label_aliases.items()}
+    # 仕様 and 実測 are the Japanese labels the notes use for specs and measurements.
+    label_aliases = {"recorded": ("recorded", "記録", "仕様"), "code": ("code", "コード", "実測"), "inferred": ("inferred", "推測")}
+    labels = {name: sum(text.count(f"【{tok}") for tok in toks) for name, toks in label_aliases.items()}
+    # Obsidian styles [...] like a link, so labels belong in 【】 (lineage #26).
+    bracket_label = re.compile(r"\[(?:" + "|".join(t for toks in label_aliases.values() for t in toks) + r")(?=[\]:：。、 ])")
+    for n, line in enumerate(lines):
+        if in_prose[n] and bracket_label.search(re.sub(r"`[^`]*`", "", line)):
+            warns["square-bracket label"].append(f"line {n + 1}: write the provenance label in 【】")
     summary = {
         "lines": len(lines),
         "nodes": len(order),
