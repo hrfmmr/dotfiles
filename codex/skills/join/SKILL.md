@@ -1,6 +1,6 @@
 ---
 name: join
-description: "PR autopilot via `gh` only: target explicit PRs or all open PRs, create/manage PRs, keep branches current, gate on required checks, apply minimal remote fixes, optionally invoke `$review` as a review gate, and publish merge-ready handoff without merging. After creating a PR it watches review activity by default (in-session poll until reviewDecision is decisive or a timeout), reporting in-session without posting PR comments. By default (`--respond auto`) it also answers review threads: fix and push or reply, resolving bot threads; `--respond off` keeps the watch report-only. Use for PR monitoring, CI-failure triage, branch hygiene, review-comment watch, review-thread reply/fix/resolve, and human-merge handoff."
+description: "Default entry for agents creating PRs (use this instead of a bare `gh pr create`); honors the repo PR template. PR autopilot via `gh` only: target explicit PRs or all open PRs, create/manage PRs, keep branches current, gate on required checks, apply minimal remote fixes, optionally invoke `$review` as a review gate, and publish merge-ready handoff without merging. After creating a PR it watches review activity by default (in-session poll until reviewDecision is decisive or a timeout), reporting in-session without posting PR comments. By default (`--respond auto`) it also answers review threads: fix and push or reply, resolving bot threads; `--respond off` keeps the watch report-only. Use for PR monitoring, CI-failure triage, branch hygiene, review-comment watch, review-thread reply/fix/resolve, and human-merge handoff."
 ---
 
 # Join
@@ -27,7 +27,8 @@ Use when prompt intent matches `pr-autopilot --gh-only`.
 Example prompt forms:
 - `$join --pr 123 --watch required --fix minimal --no-merge`
 - `$join --scope open --update-branch rebase --handoff on-green`
-- `$join --create-missing-prs --mode remote`
+- `$join --repo owner/repo --head <branch> --base <base>` (create the PR for one pushed branch, from the repo template)
+- `$join --create-missing-prs --mode remote` (explicit sweep: a PR for every non-default branch that has none)
 - `$join --ci-stall 10m --on-stall pause+comment`
 - `$join --pr 123 --review auto --review-target pr --no-merge`
 - `$join --pr 123 --respond off --no-merge` (watch reviews, report only)
@@ -41,6 +42,7 @@ Example prompt forms:
 - `--wait poll:30-60s` via `gh pr checks --required --json ...`.
 - `--status in-session` (report status to the user in the session; never post or maintain PR comments).
 - `--target --pr <num> | --target all-open`.
+- `--head <branch>`: create the PR for that one already-pushed branch only. `--create-missing-prs` sweeps every non-default branch without an open PR; use it only when passed explicitly, never by default.
 - `--boundary gh-only`; if blocked => `--pause pr` and report the block in-session.
 - `--no-merge --no-approve` unless user explicitly overrides.
 - `--watch` is default-on after PR creation; `--no-watch` opts out. Tune with `--watch-interval 180s` and `--watch-timeout 2h` (see Post-create review watch).
@@ -61,13 +63,17 @@ Example prompt forms:
 - Process target PRs sequentially.
 
 ## PR creation policy (gh-only)
-- For every non-default branch discoverable via `gh api` without an open PR, create a PR.
-- If `.github/pull_request_template.md` exists on the target base branch, create the PR body from that template and fill every markdown heading with obvious context (do not leave heading sections empty).
+- Create the PR for the explicit branch (`--head <branch>`). Sweep every non-default branch discoverable via `gh api` without an open PR only when `--create-missing-prs` is passed explicitly; never sweep by default.
+- The branch must already be pushed. join is gh-only and cannot push; the invoker pushes with git first (after any user confirmation the work requires).
+- If `.github/pull_request_template.md` exists on the target base branch, create the PR body from that template and fill every section with obvious context (do not leave a section empty).
+  - Read the template's own instructions first (HTML comments at the top and in each section). They are binding and override this skill's generic rules: if the template allows adding or removing headings, do so; keep every item it marks as required (for example a `source issue link` line or a rejected-alternatives section); for a required item that does not apply, write the form it prescribes (for example `なし (reason)`).
   - Fill with concrete values from available fields (`intent_summary`, `changed_paths`, `issue_refs`, `patch_id`, current validation/check state).
-  - Keep template heading structure unchanged; append concise bullets/sentences under each heading as needed.
+  - Keep the template's headings and order, except where its own instructions allow changes; append concise bullets/sentences under each heading as needed. Do not leave a section as a bare placeholder comment.
+  - Fill a conditional section (for example an AI usage note) whenever its condition applies. For a PR written with an AI agent, state the tool with the model name and the commit at the time of writing, as the template asks. Delete such a section only when the template says it may be deleted.
   - Apply the PR description content policy (below) when writing the content under each heading.
 - If the repo template does not exist, use `assets/pr-template.md` (own fallback structure) or `gh pr create --fill`.
-- Prefer explicit body create when template is present: `gh pr create --title <title> --head <branch> --base <base> --body "<rendered-template-body>"`.
+- Prefer explicit body create when template is present: `gh pr create --title <title> --head <branch> --base <base> --body-file <rendered-template-file>` (or `--body "<rendered-template-body>"`).
+- To bring an existing PR's body into line with the template, use `gh pr edit <num> --body-file <file>`. This edits a published PR, so get the user's confirmation first.
 - Default to ready-for-review (no drafts unless configured).
 - If `issue_refs` includes one or more bd issue IDs and `BEADS_DIR` is present, record PR linkage on each issue immediately after creation:
   - Set external reference: `bd update <issue-id> --external-ref pr:<number>`
@@ -78,11 +84,13 @@ Example prompt forms:
 
 ## PR description content policy
 - Write for the reader, not for the diff: every PR body must make Why, What, and How legible without forcing the reader into the diff itself. Favor plain, explicit phrasing over terse polish.
-- Default heading set (fallback only, see `assets/pr-template.md`): Overview / Background / Changes / Notes. When a repo template exists, keep its headings (per "PR creation policy" above) but hold the same clarity bar inside them.
+- Write the body's prose with `$reader-first`: load that skill (when available) before drafting and apply it inside every heading, including repo-template headings. In practice: explain a term or premise in plain words where it first appears (what the system or resource is, what state it is in today); give the reason before the mechanics; separate confirmed facts, inferences, and what is not verified; and keep every fact, number, and condition from the sources instead of shortening by dropping them. `$reader-first` governs the prose only: the template's required items and its own instructions, and the other rules in this section, stay in force.
+- When the change alters a structure or a flow (infrastructure resources, data flow, state transitions, rollout order), show the before and after with a diagram placed next to its explanation (mermaid renders in a GitHub PR body). Quote node labels and keep parentheses out of them. Render the diagram locally and check labels, line breaks, and arrows before publishing; if it cannot be rendered, say so in the report.
+- Default heading set (fallback only, see `assets/pr-template.md`): Overview / Background / Changes / Notes. When a repo template exists, keep its headings, subject to the template's own instructions (per "PR creation policy" above), but hold the same clarity bar inside them.
 - Shape each heading the same way: open with a plain-language summary in prose, then list the key points as bullets beneath it. Don't open a heading with a bare bullet list — give the reader prose to orient on first, however long that takes to be clear.
 - Under each topic in Changes, lead with the reason before the mechanics — a reader should know *why* a change exists before seeing *what* it touches. If a topic needs more than a bullet's worth of explanation, give it its own `### <Topic>` subsection instead of cramming it into the bullet.
 - Surface any prerequisite the reader needs but the diff won't show (a prior incident, an upstream change, a constraint) — don't assume shared context.
-- Carry origin context forward: if the patch comes from a `$desk` task, append `source issue link: <url>` as the last line of Overview (or the template's closest equivalent heading), using the task note path/URL as `<url>`.
+- Carry origin context forward with a `source issue link: <url>` line. If the repo template defines that line, follow the template for its position and meaning (for example a first line pointing at the backlog task). The URL must be one the team can open: use the task's `source_issue_link` (or the backlog task URL the user names), never a `$desk` task note path, a vault path, or a bd ID. If the correct URL is unknown, do not guess: ask the user, or write the template's prescribed `なし (reason)` form. Only when the template does not define the line and the patch comes from a `$desk` task, append it as the last line of Overview.
 - `bd` stays internal: no `bd` issue ID or bd-specific detail ever appears in PR-visible text (description or any comment the skill posts). Linkage flows one way — PR → bd via `bd update` — never the reverse.
 - Default to Japanese content unless the invoking context says otherwise.
 
@@ -90,9 +98,12 @@ Example prompt forms:
 Before sending the body via `gh pr create`/`gh pr edit`, confirm:
 - Each topic states *why*, not just *what*.
 - Any non-obvious prerequisite/background fact is stated.
-- `source issue link: <url>` is present at the end of Overview if the patch originated from a `$desk` task.
+- A first-time reader can tell what changes, why, and what is confirmed versus unverified, without opening the diff (the `$reader-first` check).
+- For a change to a structure or a flow, the before/after diagram is present, renders, and agrees with the text.
+- `source issue link: <url>` is present where the template (or, without one, the last line of Overview) puts it, and the URL is one the team can open.
+- Every item the repo template marks as required is present and filled, and no section is left as a bare placeholder comment.
 - No `bd` issue ID or bd-specific text appears anywhere in the body or in skill-authored comments.
-- Heading structure matches the repo template if one exists, otherwise the four-heading fallback.
+- Heading structure matches the repo template (as its own instructions allow) if one exists, otherwise the four-heading fallback.
 
 ## Operating mode
 Use one mode only:
@@ -257,6 +268,8 @@ Investigate the linked runs, unblock CI, then resume automation.
 - PR template fetch (decoded): `gh api repos/<owner>/<repo>/contents/.github/pull_request_template.md?ref=<base> --jq '.content | gsub("\n"; "") | @base64d'`
 - Create: `gh pr create --fill --head <branch>`
 - Create with rendered template body: `gh pr create --title <title> --head <branch> --base <base> --body "<rendered-template-body>"`
+- Create from a template file: `gh pr create --title <title> --head <branch> --base <base> --body-file <file>`
+- Edit an existing PR body (confirm with the user first): `gh pr edit <num> --body-file <file>`
 - Open PRs: `gh pr list --state open --json number,title,headRefName,isDraft`
 - Mark ready: `gh pr ready <num>`
 - Update branch: `gh pr update-branch <num> --rebase`
