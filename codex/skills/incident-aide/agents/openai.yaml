@@ -1,0 +1,3 @@
+interface:
+  display_name: "Incident Aide"
+  short_description: "Read-only aide for a human incident commander: log, drafts, gap checks"
