@@ -73,14 +73,17 @@ An unknown word: run `help`.
 ### `todo`
 
 1. Drain the file inbox: `mayor.sh new`, process (Protocol 4), `mayor.sh ack <upto>`.
-2. Read the Inbox of each focus project in `inbox-projects.tsv` (`references/inbox.md`,
-   "Reading"). Its open questions and action items are the human's turn.
+2. Read each focus project in `inbox-projects.tsv` (`references/inbox.md`, "Reading"):
+   open questions and action items are the human's turn; show `picked` as 選んだまま未送信.
+   Bring each Board issue's status thread and card up to these reads (`references/inbox.md`,
+   "The Board and the status threads").
 3. `mayor.sh status`. For each focus commander that is `blocked`, not acked, or has
    been asking in its own pane, read it (`herdr agent read <name> --source
    recent-unwrapped --lines 80`; while it is working that read is refused with
    `agent_not_idle`, so use `--source visible`) and copy the requests addressed to the
-   human into the ledger, marked as transcribed by the Mayor. Commanders sometimes ask
-   in their pane instead of the inbox, including a closing "please decide" in a report.
+   human that are not Inbox items into the ledger, marked as transcribed by the Mayor.
+   Commanders sometimes ask in their pane instead of the inbox, including a closing
+   "please decide" in a report.
    Check the `done <date>` on the screen: an old screen is stale, so mark those items
    unconfirmed and ask the commander to re-report the current state.
 4. For ledger items tied to a PR, check `gh pr view <n> -R <repo> --json state`; move
@@ -240,8 +243,9 @@ without a working conversation wakeup path is not event mode.
 
 An Inbox answer returns only to the session that asked, so also arm
 `MAYOR_SESSION=<this session id> $S/watch-plannotator.sh` (`references/inbox.md`,
-"Watching"): exactly one run, never a rebuilt read mark (`plannotator-seen*`). On its
-completion, read the changed threads, update the summary (Protocol 4), and re-arm.
+"Watching"): exactly one run, never a rebuilt `plannotator-seen*`. On completion, read
+the changed threads, check delivery and picked answers, update the changed Board issues'
+status threads and cards, then the summary, re-arm.
 
 ### Turn-live cycle
 
@@ -305,22 +309,32 @@ The human may name the issues to focus on. Record it in the roster's fifth colum
 
 ## Protocol 4: Keep the ledger
 
-Where each Inbox commander's issue stands lives in the Plannotator Inbox: its open
-questions and action items are the human's turn, and the Mayor does not copy them into
-the ledger. The ledger records what passes through the Mayor (relays, the human's
-decisions, standing rules) and stays the source of truth for the items that arrive by
-`report.sh` from pend and tool-less commanders. The file inbox is only a queue.
+The human reads where each issue stands on the Board and in the status threads
+(`references/inbox.md`), not in the ledger. The ledger is the Mayor's own durable record
+(git history, grep) for recovering after a summary or a handoff, and holds only what the
+Inbox does not (human, 2026-11-05): relays the Mayor sent and whether each arrived; the
+human's decisions and standing rules that came outside the Inbox; the items that arrive
+by `report.sh` from pend and tool-less commanders, for which it stays the source of
+truth; and the commander list with the workspaces that have no agent. Never copy Inbox
+questions, answers or per-issue events into it; finished entries go to 済んだもの. The
+file inbox is only a queue.
 
 - File inbox fields are ` | `-separated `key=value` pairs (`from issue key kind urgent
   where what done_when`, plus `q options rec` for `confirm`).
-- New item: add under its issue; urgent ones also go in the urgent table.
+- Each relay (`mayor.sh relay`, a `[mayor から]` notice, a broadcast) gets one line under
+  中継の記録: time, to whom, which human message (Inbox id) or notice, and whether it
+  arrived and how that was checked.
+- New item: add under file inbox の項目 (a pend issue's under 保留), urgent ones first.
   `done` / `cancel`: move the item with that key to the done section.
   `ack`: mark the commander briefed; no item.
   `other` with a fixed issue ID or a delegation: `references/intake.md` step 5 or 6;
   saying the Inbox tool does not load: Protocol 2 step 3.
 - Add a message to the Mayor's Inbox summary whenever an item enters or leaves the
-  human's turn, a cross-issue finding appears, or a new commander starts
-  (`references/inbox.md`); a read with no such change stays in the chat.
+  human's turn, a cross-issue finding appears, a new commander starts, or a picked
+  answer sits unsent (`references/inbox.md`); a read with no such change stays in chat.
+- For each Board issue whose projects changed, first add a rewritten message to its
+  `<issue>: 現況` thread and update its card (`references/inbox.md`, "The Board and the
+  status threads"); the summary then links that thread.
 - Order the human-facing view: urgent first, then items that block an agent
   (`answer`, `confirm`, `approve`), then `operate` / `merge`, then `review` /
   `external` / `other`.
@@ -372,8 +386,8 @@ decisions, standing rules) and stays the source of truth for the items that arri
 - A human report or instruction: find the owner from the ledger or roster (ask with
   native ask only if two commanders fit), then relay
   `"[mayor 中継] human: <原文>"`. Never paraphrase into a stronger instruction.
-- When a relay answers an Inbox item, add its project, thread and `<message id>/<key>`;
-  for a new request, say it answers no Inbox item (`references/inbox.md`).
+- A relay that answers an Inbox item names its project, thread and `<message id>/<key>`;
+  a new request says it answers none; an undelivered Inbox message: `references/inbox.md`.
 - End a message sent to every commander with 返信不要, or every one of them replies.
 - For a layered or ambiguous question, preserve the original wording and identify the
   underlying concern in one sentence. Mark any added interpretation as the Mayor's
