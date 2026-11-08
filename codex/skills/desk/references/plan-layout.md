@@ -11,6 +11,7 @@ Applies to a **planned task**: impl, or research with stages or several 論点 �
 | 完了イメージ (before / after) | `## 設計` > `### 完了イメージ (before / after)`, right after 成功基準 | Init: the before diagram, and the after diagram when it can already be drawn. Plan approval: finalize both. |
 | 論点の一覧 | top of `## 論点`, above the first `#### D-n` entry | Seed 論点 (Init step 3): one row per placeholder. Each decision: update its row. |
 | 計画の段階 | `## Milestones` rows (one stage per row) and the derived note `段階ごとの構成図` linked from 設計方針・構成 | Plan approval |
+| A stage's own plan | a stage design note per stage that needs one (see Nesting a stage's plan), linked from its Milestone row | When the stage turns out to need its own design |
 | Execution state | 現在地 and Milestones only | During execution |
 
 During execution, do not rewrite 完了イメージ, the 論点 rows, or the staged-diagram note unless the design itself changes (an event; see Event Gate). A changed design updates the diagrams in the same gate.
@@ -70,3 +71,14 @@ The derived note `<task prefix>--段階ごとの構成図` (create it per `### D
 5. `## 段階ごとの要約`: a table (段階 / 足すもの / やめるもの / 始める前の条件 / 人の手).
 
 A plan with no stages (one step) skips this note; 完了イメージ is enough.
+
+## Nesting a stage's plan
+
+A stage can itself be a sizable design task — its own decisions, its own before/after, its own sub-stages. Do not pour that detail into the root note: give the stage a **stage design note** that repeats the root's plan layout one level down, so the root stays the overview and the reader can move whole ↔ detail at every level.
+
+- **When**: the stage has 論点 of its own, or its design no longer fits a few lines in the staged-diagram note. A stage that is only execution needs no note.
+- **Name and links**: `<task prefix>--<Mn> <stage name>` (a derived note; inherit `#prj-*` tags). Its first line is a breadcrumb back to the parent (`↑ [[<parent note>]] > <Mn> <stage name>`). The parent links down from the stage's Milestone row (`summary:: <Mn> <stage name> → [[<stage note>]]`), from the stage's section in the staged-diagram note, and from 設計方針・構成.
+- **Contents, same order as the root**: `## 背景` (why this stage exists, pointing to the parent rather than retelling it) → `## 問題定義` → `## 成功基準` (the stage's done conditions) → `## 完了イメージ (before / after)` (before = the shape this stage starts from, i.e. the previous stage's after; after = this stage's after in the staged-diagram note, drawn finer) → `## 設計方針・構成` → `## 論点` (its own 論点の一覧 and entries) → `## 段階` (sub-stages as a numbered list, and a staged-diagram section or note when they need diagrams).
+- **Recursion**: the same rule applies inside a stage note — a sub-stage that is itself a design task gets its own note one level further down. Keep each level readable on its own: a level summarizes its children in one row or one line each and links to them; detail lives only in the deepest note that needs it.
+- **What stays in the root**: the task's state and history. Stage notes have no 現在地, Event Log, frontmatter `status`, or bd mirror; 現在地, Milestones, the Event Log, and bd stay in the root note, written by the root session. A design change in a stage note is an event recorded in the root's Event Log, and the root's bd `design` snapshot names each stage note and its open 論点.
+- **論点 ids across levels**: one D-n sequence per task, so an id points to one decision wherever it appears. A stage note's 論点 take the next free numbers; the entries live in the stage note. The root's 論点の一覧 keeps its own decisions and one row per stage note (`<Mn> の論点: D-7〜D-9、未決 1 件 → [[<stage note>]]`), and 現在地 未決の論点 lists every open D-n with its topic and the note it lives in. The done gate counts open 論点 in stage notes too.

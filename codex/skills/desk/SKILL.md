@@ -129,6 +129,7 @@ A planned task (impl, or research with stages or several 論点) lays out its pl
 - **完了イメージ (before / after)**: two mermaid diagrams on the same skeleton — today's shape, and the shape when this task is done with what it adds, retires, and leaves undecided marked by color. Draw before at Init; finalize both at plan approval.
 - **論点の一覧**: a table atop 論点 (論点 / これは何か / 判断 / 理由・根拠) so every decision is visible at a glance; これは何か glosses the mechanism and states the worry for a first-time reader. Keep each row in step with its entry.
 - **Stages**: when the plan has stages, one Milestone row per stage under the same name everywhere, and a derived note `段階ごとの構成図` (per-stage before/after diagrams, 始める前の条件, 確かめること, a summary table) linked from 設計方針・構成.
+- **Nesting**: a stage that is itself a sizable design task gets a stage design note repeating this layout one level down (and so on recursively), linked down from its Milestone row and back up by a breadcrumb, so each level reads as an overview of the next. State, history, and bd stay in the root note; D-ids run as one sequence across all levels.
 - **When to write**: Init writes 背景 / 問題定義 / 前提, the before diagram, and the 論点の一覧 rows for the seeded placeholders; plan approval finalizes 完了イメージ, the 論点 rows, the stages, and the staged-diagram note; during execution only 現在地, Milestones, and 論点 status move unless the design itself changes.
 
 ### Writing for the cold reader
