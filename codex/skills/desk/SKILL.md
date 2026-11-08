@@ -108,19 +108,28 @@ Exact template: `references/note-templates.md`.
 | section | holds | update style |
 |---------|-------|--------------|
 | `## 現在地` | Derived view. Opens with 状況, a prose paragraph (2–5 sentences) after which a cold reader can say what the task is, where it stands, and what waits on whom. Then the index fields: 位置 (Milestone-based, e.g. `M3/5 <name>`), 未決の論点 (D-id with its topic in words), 残TODO (count + next one), Next Action (human), Next Action (agent) — each field only what is still open —, as of (`Turn-N`, the last Turn this view reflects). | Rewrite in place. Refresh with every head update. |
-| `## 設計` | Fixed sub-sections: 背景 (prose: why the task exists and what hurts without it) / 問題定義 (one line) / 成功基準 / 前提 (Facts) / 設計方針・構成 (opens with a whole-picture diagram; see Design Briefing). | Rewrite in place. |
+| `## 設計` | Fixed sub-sections: 背景 (prose: why the task exists and what hurts without it) / 問題定義 (one line) / 成功基準 / 完了イメージ (before / after; planned tasks, see Plan layout) / 前提 (Facts) / 設計方針・構成 (opens with a whole-picture diagram; see Design Briefing). | Rewrite in place. |
 | `## Milestones` | Dataview table (`bd_issue::`, `summary::`, `milestone_status::` = open \| in_progress \| done \| skipped). | Update rows in place; keep each row's bd child issue consistent (`done` → `bd close`; `skipped` → `bd close --reason skipped`). Rows without a bd issue (adhoc) carry `—`. |
-| `## 論点` | One `#### D-n <topic>` sub-section per substantial decision topic (see below). | Edit in place; overturn by supersede. |
+| `## 論点` | For planned tasks, a 論点の一覧 table first (see Plan layout); then one `#### D-n <topic>` sub-section per substantial decision topic (see below). | Edit in place; overturn by supersede. |
 | `## Event Log` | `### Turn-N` entries, newest last. | Append only. |
 
-**論点 entry**: `decision_status:: open | decided | superseded | dropped`, then 問い / 選択肢 / 判断 / 根拠 / 影響先. Use `decision_status::` (never bare `status::`) so it cannot collide with the frontmatter `status` in Dataview.
+**論点 entry**: `decision_status:: open | decided | superseded | dropped`, then 問い / 選択肢 / 判断 / 根拠 / 影響先, plus 残ること when something stays open after the decision. Use `decision_status::` (never bare `status::`) so it cannot collide with the frontmatter `status` in Dataview.
 
 - Write each field as explanation. 問い says what must be decided and why it matters now; 選択肢 is one nested bullet per option (what it is, its benefit, what it costs; a single proposal is written as one bullet and says no alternative was considered, never padded with invented options); 判断 on an `open` entry says 未決 and gives the recommendation, its reason, and what is still unknown, so the human can decide from the note alone; 根拠 separates confirmed fact, source statement, and inference. Template and worked example: `references/writing-for-recap.md`.
-- Overturning a decided 論点: mark the original `superseded → D-m` and add `D-m` (noting `supersedes D-n`). Never overwrite the trail.
+- Overturning a decided 論点: mark the original `superseded → D-m` and add `D-m` (noting `supersedes D-n`). Never overwrite the trail, and never renumber an assigned D-id.
 - Closing a 論点 without deciding: `dropped`, with the reason; if it is carried to a separate bd issue, name that issue.
 - Grain: substantial topics — a decision that would change design, plan, or scope. Not per-file or per-function nitpicks.
 
 **grill-me mapping**: `$grill-me` Snapshot fields land as Problem statement / Success criteria / Facts → 設計; Decisions / Open questions → 論点.
+
+### Plan layout
+
+A planned task (impl, or research with stages or several 論点) lays out its plan so the note reads top to bottom as: why (背景) → what to solve (問題定義, 成功基準) → what changes when done (完了イメージ) → what was decided (論点の一覧) → how it proceeds (Milestones as stages) → where it stands (現在地). A small task (one fix) and adhoc may use any part but need none. Recipes, the color legend, and table shapes: `references/plan-layout.md`.
+
+- **完了イメージ (before / after)**: two mermaid diagrams on the same skeleton — today's shape, and the shape when this task is done with what it adds, retires, and leaves undecided marked by color. Draw before at Init; finalize both at plan approval.
+- **論点の一覧**: a table atop 論点 (論点 / これは何か / 判断 / 理由・根拠) so every decision is visible at a glance; これは何か glosses the mechanism and states the worry for a first-time reader. Keep each row in step with its entry.
+- **Stages**: when the plan has stages, one Milestone row per stage under the same name everywhere, and a derived note `段階ごとの構成図` (per-stage before/after diagrams, 始める前の条件, 確かめること, a summary table) linked from 設計方針・構成.
+- **When to write**: Init writes 背景 / 問題定義 / 前提, the before diagram, and the 論点の一覧 rows for the seeded placeholders; plan approval finalizes 完了イメージ, the 論点 rows, the stages, and the staged-diagram note; during execution only 現在地, Milestones, and 論点 status move unless the design itself changes.
 
 ### Writing for the cold reader
 
@@ -262,14 +271,14 @@ Reconciliation for missed or half-written events.
    - **impl/research**: confirm `target_repo` → resolve `BEADS_DIR` from `.envrc` → derive socket vars → create the worktree via `$wt` (propose path/branch candidates, obtain approval) → create the bd epic via `$beads`.
    - **adhoc**: no worktree or bd issue; leave the fields empty.
 3. **Seed 論点**: research the source issue and repo read-only, list the topics that need a decision, and present them via native ask for the human to add, remove, or merge. Fix the result as placeholders (`decision_status:: open`, other fields blank) so later work knows where each conclusion belongs.
-4. Create the note at vault root from `references/note-templates.md`: fill 背景, 問題定義, and 前提 with what is known (背景 and each seeded 問い in sentences), leave the rest as placeholders, draft Milestones as a rough critical path, set `status: not_started`.
+4. Create the note at vault root from `references/note-templates.md`: fill 背景, 問題定義, and 前提 with what is known (背景 and each seeded 問い in sentences), leave the rest as placeholders, draft Milestones as a rough critical path, set `status: not_started`. For a planned task, also draw the 完了イメージ before diagram (and after, if it can already be drawn) and add a 論点の一覧 row per seeded placeholder (see Plan layout).
 5. Treat creation as an event: write Turn-1 (`Task initialized`) and run the bd sync. Before the first `design` write, read `bd show`; fold any existing `design` content into 設計, because the replace would discard it.
 
 ## Planning
 
 - impl: run `$rough-plan` unless the change is trivial. Trivial skip (1 file, a few lines, self-evident fix): record the skip and reason as one line in 設計 > 設計方針・構成 and treat it as an event.
 - research/adhoc: settle open 論点 with `$grill-me` in the root session as needed.
-- Plan approval is a native-ask decision recorded as an event.
+- Plan approval is a native-ask decision recorded as an event. For a planned task, the same gate finalizes the Plan layout parts: 完了イメージ, the 論点の一覧 rows, Milestones as stages, and the staged-diagram note when the plan has stages.
 - Once Milestones are derived, create a bd child issue per row (`bd create --parent <epic-id>` via `$beads`) and fill `bd_issue::`.
 - If the approved plan is too long to keep the head readable, put it in a derived note and link it from 設計方針・構成.
 - Present plans and design changes per Design Briefing.

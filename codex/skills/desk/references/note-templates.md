@@ -31,6 +31,15 @@
 ### 成功基準
 <!-- testable completion conditions -->
 
+### 完了イメージ (before / after)
+<!-- planned tasks (see references/plan-layout.md): legend line, then two mermaid diagrams on the same skeleton; small tasks and adhoc may drop this sub-section -->
+
+#### 今の形 (before)
+<!-- mermaid; existing parts as `old`; one-line > caption: what is missing and what that costs -->
+
+#### 完了したときの形 (この task の範囲)
+<!-- mermaid on the same skeleton; `new` / `gone` / `unk` overlaid; one-line > caption; completion conditions are 成功基準 -->
+
 ### 前提 (Facts)
 <!-- verified facts, constraints, links — each fact as a sentence saying what is known, how it was confirmed, and when; see references/writing-for-recap.md -->
 
@@ -44,15 +53,21 @@
 
 ## 論点
 
+<!-- planned tasks: 論点の一覧 (see references/plan-layout.md) -->
+| 論点 | これは何か (背景と問題意識) | 判断 | 理由・根拠 |
+|---|---|---|---|
+| D-1 <topic> | <what is decided, glossed for a first-time reader; 心配なのは、〜ことです> | 未決 (推奨: <option>) | <reason and main evidence> |
+
 #### D-1 <topic — named so the reader sees what is being decided>
 decision_status:: open
 - 問い: <what must be decided, why it matters now, what changes depending on the answer>
 - 選択肢:
   - A <name>: <what it is; its benefit; what it costs or risks>
   - B <name>: <same>
-- 判断: <open: 未決。推奨とその理由、まだ分かっていないこと / decided: the chosen option and who decided>
+- 判断: <open: 未決。推奨とその理由、まだ分かっていないこと / decided: the chosen option and who decided, then why each other option was not taken>
 - 根拠: <confirmed facts, source statements, and inference, kept apart>
 - 影響先: <what this decision changes>
+- 残ること: <what stays open after the decision, or what execution must confirm and where; omit when nothing remains>
 
 ## Event Log
 <!-- Turn-N headings appended here, one per progress event -->
@@ -63,7 +78,7 @@ decision_status:: open
 Field-writing rules (explanation, one bullet per option, certainty kept visible) and a worked example: `references/writing-for-recap.md`.
 
 - `decision_status::` is one of `open | decided | superseded | dropped`. Do not use bare `status::` (collides with frontmatter `status` in Dataview).
-- Decide: fill 判断 / 根拠 / 影響先 and set `decided`.
+- Decide: fill 判断 / 根拠 / 影響先 (and 残ること if any), set `decided`, and update the 論点の一覧 row in the same write.
 - Overturn: set the original to `superseded` and add `→ D-m`; add `D-m` with `supersedes D-n` in its 問い.
 - Drop: set `dropped` with the reason; name the follow-up bd issue if one was opened.
 
