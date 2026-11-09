@@ -8,6 +8,7 @@ web_search = "live"
 approvals_reviewer = "guardian_subagent"
 
 [features]
+daemon_auto_start = false
 multi_agent = true
 apps = true
 prevent_idle_sleep = true
