@@ -429,6 +429,10 @@ It only adds or updates rows, so a snapshot taken while nothing has a name canno
 
 Signs: many `gone` / `name_lost` events at once, or most commanders `agent_not_found`.
 
+herdr may bring the agents back by itself: after the 2026-11-09 reboot every commander
+was running again and only the Mayor and one commander had lost their names. So read
+`herdr agent list` first and restore only what is missing.
+
 1. Protocol 0 for the Mayor itself.
 2. `$S/mayor.sh restore` (dry run). It matches each saved name to a pane by label,
    then by the old pane id in the same workspace, then by the only unnamed agent with
@@ -439,10 +443,15 @@ Signs: many `gone` / `name_lost` events at once, or most commanders `agent_not_f
    moves the roster's pane ids to where the names now live. Otherwise show the plan to
    the human first.
 4. Put each `start` line in the ledger as an `operate` item for the human. Do not start
-   agents yourself.
+   agents yourself. Skip panes labeled `<name>-resting` or `<name>-stopped`: those
+   commanders were stopped on purpose to save memory, so a restart leaves them stopped
+   (human, 2026-11-09).
 5. A commander resumed into its old session keeps the brief; a fresh one needs Protocol 2.
 6. `$S/mayor.sh forget <name>` for names that will not come back, so restore stops
    listing them.
+6a. Re-arm the watchers (Protocol 3): background tasks from before the restart are gone.
+   Shared local servers may be down too. On 2026-11-09 the beads Dolt server was, and
+   commanders could not write their issue records until it came back.
 7. Hunk reviews: if `hunk session list` is empty while a `hunk-*` pane exists, the TUI
    and its comment watcher are gone, and the live comments with them. At the human's
    request, relaunch the viewer in that labeled pane with the previous command

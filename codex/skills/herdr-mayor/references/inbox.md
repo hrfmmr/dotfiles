@@ -204,6 +204,12 @@ Use the CLI: the Mayor's Inbox tool may have no card action. `--key` makes a cre
 to repeat. More than one `--ref` in a call fails with the usage text; add each further PR
 with its own `card link`.
 
+Link a card to its source issue as well as its PRs (human, 2026-11-06): the team tracker
+issue the work comes from (`--ref <its URL>`), and a child issue's page too when the card
+holds that child. Take the URL from the desk note's `source_issue_link`, the daily note,
+or a tracker search by the issue's number; a bd ID is not a source issue. When the work
+has no tracker issue (a chat request, a skill change), say so instead of guessing one.
+
 ### Status threads
 
 One thread per card, named `<issue>: 現況` (`send_message` with `thread`). On every change,

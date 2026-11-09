@@ -114,6 +114,10 @@ human ではなく Mayor が動くための知らせは、いつも `report.sh` 
 - `[mayor 中継] Inbox で届かなかった human のメッセージ (Inbox「…」›「…」、<時刻>、<message id>、答えなら <質問の message id>/<key>): <原文>`: human が Inbox であなたのスレッドに送ったのに、この session に届かなかったもの。Inbox にはもう載っていて、答えはもう送られているので、2 の書き戻しや取り下げは要らない (送られた質問は取り下げられない)。原文どおりに受けて進め、返すことがあれば、その human のメッセージに `reply_to` で同じスレッドに書く。あとで `Plannotator Inbox: … (<同じ message id>)` が届いたら同じものとして扱い、二度は実行しない。
 - `[mayor から] ...`: Mayor 自身の連絡 (規約の配布、project のフォルダの知らせ、状況の問い合わせなど)。human の指示ではない。「返信不要」とあれば返さない。
 
+## 作業を任せるとき
+
+新しい Claude の pane (worker) を立てず、session の中の sub-agent か codex を使う (human、2026-11-07)。Claude Code の session は 1 つで約 300 MB を使い、26 個で 32 GB の Mac が swap に入った。Claude の worker の pane を前提にした skill (herdr-impl など) で立てたときは、終わったらすぐ止める。手の空いた worker を残すなら、理由を report.sh で Mayor に知らせる。
+
 ## 名前
 
 あなたの herdr 名は pane label と同じ文字列にする。session を再起動すると名前だけが消えることがある。`herdr agent get <名前>` が失敗したら、`herdr agent rename "$HERDR_PANE_ID" <名前>` で付け直す。Mayor の見張りも、消えた名前に気づいたら付け直す。

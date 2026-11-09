@@ -5,6 +5,12 @@ commander (for example "add workspace for ...", "create a new commander for ..."
 Mayor sets the task up; the work itself, including filing its issue, belongs to the
 commander. Pick a provisional name for the task and `<topic>-cmd` for the agent.
 
+Before step 1, count the live Claude agents (`herdr agent list`, `agent == "claude"`,
+the Mayor included). Each Claude Code session holds about 300 MB, and on 2026-11-07 26
+of them filled a 32 GB Mac into swap. When the count is above 10, show the human the
+candidates to stop first (idle workers, pend commanders) before creating the new one
+(human, 2026-11-07).
+
 1. **Keep the handoff.** Copy any handoff document the human points at out of `/tmp`
    (it can vanish) into a git-ignored work folder beside the ledger, such as
    `<vault>/.local/<provisional name>/handoff.md`. Confirm with `git check-ignore -v
