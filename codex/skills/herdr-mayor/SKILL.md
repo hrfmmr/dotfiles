@@ -315,6 +315,33 @@ The human may name the issues to focus on. Record it in the roster's fifth colum
   focused `confirm` items. A commander back in focus returns to the Inbox (Protocol 2
   steps 1 and 3, or a `[mayor から]` notice to switch by its brief).
 
+## Resting and waking commanders
+
+Each Claude Code session holds about 300 MB, so the human keeps about 10 live Claude
+agents (human, 2026-11-07). A resting commander has stopped its process but keeps its
+session, pane and Inbox project; it costs no memory until woken.
+
+**Rest** only commanders the human picks. When `herdr agent list` shows more than 10
+Claude agents, show the human the candidates: commanders with no work in hand that only
+wait on the human or an outside reply, and finished ones (human, 2026-11-09).
+1. Relay the human's words and ask the commander to write what it needs to resume (its
+   position, what it waits on, its next step) and report by `report.sh --kind other`.
+2. On that report, note in the ledger the pane, `agent_session.value` from `herdr agent
+   get`, model and cwd. Then relay `/exit`, confirm `agent_not_found`, and rename the pane
+   `<name>-resting`. Keep the roster row and the Inbox project.
+
+**Wake** without asking when the human writes in a resting commander's Inbox project or
+asks for it (human, 2026-11-09). An outside reply (mail) reaches nobody, so the human
+writes a line in that Inbox.
+1. `herdr agent start <name> --kind claude --pane <pane> -- --resume <session> --model
+   <model> --effort medium --name <name>`.
+2. Check `herdr agent get <name>`. A resumed start can return without setting the name
+   while the session does come up (2026-11-10); then run `herdr agent rename <pane>
+   <name>`. Rename the pane back to `<name>`.
+3. The plugin delivers the waiting Inbox message on resume. Once the commander settles,
+   relay a `[mayor から]` fact note naming the human's message and thread, saying to
+   ignore it if already started.
+
 ## Protocol 4: Keep the ledger
 
 The human reads where each issue stands on the Board and in the status threads
