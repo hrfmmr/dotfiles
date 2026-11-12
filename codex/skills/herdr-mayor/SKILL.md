@@ -13,7 +13,7 @@ description: >-
   the agents", "relay this to the commander of that issue", "add a workspace for this
   task", or resumes a Mayor session. Sub-commands: help, start, todo, ask, relay, done,
   focus, pend, status, intake, restore, handoff, resume.
-  Requires HERDR_ENV=1. Composes the herdr skill.
+  Requires HERDR_ENV=1. Composes the herdr and pr-status skills.
 ---
 
 # herdr-mayor
@@ -125,6 +125,8 @@ An unknown word: run `help`.
   review hold the human explicitly set in advance (e.g. "show me before publishing").
   The commander gets that confirmation from the human directly, in its own pane or as an
   Inbox question. Human-only operations (apply and the like) stay with the human.
+  The only outward action the Mayor itself takes is a Slack review request or reminder
+  from the `pr-status` skill, after the human answers 送る or 直して送る to that question.
 - Add only facts (paths, keys, locations) to a relay, never a condition the human did
   not state (for example "do not commit until told"): commanders stall on it. If a
   commander asks whether an approval includes the next step, check the request and
@@ -245,7 +247,13 @@ An Inbox answer returns only to the session that asked, so also arm
 `MAYOR_SESSION=<this session id> $S/watch-plannotator.sh` (`references/inbox.md`,
 "Watching"): exactly one run, never a rebuilt `plannotator-seen*`. On completion, read
 the changed threads, check delivery and picked answers, update the changed Board issues'
-status threads and cards, then the summary, re-arm.
+status threads and cards, then the summary, run the PR status pass, re-arm.
+
+The PR status pass (`references/inbox.md`, "The PR status thread"): on every watcher
+wake (about hourly), run the `pr-status` skill in a sub-agent, passing `MAYOR_SESSION`,
+so PR detail stays out of this context. It writes to its own thread only when something
+changed and asks the human before any Slack review request or reminder; take back only
+its short summary. PR status never goes into the summary thread.
 
 ### Turn-live cycle
 

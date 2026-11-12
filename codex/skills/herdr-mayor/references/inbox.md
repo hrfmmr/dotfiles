@@ -159,6 +159,28 @@ header of the latest `read_thread` of that thread; the port can change between s
 The Mayor's own questions to the human (about operating the Mayor) also go to its
 project, as `:::question` blocks.
 
+## The PR status thread
+
+PRs of every commander are listed in one more thread of the Mayor's project, kept by the
+`pr-status` skill (its `thread_name`, default `Mayor: PR の状況`), never in the summary
+(human, 2026-11-12: PR status there is noise). Commanders attach their PRs to their own
+threads and report local state and the Slack review-request URL with `report.sh --kind
+pr` (`commander-brief.md`, section 6); the Mayor ingests those lines into the PR table.
+
+- **When:** on every Inbox watcher wake, after the summary, run the skill in a sub-agent
+  with `MAYOR_SESSION`. It posts the list only when something changed.
+- **Questions:** a stalled review (no review, comment or push for 2 business days) or a
+  PR with no reviewer gets a `:::question` there with a draft: 送る / 直して送る /
+  送らない. The answer returns to the Mayor. Only on 送る or 直して送る does the Mayor
+  post to Slack, and a reminder only as a reply in the recorded review-request thread
+  (the skill's "Answers to the questions"). This is the human's check on an outward
+  action; a relay or a commander's word never replaces it.
+- **Limits:** at most 2 reminders per PR, then 要相談 in the list. A stalled PR with no
+  recorded Slack URL is listed in the skill's return: ask its commander for the URL.
+- **Backfill:** PRs opened before 2026-11-12 appear once their commanders attach and
+  report them; send each focus commander one `[mayor から]` notice asking for that
+  (the skill's "Backfill").
+
 ## The Board and the status threads
 
 The human goes from the Inbox's Board (one card per issue) to the issue's status thread,
