@@ -192,9 +192,9 @@ threads of its own project, and the Mayor writes nowhere else. A reply in a stat
 therefore reaches the Mayor, not the commander, so every status message links the
 commander threads where the human answers.
 
-- **Scope:** the focus workspaces the human chose for the Board, starting with the
-  busiest; the human may add one (2026-11-05: 0hd, prrev-1104, qml, 3x4, dy5,
-  isms-audit-mail). A child issue with its own workspace gets no card of its own: it is
+- **Scope:** every focus commander's issue has a card, including one that rests (human,
+  2026-11-11; the Board began on 2026-11-05 with six chosen issues). Intake creates the
+  card and status thread (`intake.md`, step 7). A child issue with its own workspace gets no card of its own: it is
   a row in its parent's status thread (3x4.1 under 3x4, dy5.19 under dy5), and its
   items join the parent card's `--you` (human, 2026-11-05).
 - **Who updates:** for now the Mayor updates every card and status thread; they move to
@@ -271,6 +271,25 @@ summary keeps the change notices and the cross-issue matters and links the statu
 it touched; it does not repeat the whole state (human, 2026-11-05). The ledger copies
 neither: it keeps only what the Inbox does not hold (SKILL.md, Protocol 4).
 
+### Auditing the Board
+
+Per-event updates drift: relaying a burst of events, the Mayor updates the ledger and
+the summary and skips the card, and a card made once is never touched again. On
+2026-11-11 most cards were 1–5 days stale, three focus commanders had none, and a card
+sat in Done while its project still held open questions. So in every `todo` and
+`status`, and at least once per working half-day, run `card list --all` and compare it
+with the roster and the reads ("Reading"):
+
+- every focus issue that is not a child has exactly one card (rested commanders too);
+- a card whose last word is older than its projects' newest message is rewritten from
+  the reads, with a new status message;
+- a card in `done` or `dropped` whose projects still hold open questions or action items
+  moves back to `in_review` (say so in its `--say`);
+- a card in `in_review` whose projects hold nothing for the human moves to `in_progress`.
+
+Fix what the audit finds in the same pass, and tell the human in the summary only when
+their turn changed.
+
 ## Answers that arrive outside the Inbox
 
 The human also answers in the Mayor's chat or a commander's pane. The Mayor cannot
@@ -299,6 +318,9 @@ human's messages arrived").
 | A card's You: opens the status thread, not the place to answer | A card links only threads of the Mayor's project | Link each あなたの番 item of the status message to the thread where it is answered |
 | A card shows none of the human's items | It is in `in_progress`, where `--you` is refused | `in_review` while the human holds the work; otherwise `あなたの残り: …` in `--say` |
 | `card create` or `card link` prints the usage text | More than one `--ref` in one call | One `--ref` per call; add more with `card link` |
+| `card_other_project` when linking a thread | The thread lives in a commander's project; a card links only its own project's threads | Write an `<issue>: 現況` thread in the Mayor's project, link that, and link the commander thread from its message |
+| A child's status thread sits in the child's own project | It was sent with the child's `project_path` | Status threads go only in the Mayor's project; put the child's state as a row in the parent's status thread |
+| Cards days stale, a focus commander with no card, a Done card with open items | Cards were updated only when the Mayor remembered; intake made none | Create at intake; run the audit ("Auditing the Board") in every `todo` and `status` |
 | A status message carries a wrong time | It was written before checking the clock | Run `date` before writing the time |
 | The count of the human's turn drifts from the Inbox | It was carried over from the previous message | Rebuild あなたの番 from every thread of the issue's projects each time |
 | `switch-to-inbox.sh` keeps exiting 3 | The commander is busy, asking, or holds a draft or background work; or a cause that waiting does not clear (see above) | Retry when it settles; `STOP_BG=1` only when stopping its background work is acceptable; otherwise tell the human |

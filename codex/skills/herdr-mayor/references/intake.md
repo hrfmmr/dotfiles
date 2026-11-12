@@ -55,4 +55,10 @@ candidates to stop first (idle workers, pend commanders) before creating the new
    and relay the folder to both the delegate and its parent. If the delegate's brief does
    not point at `references/commander-brief.md`, send it the Protocol 2 brief. It asks
    the human in the Inbox directly, in its own project.
-7. Add a summary message for the new commander (`inbox.md`, "The Mayor's summary").
+7. **Put it on the Board in the same pass.** Once the project exists, add its
+   `<issue>: 現況` thread in the Mayor's project and a card linked to it (`inbox.md`,
+   "The Board and the status threads"; human, 2026-11-11, after three commanders went
+   days without a card). A child issue (a sub-issue of an issue that already has a card)
+   gets no card: add its row to the parent's status thread and its items to the parent
+   card's `--you`. A delegate (step 6) is handled the same way.
+8. Add a summary message for the new commander (`inbox.md`, "The Mayor's summary").

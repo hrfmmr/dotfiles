@@ -64,7 +64,7 @@ An unknown word: run `help`.
 | `relay <issue or name> <text>` | "〜に伝えて" | Relay the text verbatim to the owner (Protocol 5) |
 | `done <key or Inbox item> [note]` | "〜は済んだ" | Relay `[mayor 中継] human: <item> は済んだ。<note>` to its owner, naming the Inbox project, thread and question for an Inbox item; move a ledger item to done |
 | `focus <issue or name>...` / `pend <issue or name>...` | "〜を優先に", "〜は後回し" | `mayor.sh priority`, then the Priority section's follow-ups |
-| `status` | "commander の様子は?" | `mayor.sh status`, Protocol 3 delivery checks, plus one line per commander that is not idle/acked; laid out like `todo` by `references/human-report-format.md` |
+| `status` | "commander の様子は?" | `mayor.sh status`, Protocol 3 delivery checks, the Board audit (`references/inbox.md`), plus one line per commander that is not idle/acked; laid out like `todo` by `references/human-report-format.md` |
 | `intake <request>` | "このタスクの workspace を足して", "新しい commander を立てて" | Only on the human's explicit request: Protocol 7 (brief, workspace and commander, Inbox project once the issue ID is fixed) |
 | `restore` | "herdr を再起動した" | Protocol 6 |
 | `handoff` | "Mayor を別の session に移したい", "記憶を外に出して" | The Handoff "leaving" steps: write the handoff file, copy memories, stop the watchers, release the name |
@@ -75,8 +75,8 @@ An unknown word: run `help`.
 1. Drain the file inbox: `mayor.sh new`, process (Protocol 4), `mayor.sh ack <upto>`.
 2. Read each focus project in `inbox-projects.tsv` (`references/inbox.md`, "Reading"):
    open questions and action items are the human's turn; show `picked` as 選んだまま未送信.
-   Bring each Board issue's status thread and card up to these reads (`references/inbox.md`,
-   "The Board and the status threads").
+   Bring each Board issue's status thread and card up to these reads, and run the Board
+   audit (`references/inbox.md`, "The Board and the status threads", "Auditing the Board").
 3. `mayor.sh status`. For each focus commander that is `blocked`, not acked, or has
    been asking in its own pane, read it (`herdr agent read <name> --source
    recent-unwrapped --lines 80`; while it is working that read is refused with
