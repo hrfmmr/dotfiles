@@ -10,7 +10,7 @@ human への質問・頼みごと・報告の出し先は、あなたの状態�
 
 | あなたの状態 | 出し先 |
 |---|---|
-| focus で、Plannotator Inbox の道具があり、Mayor から Inbox の project のフォルダを伝えられている | Plannotator Inbox (1・2)。`report.sh` は 5 の知らせだけに使う |
+| focus で、Plannotator Inbox の道具があり、Mayor から Inbox の project のフォルダを伝えられている | Plannotator Inbox (1・2)。`report.sh` は 5・6 の知らせだけに使う |
 | pend と伝えられた / Inbox の道具が無い / project のフォルダがまだ無い | Mayor の inbox (`report.sh`、3・4) |
 
 - 道具の確かめ方: ToolSearch で `select:mcp__plannotator__plannotator_inbox` を読み込む。読み込めないときは (道具が繋がる前に始まった session)、その一回だけ `report.sh --kind other` で Mayor に知らせ、`report.sh` で進める。
@@ -92,6 +92,15 @@ human ではなく Mayor が動くための知らせは、いつも `report.sh` 
 - **作業を別の workspace と agent に任せた**: `--kind other` で、workspace の名前、agent の名前、扱う項目、作業の場所 (cwd) と、任せた先の bd の識別子と題名を書く。任せた時点で識別子が決まっていなければ、決まったときにもう一度書く。
   - 任せた先の担当も自分の project を持ち、human に Inbox で直接聞く。project は、任せた先の識別子が決まってから Mayor が作り、あなたと任せた先の両方に伝える。
   - 任せた先への指示書には、この規約を読むこと、Mayor からフォルダが届くまで Inbox に出さずに進めることを書く。
+
+## 6. PR を知らせる (Inbox を使っていても report.sh)
+
+Mayor は、全 commander の PR の状況を 1 つのスレッドにまとめて human に見せる。GitHub から見えないことは、あなたの知らせで知る。
+
+- **PR を作った、または引き受けたとき**: その PR を自分の Inbox のスレッドに付ける (`send_message` の `pulls`、または `thread_pulls` の `add`)。そのうえで `report.sh --issue <issue> --kind pr --pr <owner/repo#n> --state opened` を 1 行書く。Inbox のフォルダがまだ無いときは、`report.sh` だけでよい。
+- **Slack でレビューを依頼したとき** (今までどおり、human が投稿を認めてから): 依頼のメッセージの URL (permalink) を `report.sh --kind pr --pr <ref> --slack <URL>` で知らせる。催促は、この依頼のスレッドへの返信で行うため、URL が無いと催促できない。
+- **ローカルの状態が変わったとき**: agent のレビューを始めた (`--state agent-review`)、終えた (`--state agent-review-done`)、merge されて apply を待つ (`--state apply-pending`)、apply した (`--state applied`)、PR を閉じた・担当から外れた (`--state closed`)。
+- 催促や最初のレビュー依頼の文面は Mayor が下書きし、human が Inbox で確かめてから Mayor が送る。あなたが催促を送ることはない。
 
 ## 出し先を切り替えるとき
 

@@ -327,6 +327,7 @@ file inbox is only a queue.
 - New item: add under file inbox の項目 (a pend issue's under 保留), urgent ones first.
   `done` / `cancel`: move the item with that key to the done section.
   `ack`: mark the commander briefed; no item.
+  `pr`: no item; record it with the `pr-status` skill (`pr_status.py ingest "<line>"`).
   `other` with a fixed issue ID or a delegation: `references/intake.md` step 5 or 6;
   saying the Inbox tool does not load: Protocol 2 step 3.
 - Add a message to the Mayor's Inbox summary whenever an item enters or leaves the
