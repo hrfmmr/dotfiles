@@ -1,0 +1,36 @@
+# Copy to $MAYOR_HOME/pr-status/config and fill in locally. Keep real values out of git.
+# All keys are optional; the defaults are shown.
+
+# Absolute path of the Mayor's Inbox project folder.
+# Default: the folder of the `mayor` row in $MAYOR_HOME/inbox-projects.tsv.
+#mayor_project=/path/to/herdr-mayor/inbox-projects/<mayor folder>
+
+# Name of the dedicated PR status thread in the Mayor's project.
+#thread_name=Mayor: PR の状況
+
+# Slack channel where a first review request is posted (name or ID). Empty: ask the commander.
+#review_channel=#<review-channel>
+
+# Holidays file (one YYYY-MM-DD per line, # comments). Weekends are always skipped.
+#holidays=/path/to/holidays.txt
+
+# IANA time zone for business days. Default: the machine's local zone.
+#timezone=<Area/City>
+
+#stall_business_days=2
+#max_reminders=2
+
+# Repos whose merge is followed by an apply (owner/repo, comma-separated).
+#apply_repos=<owner>/<repo>
+
+# Extra logins that are bots but not typed as Bot (comma-separated).
+#ignore_logins=
+
+# roster: commanders in roster.tsv only. all: every agent in inbox-projects.tsv.
+#scope=roster
+
+# Resolved threads are read only when active within this many days.
+#resolved_lookback_days=30
+
+# change: send the list only when something changed. always: on every run.
+#post=change
