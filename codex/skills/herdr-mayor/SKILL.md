@@ -245,8 +245,9 @@ without a working conversation wakeup path is not event mode.
 
 An Inbox answer returns only to the session that asked, so also arm
 `MAYOR_SESSION=<this session id> $S/watch-plannotator.sh` (`references/inbox.md`,
-"Watching"): exactly one run, never a rebuilt `plannotator-seen*`. On completion, read
-the changed threads, check delivery and picked answers, update the changed Board issues'
+"Watching"): exactly one run, never a rebuilt `plannotator-seen*`. On completion, look
+up each reported project's owner in `inbox-projects.tsv` (never from a list held in
+context; wake a resting owner), read the changed threads, check delivery and picked answers, update the changed Board issues'
 status threads and cards, then the summary, run the PR status pass, re-arm.
 
 The PR status pass (`references/inbox.md`, "The PR status thread"): on every watcher

@@ -78,6 +78,15 @@ Record rewrites (read marks, draft picks) are ignored. The project column is the
 internal slug (for example `u3112-63b455`), not the folder name; match it to a folder
 in `inbox-projects.tsv` and read by that folder.
 
+Look up every reported project in `inbox-projects.tsv` (folder column) and `roster.tsv`
+on each completion, before deciding anything about it. Never judge a project as not the
+Mayor's from a list held in context (a summary written at compaction, an earlier reply):
+those lists drop projects. A project not in either file belongs to no commander; leave
+it. One whose commander is resting (pane `<name>-resting`) reaches nobody until woken:
+wake it now ("Resting and waking commanders" in `SKILL.md`) (human, 2026-11-12, after a
+request in a resting commander's project sat unread for two hours because a carried-over
+list left that project out).
+
 - Run exactly one. Before re-arming, confirm the previous run has exited: two runs race
   for the read marks and drop or repeat events. Check by process, not by script path: a
   run started from an older copy of the script uses the same read marks.
@@ -121,7 +130,9 @@ its `message` line by `person` and its `answer-sent` lines share the project and
 and `reply=` is its id. A `message` line alone (a text reply or annotation) prints no id;
 find it with `read_thread`.
 
-1. If the commander is idle, read its pane now. If it is working, note the pending check
+1. Find the commander by the project's row in `inbox-projects.tsv` (Watching, above).
+   If it is resting, wake it first; the plugin delivers the message on resume.
+   If the commander is idle, read its pane now. If it is working, note the pending check
    in the ledger and check once the turn ends: run `herdr agent wait <name> --until idle
    --until done --until blocked --timeout 1800000` through the background tool, or check
    at the next wake or `todo`. When the wait ends before the message shows, look again a
