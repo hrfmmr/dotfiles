@@ -6,11 +6,11 @@ description: >-
   agent to implement the issue's handoff plan, collect validation + tfplan
   artifacts, run a third-party review loop in a `reviewer` pane, relay findings
   worker↔reviewer until no HIGH findings remain, present the diff for human
-  review via hunk-present (reusing the implementer worker as the hunk fix
-  worker), then leave a merge-ready branch for a human to open and merge the PR.
+  review via pre-review (an Inbox guided review, reusing the implementer
+  worker as the fix worker), then leave a merge-ready branch for a human to open and merge the PR.
   Worker runs claude sonnet5; reviewer runs codex. Requires HERDR_ENV=1 and an
   existing canonical bd issue that already contains a handoff plan. Composes the
-  herdr, wt, herdr-review-loop, hunk-present, and desk skills. Use when asked
+  herdr, wt, herdr-review-loop, pre-review, and desk skills. Use when asked
   to orchestrate implementation with worker and reviewer panes, delegate a bd
   issue to a Herdr worker and review-loop it to convergence, bridge worker and
   reviewer as an architect, run implement-then-review across panes, or invoke
@@ -57,7 +57,7 @@ review directly; you broker a `worker` pane (implements) and a `reviewer` pane
 - `herdr` — base pane/agent control (split, agent start, prompt, read, wait, rename).
 - `wt` — create the bd-issue-prefixed worktree. Always reuse `wt`; never raw `git worktree`.
 - `herdr-review-loop` — reviewer pane + branch-diff review loop (Step 5–6).
-- `hunk-present` — human review of the branch diff (Step 7): reading map in a dedicated Herdr tab, hunk comment Q&A, verdict.
+- `pre-review` — human review of the branch diff (Step 7): Plannotator Inbox guided review, asynchronous reply, fix rounds, verdict. (`hunk-present` only when the human asks for Hunk.)
 - `beads` — bd graph writes when the repo uses a bd-backed issue DB.
 - `desk` — event recording in the task note when one is active (optional; see Logging).
 
@@ -192,22 +192,22 @@ Whatever name is resolved, apply that SAME value to the agent name AND the pane 
    re-review. **Loop until HIGH findings = 0.** HIGH = correctness / security /
    data-loss impact. MED/LOW are recorded as PR comments (non-blocking). Cap at
    **3 review cycles**, then human-escalate.
-7. **Human review (hunk).** First groom the branch per `$commit`'s pre-PR
+7. **Human review (pre-review).** First groom the branch per `$commit`'s pre-PR
    grooming contract (semantic-unit squash, English subjects, tree-identity
-   check) — groom BEFORE the hunk session exists so no review re-sync is
-   needed. Delegate the grooming to the worker with an explicit push
+   check) — groom BEFORE the guide is sent so it never shows a stale history.
+   Delegate the grooming to the worker with an explicit push
    authorization for this step only (`--force-with-lease`; overrides the
    default push ban). Then present the branch diff to the human via
-   `$hunk-present`: dedicated Herdr tab named `hunk-<PR番号|slug>`, three-dot
-   (merge-base) target, sidecar reading map. **Reuse `<PFX>-worker` as the hunk
-   fix worker — do NOT spawn a new fixer.** The worker keeps its existing pane
-   (topology stays as built in Step 2); satisfy `$hunk-present`'s Fix worker spawn
-   contract by briefing it with the hunk session coordinates: the worktree path
-   (`--repo` selector), the TUI tab/pane ids (read/drive-forbidden), the human
-   comments (or the `comment list` command to fetch them), and 5b ownership —
-   the worker runs the post-fix re-sync (sidecar anchors, three-dot reload,
-   in-place replies with the commit hash). Verdict is recorded per
-   `$hunk-present` step 6.
+   `$pre-review`: a Plannotator Inbox guided review built from the merge-base
+   patch, sent into this work's thread; the human answers asynchronously.
+   **Reuse `<PFX>-worker` as the fix worker — do NOT spawn a new fixer.** The
+   worker keeps its existing pane (topology stays as built in Step 2); brief
+   it per `$pre-review`'s Fix worker spawn contract: the worktree path and
+   branch, the human's comments verbatim with chapter/file/line, fixup into
+   the matching semantic commit, push authorization for that round only, and
+   no Inbox posts. The orchestrator verifies the fix, re-sends a fresh guide
+   (new patch) into the same thread, and records the verdict per
+   `$pre-review` step 7.
 8. **PR handoff.** Leave the merge-ready branch. Report the branch and how to
    open the PR. Do not create or merge it.
 

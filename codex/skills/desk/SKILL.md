@@ -15,7 +15,7 @@ The task note is the human's state view. A fixed block at the top always answers
 
 The note is read cold — by the human after days away, and by a successor agent that never saw the conversation. So the 背景, 現況, and 判断ポイント are written as natural-language explanation (see Writing for the cold reader), not as labels, IDs, and fragments. The fixed fields index the prose; they do not replace it.
 
-Delegate concrete work to existing skills ($wt / $rough-plan / $grill-me / $tk / $review / $commit / $join / $beads / $herdr-impl / $hunk-present).
+Delegate concrete work to existing skills ($wt / $rough-plan / $grill-me / $tk / $review / $commit / $join / $beads / $herdr-impl / $pre-review).
 
 ### Architecture
 
@@ -60,8 +60,8 @@ For `task_type: impl`, follow this standard:
 - **plan**: settle 論点 and draft the rough plan with `$rough-plan` (invokes `$grill-me` for requirement clarity, `$creative-problem-solver` for approach trade-offs, and at its Step 4.5 `$critique` — or `$herdr-critique-loop` when `HERDR_ENV=1` — to converge to no-HIGH before approval). The approved plan lands in 設計 > 設計方針・構成 and Milestones.
 - **impl**: delegate to `$herdr-impl` when `HERDR_ENV=1`; otherwise run the fallback cycle (`$tk` → `$review` → `$commit`) in the root session. The commit standard on both paths is `$commit`.
 - **verify**: internalized in `$herdr-impl` (its `herdr-review-loop`); on the fallback, use `$review`. Do not run a separate verify pass on the Herdr path.
-- **pre-present grooming**: before any `$hunk-present` presentation, the branch must satisfy `$commit`'s pre-PR grooming contract — `$herdr-impl` internalizes this in its Step 7; on the fallback cycle, groom before presenting.
-- **human review**: present the implemented diff with `$hunk-present` (sidecar reading map in a dedicated Herdr tab, questions as inline hunk comments, verdict recorded there). On the Herdr path, reuse `$herdr-impl`'s implementer worker as the hunk fix worker (no new spawn) and pass it the hunk session coordinates per `$hunk-present`'s Fix worker spawn contract.
+- **pre-present grooming**: before any `$pre-review` presentation, the branch must satisfy `$commit`'s pre-PR grooming contract — `$herdr-impl` internalizes this in its Step 7; on the fallback cycle, groom before presenting.
+- **human review**: present the implemented diff with `$pre-review` (a Plannotator Inbox guided review: merge-base patch plus importance-ordered chapters, the human answers asynchronously in the Inbox, verdict recorded in this note per `$pre-review` step 7). On the Herdr path, reuse `$herdr-impl`'s implementer worker as the fix worker (no new spawn) and brief it per `$pre-review`'s Fix worker spawn contract. Use `$hunk-present` only when the human asks for Hunk.
 
 ## Task Note Contract
 
@@ -318,7 +318,7 @@ When the work produces a substantial artifact (design doc, investigation report,
 
 ## Completion
 
-1. When every Milestone is `done` or `skipped` and no 論点 is `open`, set `status: in_review` and run the Event Gate. For impl, present the final diff via `$hunk-present`; the verdict is recorded there.
+1. When every Milestone is `done` or `skipped` and no 論点 is `open`, set `status: in_review` and run the Event Gate. For impl, present the final diff via `$pre-review` (before the PR exists, per its no-PR path); record its verdict here.
 2. **Done gate** — `status: done` requires all of: (a) no `open` 論点 (carry-over topics are closed as `dropped` with the follow-up issue named), (b) every Milestone `done` or `skipped`, (c) an explicit human verdict. If the human requests more work, return to `in_progress`, add Milestones or 論点 as needed, and record the event.
 3. On pass, impl: verify the branch satisfies `$commit`'s pre-PR grooming contract (semantic-unit commits, English subjects); groom and re-sync if not. Create the PR via `$join` if needed and update `pull_request_url`.
 4. Set `status: done` and run the Event Gate (head, Turn, bd sync), then close the bd epic (the human verdict is the required human check gate).
@@ -342,7 +342,7 @@ A note without `## 現在地` (old `## Planning` / `## Dialogue` layout, possibl
 | Every note write | `$reader-first` | background / state / decision prose a cold reader can recap |
 | Execution | `$herdr-impl` (HERDR_ENV=1) / `$tk` + `$review` + `$commit` (fallback) | implement issue |
 | Verify | `herdr-review-loop` (inside `$herdr-impl`) / `$review` (fallback) | review convergence |
-| Human review | `$hunk-present` | diff reading map, hunk comment Q&A, verdict |
+| Human review | `$pre-review` | Inbox guided review of the diff, reply Q&A and fix rounds, verdict |
 | Completion | `$join` | PR creation |
 | All phases | `$beads` | bd issue CRUD & sync |
 
