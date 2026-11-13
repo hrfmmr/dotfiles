@@ -1,0 +1,3 @@
+interface:
+  display_name: "Pre Review"
+  short_description: "Send the human an Inbox guided review of a PR before team review"
