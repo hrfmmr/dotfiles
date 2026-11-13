@@ -150,9 +150,13 @@ the workspace in the sidebar; that is expected for the Mayor's own workspace.
 1. `$S/mayor.sh init --ledger <path>`. Ask the human where the ledger note lives only
    if no path is configured; create it from `references/ledger-template.md`.
 2. `$S/mayor.sh survey` lists every pane with workspace, agent name, label, kind, status.
-   Also look at labeled panes and tabs without an agent (for example `hunk-*`) and run
-   `hunk session list`: a human review in flight (a Hunk presentation) is a human todo
-   even though no agent shows it, so put it in the ledger.
+   A human review in flight is a human todo even though no agent pane shows it, so put
+   it in the ledger. By default it is a `$pre-review` guided review in the Plannotator
+   Inbox: its verdict request is an open question in the commander's thread, so the
+   Inbox read (`todo` step 2) finds it. List it as a review of the diff with that thread's
+   link, not as a bare question. Hunk is used only when the human asked for it: then also
+   look at labeled panes and tabs without an agent (for example `hunk-*`) and run
+   `hunk session list`.
 3. Pick one commander per issue workspace: the root agent the human talks to, usually
    a `*-cmd` name or the workspace's first agent pane. Skip workers, reviewers, and
    workspaces that are not issues (dotfiles, scratch, home). Read a pane with
@@ -489,7 +493,9 @@ was running again and only the Mayor and one commander had lost their names. So 
 6a. Re-arm the watchers (Protocol 3): background tasks from before the restart are gone.
    Shared local servers may be down too. On 2026-11-09 the beads Dolt server was, and
    commanders could not write their issue records until it came back.
-7. Hunk reviews: if `hunk session list` is empty while a `hunk-*` pane exists, the TUI
+7. Reviews: a `$pre-review` guided review lives in the Inbox and survives the restart;
+   nothing to relaunch. Hunk reviews (only when the human asked for Hunk): if
+   `hunk session list` is empty while a `hunk-*` pane exists, the TUI
    and its comment watcher are gone, and the live comments with them. At the human's
    request, relaunch the viewer in that labeled pane with the previous command
    (`cd <repo> && EDITOR=nvim hunk diff <target> --agent-context
