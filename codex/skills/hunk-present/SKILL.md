@@ -7,6 +7,8 @@ description: Present a locally agent-generated changeset to a human in Hunk and 
 
 Present a changeset that a coding agent just produced so a human can understand it and approve it. Hunk is the presentation surface: the reading map lives in the diff view, and the human's questions get answered there too.
 
+The default human review is now `$pre-review` (a Plannotator Inbox guided review); use this skill only when the human asks for Hunk.
+
 ## Core principles (non-negotiable)
 
 - **Explain and get approval, don't critique** — state WHAT each change does and WHY it exists so the human can judge it. Hunting for defects is `$review` / `$difit-review` territory.
