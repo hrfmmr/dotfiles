@@ -63,7 +63,7 @@ cd "$W" && plannotator review --git --base "$MB" --title "<bd id> <topic>" --gat
 Save it as a derived note in the vault root, named `<bd id>--<topic> diff解説.md`, with `bd_issue_id` in its frontmatter. The vault root is the cwd when it contains `.obsidian/`, else `DESK_VAULT` (a legacy name) when set, else ask the human once. Layout:
 
 1. **位置と目的.** The review session URL at the top. Which commits, in what order, and which chapter is the heart or carries the risk. A reader who stops here has not been misled.
-2. **背景.** Why the change exists. Cite the vault note that holds the context as `<note>.md:L<n>` (path relative to the vault root), or say no note covers it.
+2. **背景.** Why the change exists. Cite the vault note that holds the context (the plan note `<bd id>--<topic> plan.md` first) as `<note>.md:L<n>` (path relative to the vault root), or say no note covers it.
 3. **章.** One chapter per commit, or per run of commits with one reason; never put two purposes in one chapter. Each chapter gives:
    - the commit (`abc1234`) and its place in the sequence (6 件中 3 件目), so the human can open that commit alone;
    - what changed, why (the non-obvious decision and its alternative), and what it implies for behavior, contracts, or operations. **Say plainly where the risk concentrates.** Use `> [!WARNING]` or `> [!IMPORTANT]` only for a real behavior or contract shift;

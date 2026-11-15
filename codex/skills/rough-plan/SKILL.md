@@ -21,7 +21,7 @@ When skipping for triviality, record the skip and its reason as a one-line entry
 
 ## Recording
 
-rough-plan hands its outcome to the caller, which records it per AGENTS.md (Task State): settled decisions as `bd` notes, the approved plan in the issue's `design` field, and one child issue per phase. rough-plan itself does not write a vault note.
+The plan is a derived note in the vault, `<bd id>--<topic> plan.md`, with `bd_issue_id` in its frontmatter (vault root as in `$pre-review` step 3). It is written at Step 4 and edited in place on each modify round. It is the artifact the human approves, not a task note. On approval the caller records it per AGENTS.md (Task State): the same file in the issue's `design` field, one child issue per phase, and a `bd` note for each settled decision. Without a `bd` issue, the plan stays in the conversation and no note is written.
 
 ## Question Channel
 
@@ -31,7 +31,7 @@ Rules:
 - One question per decision; 2-4 concrete options each, recommended option first.
 - Each option must state the consequence of choosing it, not just a label.
 - Do not log raw Q&A. Hand each settled decision (topic, options, choice, rationale) to the caller to record as a `bd` note; without a `bd` issue, keep it in the plan.
-- Step 5 approval is a native-ask decision (approve / modify / reject), never a note-side gate.
+- Step 5 approval is one decision (approve / modify / reject), asked in the Inbox when the work has an Inbox thread and through native ask otherwise, never a note-side gate.
 
 ## Workflow
 
@@ -80,7 +80,7 @@ Skip conditions (agent judgment):
 
 ### Step 4: Draft Rough Plan
 
-Write the rough plan using this structure:
+Write the rough plan into the plan note (see Recording), using this structure:
 
 ```markdown
 **Rough Plan: <title>**
@@ -167,9 +167,9 @@ Trivial changes may skip this step (consistent with the Applicability trivial-sk
 
 ### Step 5: Human Approval
 
-Present the rough plan, with its commit plan, in the conversation and ask for approval via native ask (approve / modify / reject). On modify, revise and re-ask. The pre-approval draft is not written to `bd`.
+Present the rough plan, with its commit plan, as the plan note. When the work has an Inbox thread, attach the note there and ask the approval as one `:::question` (approve / modify / reject); otherwise show it in the conversation and ask via native ask. On modify, revise the note and re-ask. The pre-approval draft is not written to `bd`.
 
-On approval, the caller records the plan (see Recording): `bd update <id> --design-file` with the approved plan, one child issue per phase, and a `bd` note for each settled decision. A change to a commit row after approval is re-approved for the changed rows only.
+On approval, the caller records the plan (see Recording): `bd update <id> --design-file <the plan note>`, one child issue per phase, and a `bd` note for each settled decision. A change to a commit row after approval is re-approved for the changed rows only: edit the note first, then run `--design-file` again.
 
 ### Step 6: Handoff
 
