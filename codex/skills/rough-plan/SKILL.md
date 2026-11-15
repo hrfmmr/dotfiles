@@ -1,6 +1,6 @@
 ---
 name: rough-plan
-description: Approval gate that drafts a rough implementation plan before code changes begin. Runs as the planning step of desk impl tasks, or by invoking $rough-plan directly.
+description: Approval gate that drafts a rough implementation plan, including the commit plan (one commit per purpose, each with a validation signal), before code changes begin. The planning step of implementation tasks under the Human Review Default in AGENTS.md, or invoke $rough-plan directly.
 ---
 
 # Rough Plan
@@ -12,21 +12,16 @@ Requirements (What/Why) must already be settled. If unclear, run `$grill-me` fir
 
 ## Applicability
 
-| task_type | rough-plan | skip condition |
-|-----------|-----------|----------------|
-| impl | MUST | Trivial changes (single file, a few obvious lines) may be skipped by agent judgment |
-| research | skip | -- |
-| adhoc | skip | -- |
+| task | rough-plan | skip condition |
+|------|-----------|----------------|
+| implementation | MUST | Trivial changes (single file, a few obvious lines) may be skipped by agent judgment |
+| research, documents | skip | -- |
 
-When skipping for triviality, record the skip and its reason as a one-line note (in a desk task note: 設計 > 設計方針・構成).
+When skipping for triviality, record the skip and its reason as a one-line entry in the `bd` issue notes (AGENTS.md, Task State).
 
-## desk Integration
+## Recording
 
-This skill is desk's planning step for impl tasks.
-
-- In a desk session, the desk root session invokes rough-plan for an impl task whose plan is not yet approved; open 論点 seeded at Init are settled through this workflow.
-- rough-plan does not write the task note. The desk session records outcomes per its Event Gate: settled 論点, the approved plan in 設計 > 設計方針・構成, Milestones derived from the phases.
-- After human approval, the desk session continues to execution in the same session.
+rough-plan hands its outcome to the caller, which records it per AGENTS.md (Task State): settled decisions as `bd` notes, the approved plan in the issue's `design` field, and one child issue per phase. rough-plan itself does not write a vault note.
 
 ## Question Channel
 
@@ -35,7 +30,7 @@ Whenever a step needs a human judgment call — Step 2 requirement clarification
 Rules:
 - One question per decision; 2-4 concrete options each, recommended option first.
 - Each option must state the consequence of choosing it, not just a label.
-- Do not log raw Q&A. Hand each settled decision (topic, options, choice, rationale) to the caller so a desk session can record it as a 論点 update; outside desk, keep it in the plan.
+- Do not log raw Q&A. Hand each settled decision (topic, options, choice, rationale) to the caller to record as a `bd` note; without a `bd` issue, keep it in the plan.
 - Step 5 approval is a native-ask decision (approve / modify / reject), never a note-side gate.
 
 ## Workflow
@@ -110,9 +105,11 @@ Approach: <1-2 line summary of the direction>
 <pseudocode: concrete operations, file changes, resource definitions, etc.>
 \```
 
-**Commit order**
-1. <commit 1: what it groups>
-2. <commit 2: ...>
+**Commit plan**
+
+| ID | Purpose | Content | Validation signal | State |
+|----|---------|---------|-------------------|-------|
+| Ph1-C1 | <the one purpose> | <what changes> | <the smallest meaningful check> | <planned / 未確定> |
 
 > <caveats and verification checkpoints>
 ```
@@ -127,6 +124,12 @@ Rules:
 - Pseudocode should be granular enough to convey the concrete shape of the change (TF resource definitions, code structure, file operations, etc.).
 - Phase boundaries align with commit boundaries (1 phase = 1 commit by default).
 - State verification checkpoints (e.g. "plan diff must be zero") explicitly when applicable.
+- **Commit plan — MUST.** The plan ends with one row per commit, and the human approves the rows with the plan (Step 5):
+  - 1 commit = 1 purpose, atomic and reversible. Order the rows so every commit stands alone and passes its own validation signal (the `$commit` skill's rule).
+  - The ID is `Ph{n}-C{N}`: `n` is the phase (the design plan's step number, or the order of the phases when the plan has no steps) and `N` the commit within it, so an ID never needs context to resolve. Every progress report names the phase first.
+  - The validation signal is the smallest meaningful check that can run on the commit alone (for example `terraform fmt -check` and `terraform validate` for Terraform, a compile or syntax check for other languages). Say in the row what the signal cannot cover (a plan, an apply, a real run).
+  - Never cut or merge commits by how many new concepts they hold. Commit granularity is a software-engineering concern (atomic, reversible); a concept-heavy commit gets a thicker explanation at review time (`$pre-review`), still as one commit.
+  - Write `未確定` for any item you cannot confirm from the plan or the live system. Investigate first (read the plan, inspect read-only) or leave the row open; never fill it by guess. Investigation may change the plan: a row that looked like one change can turn out to be several independent ones. Re-cut only for software reasons, and re-approve the changed rows.
 
 #### Plan Verbosity Guidelines
 
@@ -164,20 +167,19 @@ Trivial changes may skip this step (consistent with the Applicability trivial-sk
 
 ### Step 5: Human Approval
 
-Present the rough plan in the conversation and ask for approval via native ask (approve / modify / reject). On modify, revise and re-ask. The pre-approval draft is not written to the task note.
+Present the rough plan, with its commit plan, in the conversation and ask for approval via native ask (approve / modify / reject). On modify, revise and re-ask. The pre-approval draft is not written to `bd`.
 
-On approval in a desk session, the desk root session writes the approved plan into 設計 > 設計方針・構成 (link a derived note if the plan is too long to keep the head readable), derives Milestones from the phases / commit order, marks settled 論点 `decided`, and runs its Event Gate.
+On approval, the caller records the plan (see Recording): `bd update <id> --design-file` with the approved plan, one child issue per phase, and a `bd` note for each settled decision. A change to a commit row after approval is re-approved for the changed rows only.
 
 ### Step 6: Handoff
 
-- desk context: the desk session sets `status: in_progress` (if still `not_started`) and continues to execution.
-- standalone context: begin implementation following the approved plan.
+Begin implementation following the approved plan, one commit per row. When the commits are done, the next step is human review (`$pre-review`, AGENTS.md Human Review Default).
 
 ## Standalone Invocation
 
-When `$rough-plan` is called directly outside desk:
-- If a bd issue exists, log the plan there.
-- If no task note exists, output the plan directly in the conversation.
+When `$rough-plan` is called directly:
+- If a bd issue exists, record the plan there as described in Recording.
+- Without a bd issue, output the plan directly in the conversation.
 - After human approval, proceed to implementation.
 
 ## Guardrails
