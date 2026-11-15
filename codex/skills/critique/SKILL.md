@@ -23,7 +23,7 @@ Run parallel multi-perspective reviews against a working artifact and return uni
 
 Determine what to review:
 - If a file path is given, read it.
-- If invoked within a desk session, use the task note's 設計 section (and open 論点 as context).
+- If invoked for a task, use the plan in the `bd` issue's `design` field (and the open decisions in its notes) as context.
 - If neither, scan conversation context for the most recent substantial artifact (plan, design doc, snapshot).
 - Fail with a clear message if no reviewable artifact is found.
 
@@ -66,7 +66,7 @@ After all lanes complete:
 
 ### 5. Return Output
 
-Return the findings to the caller context. Do not write to files or post comments. The caller (desk, user, etc.) decides how to persist.
+Return the findings to the caller context. Do not write to files or post comments. The caller (the user, the planning skill, etc.) decides how to persist.
 
 ## Lane Review Prompt
 

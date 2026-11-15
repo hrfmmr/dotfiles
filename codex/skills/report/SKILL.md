@@ -152,19 +152,15 @@ These principles apply to the entire deliverable. Assume the reader has no prior
 - Use tables for comparisons, inventories, and evaluations.
 - Use ◎ / ○ / △ / ❌ for conformance ratings to aid visual scanning.
 
-### Step 4: Desk-task integration
+### Step 4: Task integration
 
-When invoked as a derived note from a desk task:
+When invoked as a derived note from a task with a `bd` issue:
 
-1. **Tag inheritance**: Copy all `#prj-*` tags from the parent task note's first line to the derived note's first line.
-2. **prior/related link**: Add a wikilink to the parent task note in `prior:`.
-3. **Turn-N callout**: Hand the derived-note callout to the desk session, which appends it in the parent's Turn-N that records the derived note's creation (do not write the task note yourself):
-   ```markdown
-   > [!note] 派生ノート
-   > [[derived-note-name]]
-   ```
+1. **Tag inheritance**: Copy all `#prj-*` tags from the parent note's first line (when it has any) to the derived note's first line.
+2. **Issue link**: Put the task's `bd_issue_id` in the frontmatter and use the `<bd id>--` prefix in the title (AGENTS.md, Task State).
+3. **Record**: Hand the derived note's name to the caller, which records it in the `bd` issue notes. Do not write `bd` yourself.
 
-Skip these steps when invoked independently of a desk task.
+Skip these steps when invoked independently of a task.
 
 ### Step 5: Output & verification
 
@@ -188,7 +184,7 @@ Verify all items before reporting completion. Fix any failures before finishing.
 - [ ] References section at the end
 - [ ] Comparison tables used for evaluations
 - [ ] Detail depth matches the audience tier
-- [ ] Desk integration (tag inheritance, wikilinks) applied when applicable
+- [ ] Task integration (tag inheritance, `bd_issue_id`, wikilinks) applied when applicable
 - [ ] Top-to-bottom readability: no forward references that require later context
 - [ ] Every section opens with a connector sentence stating why it appears here
 - [ ] Premise + reason stated before supporting detail in every section

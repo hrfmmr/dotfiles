@@ -6,11 +6,12 @@ description: >-
   agent to implement the issue's handoff plan, collect validation + tfplan
   artifacts, run a third-party review loop in a `reviewer` pane, relay findings
   worker↔reviewer until no HIGH findings remain, present the diff for human
-  review via pre-review (an Inbox guided review, reusing the implementer
-  worker as the fix worker), then leave a merge-ready branch for a human to open and merge the PR.
+  review via pre-review (a gated Plannotator review plus an Inbox explanation
+  note; the implementer worker fixes), then leave a merge-ready branch for a
+  human to open and merge the PR.
   Worker runs claude sonnet5; reviewer runs codex. Requires HERDR_ENV=1 and an
   existing canonical bd issue that already contains a handoff plan. Composes the
-  herdr, wt, herdr-review-loop, pre-review, and desk skills. Use when asked
+  herdr, wt, herdr-review-loop, and pre-review skills. Use when asked
   to orchestrate implementation with worker and reviewer panes, delegate a bd
   issue to a Herdr worker and review-loop it to convergence, bridge worker and
   reviewer as an architect, run implement-then-review across panes, or invoke
@@ -33,12 +34,11 @@ review directly; you broker a `worker` pane (implements) and a `reviewer` pane
 
 ## Invariants (never violate)
 
-- **Orchestrator-only writes.** ONLY this session writes to the bd issue or a
-  desk task note. The `worker` and `reviewer` agents MUST NOT write to bd or task
-  notes — their delegation prompts explicitly forbid it. Any 申し送り/handoff from
-  worker or reviewer is captured by the orchestrator and recorded as a bd issue
-  **COMMENT** (never in the description/body). In a desk session, record it via
-  desk's Event Gate when it is an event, else as a `bd note`.
+- **Orchestrator-only writes.** ONLY this session writes to the bd issue. The
+  `worker` and `reviewer` agents MUST NOT write to bd — their delegation prompts
+  explicitly forbid it. Any 申し送り/handoff from worker or reviewer is captured by
+  the orchestrator and recorded as a `bd` note (AGENTS.md, Task State), never in
+  the description/body.
 - **bd-id hygiene.** The bd issue id appears ONLY in the branch/worktree name.
   Never in code, commit messages, or PR body. Forbid it in delegation prompts.
 - **human-gates** (orchestrator never performs these): SSO browser auth
@@ -57,23 +57,22 @@ review directly; you broker a `worker` pane (implements) and a `reviewer` pane
 - `herdr` — base pane/agent control (split, agent start, prompt, read, wait, rename).
 - `wt` — create the bd-issue-prefixed worktree. Always reuse `wt`; never raw `git worktree`.
 - `herdr-review-loop` — reviewer pane + branch-diff review loop (Step 5–6).
-- `pre-review` — human review of the branch diff (Step 7): Plannotator Inbox guided review, asynchronous reply, fix rounds, verdict. (`hunk-present` only when the human asks for Hunk.)
+- `pre-review` — human review of the branch diff (Step 7): a Plannotator review started with the gate on, an explanation note attached in the Inbox, asynchronous outcome, fix rounds, verdict. (`hunk-present` only when the human asks for Hunk.)
 - `beads` — bd graph writes when the repo uses a bd-backed issue DB.
-- `desk` — event recording in the task note when one is active (optional; see Logging).
 
 `mesh` is the in-session sub-agent orchestrator; `herdr-impl` is its Herdr-pane
 counterpart. Reference it for the loop pattern; do not reimplement it.
 
 ## Arguments
 
-- `bd_issue` (required unless derivable from an active desk task): the canonical issue.
+- `bd_issue` (required): the canonical issue.
 - `worker_kind` (default `claude`, model `sonnet5` — start with `--kind claude -- --model sonnet`), `reviewer_kind` (default `codex`): overridable.
 - `slug` (optional): branch slug; else derive from the bd issue title.
-- `plan_source` precedence: explicit arg > bd issue description > desk task note.
+- `plan_source` precedence: explicit arg > bd issue `design` field > bd issue description.
 
 Model policy: the main orchestrator session driving this skill (the architect / commander
 role in the Herdr session) runs on claude fable5. worker = claude sonnet5. reviewer = codex
-(unchanged). Planning/critique agents launched upstream (desk plan-first / `$rough-plan`)
+(unchanged). Planning/critique agents launched upstream (`$rough-plan`)
 carry no model pinning.
 
 ## Agent naming (session-unique)
@@ -194,20 +193,22 @@ Whatever name is resolved, apply that SAME value to the agent name AND the pane 
    **3 review cycles**, then human-escalate.
 7. **Human review (pre-review).** First groom the branch per `$commit`'s pre-PR
    grooming contract (semantic-unit squash, English subjects, tree-identity
-   check) — groom BEFORE the guide is sent so it never shows a stale history.
+   check) — groom BEFORE the review starts so it never shows a stale history.
    Delegate the grooming to the worker with an explicit push
    authorization for this step only (`--force-with-lease`; overrides the
-   default push ban). Then present the branch diff to the human via
-   `$pre-review`: a Plannotator Inbox guided review built from the merge-base
-   patch, sent into this work's thread; the human answers asynchronously.
+   default push ban). Then present the whole branch to the human once via
+   `$pre-review`: a Plannotator review you start with the gate on, plus an
+   explanation note cut along the commits, attached in this work's Inbox
+   thread; the gate's `decision` is the verdict and the human answers
+   asynchronously.
    **Reuse `<PFX>-worker` as the fix worker — do NOT spawn a new fixer.** The
    worker keeps its existing pane (topology stays as built in Step 2); brief
    it per `$pre-review`'s Fix worker spawn contract: the worktree path and
-   branch, the human's comments verbatim with chapter/file/line, fixup into
+   branch, the human's comments verbatim with file/line, fixup into
    the matching semantic commit, push authorization for that round only, and
-   no Inbox posts. The orchestrator verifies the fix, re-sends a fresh guide
-   (new patch) into the same thread, and records the verdict per
-   `$pre-review` step 7.
+   no Inbox posts. The orchestrator verifies the fix, starts a new review
+   session on the same base, updates the note in the same thread, and records
+   the verdict per `$pre-review` step 6.
 8. **PR handoff.** Leave the merge-ready branch. Report the branch and how to
    open the PR. Do not create or merge it.
 
@@ -216,7 +217,7 @@ Whatever name is resolved, apply that SAME value to the agent name AND the pane 
 Every delegation prompt MUST:
 - Be self-contained (the agent should not need bd access); embed the plan/spec.
 - **Require `$commit` discipline for every commit**: micro-commits (one reviewable incision per commit; corrections to unpushed commits are absorbed via amend/fixup, not stacked) with at least one validation signal before committing, and English Conventional-Commits subjects. Embed these rules in the prompt itself — the worker does not auto-load the skill.
-- **Forbid**: `git push`, PR creation, and any writes to bd issues or task notes.
+- **Forbid**: `git push`, PR creation, and any writes to bd issues.
 - Forbid writing the bd-id into code or commit messages.
 - Forbid `terraform apply`; note SSO auth is human-approved.
 - Ask the agent to STOP and report on ambiguity/blockers rather than guess.
@@ -225,17 +226,12 @@ Every delegation prompt MUST:
 
 ## Logging (orchestrator only)
 
-- Write a bd issue COMMENT at each milestone (worktree ready, delegation, worker
-  done + verification, each review cycle, HIGH-clear, handoff). Never edit the
-  issue description/body for progress. In a desk session, write per-cycle and
-  per-commit detail as `bd note` instead; desk's Event Gate owns the comments
-  (one per Turn).
+- Write a `bd` note at each milestone (worktree ready, delegation, worker
+  done + verification, each review cycle, HIGH-clear, handoff), in the entry
+  form of AGENTS.md (Task State). Never edit the issue description/body for
+  progress.
 - Do bd writes via the `beads` skill. durability = local `bd dolt commit`
   (push may be a no-op).
-- desk recording is OPTIONAL: when a desk task note is active, the orchestrator
-  records milestone-level events (milestone transition, PR, review verdict,
-  blocker, design deviation) per desk's Event Gate; per-cycle detail stays in bd
-  notes. Otherwise run standalone with bd-only logging.
 
 ## Failure / timeout handling
 

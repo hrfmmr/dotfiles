@@ -153,7 +153,7 @@ Each node has: heading with nest ID; a current-position line (what is establishe
 - `bump`: the `.o0:` token that implements hooks and reader comments; the comment watch follows its token, settle window, and derived-note rules, and differs in the reply callout (folded) and state location (see `references/comment-watch.md`).
 - `obsidian`: deliberate wikilinks in the vault.
 - `crosscheck`: the mandatory Phase 4 fact-check of the story section and claims (in Herdr; elsewhere use a fresh subagent or the codex CLI), or a blind pass of Gate A step 1 by an agent that sees only the purpose and the axes.
-- `desk` and `bd`: the decision records that Phase 1 reads.
+- `bd` and the Inbox threads: the decision records that Phase 1 reads (older tasks also have desk task notes in the vault, kept as an archive).
 
 ## References
 

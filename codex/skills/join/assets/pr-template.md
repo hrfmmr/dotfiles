@@ -4,7 +4,7 @@ A plain-language summary of what changed and why it matters.
 - Key point
 - Key point
 
-<!-- If the patch originated from a `$desk` task, add as the last line: -->
+<!-- If the patch originated from a task, add as the last line: -->
 <!-- source issue link: <url> -->
 
 ## Background

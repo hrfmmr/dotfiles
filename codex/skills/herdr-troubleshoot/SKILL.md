@@ -72,8 +72,8 @@ that relay loop when an `apply`/build/test step fails.
 ## Protocol
 
 0. **Preflight.** Verify preconditions. Resolve the issue text, the target path,
-   and whether an active worker exists (`herdr agent list`). Detect a bd issue /
-   desk task note for optional logging.
+   and whether an active worker exists (`herdr agent list`). Detect a bd issue
+   for optional logging.
 1. **Investigator pane.** Follow herdr agent pane geometry: if no bottom agent row
    exists yet, `herdr pane split --current --direction down --no-focus` with
    `--cwd <target>`; if one does (e.g. a `worker` pane), vsplit its last pane with
@@ -170,8 +170,7 @@ that relay loop when an `apply`/build/test step fails.
 
 ## Logging (orchestrator only)
 
-- When a bd issue / desk task note is active, record a COMMENT at: investigation
-  delegated, findings + triage, human-approved plan, worker fix verified,
-  hand-off. Record a desk Turn-N (per desk's Event Gate) only for the ones that
-  are events: blocker occurred/resolved, human-approved plan, fix verified. Never edit an
-  issue description for progress. Skip silently when no bd issue exists.
+- When a bd issue is active, write a `bd` note (AGENTS.md, Task State) at:
+  investigation delegated, findings + triage, human-approved plan, worker fix
+  verified, hand-off. Never edit an issue description for progress. Skip
+  silently when no bd issue exists.

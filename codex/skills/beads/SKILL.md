@@ -20,7 +20,7 @@ Run a durable beads workflow in Codex using AGENTS.md guidance, `codex exec`, an
 1. Run a socket-only preflight before any `bd` read:
    - require `BEADS_DIR` for workspace targeting
    - resolve `BEADS_DOLT_SERVER_SOCKET` in this order:
-     1. if a caller such as `$desk` already supplied `beads_dir`, derive `BEADS_DOLT_SERVER_SOCKET="$BEADS_DIR/dolt-server.sock"`
+     1. if a caller already supplied `beads_dir`, derive `BEADS_DOLT_SERVER_SOCKET="$BEADS_DIR/dolt-server.sock"`
      2. otherwise prefer repo-level env loading such as `.envrc`
    - if `BEADS_DOLT_SERVER_SOCKET` is still unset after that resolution, set it to `"$BEADS_DIR/dolt-server.sock"`
    - require every `bd` and Dolt client command to use the repo-local Unix socket named by `BEADS_DOLT_SERVER_SOCKET`; prohibit TCP client access

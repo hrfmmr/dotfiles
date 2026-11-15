@@ -71,7 +71,7 @@ The note never contains `bump::*` inline fields. Idempotency relies on:
 | `$bump` | If a note is already explicit in context, process that note. Otherwise identify the note before proceeding. |
 | hook-driven async invocation | A post-commit hook enqueues candidate observations via a recognizer registry, then a dispatcher validates stability and canonicalizes shorthand before launching workers. Each worker is a **background sub-agent** (`run_in_background: true`) that receives a single `bump_id`. Multiple stable candidates are dispatched as **parallel sub-agents** (one per `bump_id`). See `.plans/obsidian-cow-bump-hook.md` for the full pipeline design. |
 
-This skill is not limited to `desk` task notes. If the source note happens to be a `desk` note, treat the bump as a side thread rather than as a new main-thread Turn.
+This skill works on any note. If the source note happens to be an older desk task note (kept as an archive), treat the bump as a side thread rather than as a new main-thread Turn.
 
 ## Hook Detection Guardrails
 
@@ -288,7 +288,7 @@ Request: <bump_request text>
 Naming rules:
 
 - Respect `bump_title::` if it is set.
-- If the source note is a `desk` dialogue note and the marked span clearly belongs to `Turn-N`, prefer a title that preserves the side-thread feel, such as `<source note> - Turn-N.1 - <topic>`.
+- If the source note is an older desk dialogue note (kept as an archive) and the marked span clearly belongs to `Turn-N`, prefer a title that preserves the side-thread feel, such as `<source note> - Turn-N.1 - <topic>`.
 - Otherwise prefer `<source note> - <short topic>`.
 
 If the source note already carries obvious `#prj-*` or other project-scoping tags that materially help retrieval, preserve that scope in the derived note.
