@@ -15,7 +15,7 @@ We use skill prefix as `$` for referring skill name.
 - Develop: `$creative-problem-solver` (five-tier portfolio)
 - Planning: `$rough-plan`, `$critique`, `$herdr-critique-loop`
 - Issue tracking: `$beads`
-- Deliver: `$herdr-impl`
+- Deliver: `$herdr-impl`, `$pre-review`
 - Skill authoring/maintenance: `$ms`, `$refine`
 
 ## Human-Facing Documents
@@ -23,15 +23,31 @@ We use skill prefix as `$` for referring skill name.
 When writing or rewriting a document for a human reader, use `$reader-first` by default, even when the request does not name it.
 
 - Scope: vault notes, Notion pages, reports, plans, and design documents. Chat replies (see Response Format), commit messages, and code comments are out of scope.
-- When a skill with its own format applies (`$report`, `$grasp`, `$unpack`, `$hunk-present`, `$crit-explain`, `$desk`, and similar), follow that skill for structure and fields, and use `$reader-first` for the prose inside each section.
+- When a skill with its own format applies (`$report`, `$grasp`, `$unpack`, `$hunk-present`, `$crit-explain`, and similar), follow that skill for structure and fields, and use `$reader-first` for the prose inside each section.
 
-## Task Start
+## Task State
 
-When you start a task, create a `$desk` note first and work from it, even when the request does not name `$desk`. A task is multi-step work: investigation, implementation, or document production. Pick the task type (`impl`, `research`, `adhoc`) by the work.
+The state of a task lives in its `bd` issue and its Inbox thread. Do not create a task note in the vault for it.
 
-- Do not create a note for pure Q&A, for a self-evident fix to one file of a few lines, for a non-interactive run (`claude -p`, `codex exec`), or for an agent that another agent started to do part of a task (worker, reviewer, sub-agent).
-- If the task already has a desk note, open it with `$desk` instead of creating another.
-- The note lives in the Obsidian vault, whatever cwd the session started in. `$desk` resolves the vault.
+- Record to `bd` with `bd update <id> --append-notes "..."`, never `--notes` (it replaces the notes). Run `bd show <id>` afterwards to confirm the entry landed. If a `bd` write fails, say so in the Inbox thread and put the entry there. Where the repository is not beads-managed, keep the state in the Inbox thread.
+- Write an entry when a decision is made, a plan is approved, a phase (commit) is done, the human gives a verdict, a blocker appears, or the task ends.
+- Entry form: `YYYY-MM-DD HH:MM JST <agent>: what was decided, why, what is unconfirmed`, one to five lines, plus where the Inbox holds the detail as `<project> / <thread name> / <message id>`. Never write a localhost URL: the port changes.
+- Put the approved plan in the `design` field with `bd update <id> --design-file` (it replaces, so it holds the latest plan) and create one child issue per phase.
+- A new agent reads `bd show <id>` first, then the project's Inbox threads (`read_thread` with `asked_by: anyone`).
+- Close an issue only after the human's verdict is recorded.
+- Never write secrets, credentials, or concrete account IDs in `bd` entries: `bd` is pushed to a remote.
+- Derived notes (explanations, reports, reading notes) go in the vault. Give each the `bd_issue_id` in its frontmatter and the `<bd id>--` prefix in its title.
+
+## Human Review Default
+
+When the human supervises a change (a task they will merge, or work they asked to review), human review is the default. Do it without being asked, in this order:
+
+1. Agree the commit plan before coding: one commit per purpose, each with a validation signal. `$rough-plan` defines its form and carries the agreement.
+2. Implement as micro-commits per `$commit`, and groom the branch before presenting it.
+3. Present the whole branch once with `$pre-review`: a Plannotator review that you start yourself with the gate on, and an explanation of the commits, cut along the commit plan, attached in the Inbox.
+4. The gate's `decision` is the verdict. Record it in `bd` (see Task State). Merge stays with the human.
+
+Skip it only when the human says so for the task, or when the change needs no review: pure Q&A, a self-evident fix to one file of a few lines, a non-interactive run (`claude -p`, `codex exec`), or an agent that another agent started to do part of a task (worker, reviewer, sub-agent). An agent that owns a whole task, such as a commander the Mayor started, is not exempt.
 
 ## Issue Tracking
 
