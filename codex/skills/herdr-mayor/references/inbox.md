@@ -97,6 +97,9 @@ list left that project out).
 - After the first change it waits `SETTLE` seconds (45; 0 reports at once), so a run of
   answers wakes the Mayor once. While commanders re-post many items, read each project
   once after it settles rather than per event.
+- Stopping a run during that wait drops its events: they are already marked read but not
+  yet printed. After a stop, catch up by reading the threads (`SKILL.md`, `watch start`),
+  not by trusting the next run.
 - On completion, read the changed threads, check that the human's messages reached their
   commanders and look for picked answers (both below), update the summary (below), then
   re-arm.

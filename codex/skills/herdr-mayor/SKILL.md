@@ -6,13 +6,13 @@ description: >-
   decide (apply, merge, review, approvals, open questions), guide the human to where
   each one is answered, and relay the human's instructions verbatim to the commander
   that owns the issue. Focus commanders ask the human in the Plannotator Inbox, which
-  the Mayor watches. Aggregation and relay only; it never dispatches work or answers on
-  the human's behalf, and creates a new workspace and commander only on the human's
+  the Mayor watches. Aggregation and relay only; it never dispatches work or answers for
+  the human, and creates a new workspace and commander only on the human's
   explicit request (intake). Use when the user asks for a Mayor or human-todo
   aggregator across Herdr workspaces, says /herdr-mayor, "what do I need to do across
   the agents", "relay this to the commander of that issue", "add a workspace for this
   task", or resumes a Mayor session. Sub-commands: help, start, todo, ask, relay, done,
-  focus, pend, status, intake, restore, handoff, resume.
+  focus, pend, status, watch, intake, restore, handoff, resume.
   Requires HERDR_ENV=1. Composes the herdr and pr-status skills.
 ---
 
@@ -65,6 +65,7 @@ An unknown word: run `help`.
 | `done <key or Inbox item> [note]` | "〜は済んだ" | Relay `[mayor 中継] human: <item> は済んだ。<note>` to its owner, naming the Inbox project, thread and question for an Inbox item; move a ledger item to done |
 | `focus <issue or name>...` / `pend <issue or name>...` | "〜を優先に", "〜は後回し" | `mayor.sh priority`, then the Priority section's follow-ups |
 | `status` | "commander の様子は?" | `mayor.sh status`, Protocol 3 delivery checks, the Board audit (`references/inbox.md`), plus one line per commander that is not idle/acked; laid out like `todo` by `references/human-report-format.md` |
+| `watch start` / `watch stop` / `watch status` | "見張りを再開して", "現況通知を止めて", "見張りは動いてる?" | The `watch` steps below: start or stop both watchers, or report them |
 | `intake <request>` | "このタスクの workspace を足して", "新しい commander を立てて" | Only on the human's explicit request: Protocol 7 (brief, workspace and commander, Inbox project once the issue ID is fixed) |
 | `restore` | "herdr を再起動した" | Protocol 6 |
 | `handoff` | "Mayor を別の session に移したい", "記憶を外に出して" | The Handoff "leaving" steps: write the handoff file, copy memories, stop the watchers, release the name |
@@ -96,6 +97,49 @@ An unknown word: run `help`.
    block that groups the waiting items by whose turn it is.
 6. Ask any focus `confirm` items not asked yet (Protocol 5). In event mode only,
    re-arm the watchers first if needed; in pull/live mode follow Protocol 3 instead.
+
+### `watch`
+
+The human's switch for the Mayor's automatic updates: the two watchers (`mayor.sh watch`
+and the Inbox watcher, Protocol 3 "Event cycle") are all that wake the Mayor. Re-arming
+after a completion inside the Event cycle is not `watch start`.
+
+`watch status`: report the four facts of Protocol 3 and name both processes.
+`mayor.sh status` shows only `mayor.sh watch` (via `watch.pid`); the Inbox watcher has no
+pid file, so find it by process:
+`pgrep -fl 'watch-plannotator|mayor.sh watch' | grep -v 'zsh -c'` (the filter drops the
+shells that wrap background commands). Both running is Event mode, none is Pull mode;
+with only one, say which is missing.
+
+`watch stop`: only on the human's order. Stop both and leave the Mayor and every commander
+running; the Mayor is in Pull mode from then on.
+
+1. Stop each watcher that is this session's (the task handles it kept; otherwise check the
+   command line and `MAYOR_SESSION` first) with the background tool's stop, or `kill`. One
+   that already exited on the human's own message is not re-armed.
+2. Check by process that none is left and that `mayor.sh status` reads `watcher=stopped`.
+   A `watch.pid` left behind is harmless: `status` and `watch` test the process, not the file.
+3. Leave `cursor`, `seen`, `plannotator-seen*` and the roster as they are.
+4. Put the human's words, the stop time, and the last update of each status thread, card
+   and summary in the ledger (header and an entry).
+5. Answer once, in the thread the human wrote in: what stopped; that nothing updates by
+   itself now (status threads, cards, summary, ledger, herdr notifications), so the last
+   status threads go stale; what still works (the Inbox plugin delivers the human's replies
+   in a commander's own thread, commanders keep running, the Mayor answers when addressed);
+   how to start again. Post no summary or status update for the stop itself.
+
+`watch start`:
+
+1. Check by process that no watcher runs (two Inbox watchers race for the read marks).
+2. Select the delivery mode by Protocol 3, then arm one of each through the background
+   tool: `$S/mayor.sh watch` and `MAYOR_SESSION=<this session id> $S/watch-plannotator.sh`.
+3. Catch up on the stopped period without relying on the first run: `mayor.sh new` and
+   Protocol 4, then list each focus project's threads (`read_thread` without an id,
+   `asked_by: "anyone"`) and read those with activity after the stop time in the ledger.
+   A stopped Inbox watcher can have dropped events (`references/inbox.md`, "Watching").
+   Then check delivery and update the status threads, cards, summary and ledger as on a
+   watcher completion.
+4. Report what changed while stopped, and that both watchers are armed.
 
 ## Boundaries
 
@@ -221,8 +265,9 @@ another notifier merely because `watcher=stopped`.
 
 ### Check four independent facts
 
-- **Watcher:** `mayor.sh status` reports only `mayor.sh watch` via `watch.pid`.
-  `watcher=stopped` is expected when watch is disabled; it says nothing about a notifier.
+- **Watcher:** `mayor.sh status` reports only `mayor.sh watch` via `watch.pid`; the Inbox
+  watcher has no pid file and is found by process (`watch status`). `watcher=stopped` is
+  expected when watch is disabled; it says nothing about a notifier.
 - **Notifier:** if configured in the handoff, check its own process/PID and purpose.
   A notify-only loop may call `herdr notification show` without providing conversation
   input or acknowledging the inbox. It does not establish live relay.
