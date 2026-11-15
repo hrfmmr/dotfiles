@@ -29,14 +29,14 @@ When writing or rewriting a document for a human reader, use `$reader-first` by 
 
 The state of a task lives in its `bd` issue and its Inbox thread. Do not create a task note in the vault for it.
 
-- Record to `bd` with `bd update <id> --append-notes "..."`, never `--notes` (it replaces the notes). Run `bd show <id>` afterwards to confirm the entry landed. If a `bd` write fails, say so in the Inbox thread and put the entry there. Where the repository is not beads-managed, keep the state in the Inbox thread.
+- Record to `bd` with `bd update <id> --append-notes "..."`, never `--notes` (it replaces the notes). Run `bd show <id> --json` afterwards and read `notes` to confirm the entry landed: the plain `bd show` text wraps long lines, so a grep on it can miss. If a `bd` write fails, say so in the Inbox thread and put the entry there. Where the repository is not beads-managed, keep the state in the Inbox thread.
 - Write an entry when a decision is made, a plan is approved, a phase (commit) is done, the human gives a verdict, a blocker appears, or the task ends.
 - Entry form: `YYYY-MM-DD HH:MM JST <agent>: what was decided, why, what is unconfirmed`, one to five lines, plus where the Inbox holds the detail as `<project> / <thread name> / <message id>`. Never write a localhost URL: the port changes.
-- Write the approved plan as a derived note `<bd id>--<topic> plan.md` in the vault, and attach it in the Inbox for the human's approval. Then put the same file in the `design` field with `bd update <id> --design-file <note>` (it replaces, so edit the note first and run it again; `$herdr-impl` reads `design`) and create one child issue per phase.
+- Write the approved plan as a derived note `<bd id>--<topic> plan.md` in the vault, and attach it in the Inbox for the human's approval. Then put the same file in the `design` field with `bd update <id> --design-file <note>` (it replaces, so edit the note first and run it again; `$herdr-impl` reads `design`), check in `bd show <id> --json` that `design` equals the file, and create one child issue per phase.
 - A new agent reads `bd show <id>` first, then the project's Inbox threads (`read_thread` with `asked_by: anyone`).
 - Close an issue only after the human's verdict is recorded.
 - Never write secrets, credentials, or concrete account IDs in `bd` entries: `bd` is pushed to a remote.
-- Derived notes (plans, explanations, reports, reading notes) go in the vault. Give each the `bd_issue_id` in its frontmatter and the `<bd id>--` prefix in its title.
+- Derived notes (plans, explanations, reports, reading notes) go in the vault. Give each the `bd_issue_id` in its frontmatter and the `<bd id>--` prefix in its title. Add `bd_issue_id` to an existing derived note that lacks one, but do not rename it: a rename breaks its links.
 
 ## Human Review Default
 

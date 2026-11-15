@@ -12,7 +12,7 @@ Show the human an agent-made change before the team sees it, once for the whole 
 - **Explain and ask for a verdict; do not critique.** Say what each chapter changes, why, and what it implies. Hunting for defects is `$review`. Mention a bug you happen to see, but do not go looking.
 - **Start the review yourself, with the gate on.** The slash command `/plannotator-review` is human-only (model invocation is disabled), but the same screen opens from the CLI: `plannotator review --git --base <sha> --gate --json`. The `plannotator` tool (`action: review`, `gate: true`) sets the compare base only, so use the CLI when you need to choose the diff type.
 - **The gate's `decision` is the verdict.** It is `approved`, `annotated`, or `dismissed`. Classify by `decision`, never by the `message` text. Notes on an approval are guidance, not a change request. The explanation carries no verdict question.
-- **A session ends when the human submits.** After `annotated`, present again in a new session with a new URL. A running session can keep showing the old diff until it is reloaded, so do not re-stage, commit, or push while the human reviews; if you must, say exactly what changed and ask for a reload, and record that the viewed version is unconfirmed.
+- **A session ends when the human submits.** After `annotated`, present again in a new session with a new URL. A running session can keep showing the old diff until it is reloaded, so do not re-stage, commit, or push the presented branch while the human reviews (other worktrees and later work go on); if you must, say exactly what changed and ask for a reload, and record that the viewed version is unconfirmed.
 - **The explanation does not depend on the screen.** You cannot see the human's screen. The note is a markdown file attached in the Inbox, and it is also saved in the vault, because Inbox data is not versioned.
 - **Guided review is not the default.** Use `get_guide_brief` and `submit_guide` only when the human asks for a guided review in the Inbox. Hunk is optional too: use `$hunk-present` only when the human asks for Hunk.
 - **Never edit source here.** Fixes go to the fix worker (step 5). This skill writes the note, the message, and Inbox replies.
@@ -23,7 +23,7 @@ Show the human an agent-made change before the team sees it, once for the whole 
 ## Preconditions
 
 1. The commit plan was agreed before coding (AGENTS.md, Human Review Default), and the branch is groomed per `$commit`'s pre-PR grooming contract (semantic-unit commits, English subjects). Groom before presenting, so the note never goes stale because of a history rewrite. The chapters follow these commits.
-2. The worktree is clean (`git status --porcelain` is empty), and HEAD is pushed when a PR exists. The review's default scope also shows uncommitted work, so a dirty tree shows a diff that differs from the PR.
+2. Everything in the presented range is committed, and HEAD is pushed when a PR exists. Unrelated uncommitted or untracked files may remain in the worktree; never stage them. Start the review with `--diff-type branch` so the screen shows only the committed range, not the uncommitted work.
 3. A PR may or may not exist. When a draft PR exists (via `$join`), present it. When none exists yet, present the branch; the PR is created after the verdict, when the work calls for one.
 4. The `plannotator` CLI is on `PATH`, and an Inbox route exists: the `plannotator_inbox` tool (in Claude Code `mcp__plannotator__plannotator_inbox`, possibly deferred behind tool search) or the CLI. Read `plannotator inbox --help` once before the first send of the session.
 
@@ -35,7 +35,7 @@ Run every git command against the worktree (`git -C <worktree>`): on the `$herdr
 
 ```bash
 W=<worktree>
-test -z "$(git -C "$W" status --porcelain)"                              # precondition 2
+git -C "$W" status --short                              # precondition 2: every file of the range is committed; unrelated entries may remain
 BASE=$(cd "$W" && gh pr view <N> --json baseRefName -q .baseRefName)
 # no PR: BASE=$(cd "$W" && gh repo view --json defaultBranchRef -q .defaultBranchRef.name)
 git -C "$W" fetch origin "$BASE"
@@ -50,7 +50,7 @@ Use the merge-base, never a two-dot snapshot against the moving base: a snapshot
 ### 2. Start the review
 
 ```bash
-cd "$W" && plannotator review --git --base "$MB" --title "<bd id> <topic>" --gate --json > <scratch>/review.out 2>&1
+cd "$W" && plannotator review --git --base "$MB" --diff-type branch --title "<bd id> <topic>" --gate --json > <scratch>/review.out 2>&1
 ```
 
 - Run it in the background with the longest timeout. In Claude Code, pass `run_in_background` with `timeout: 7200000`; a background command is stopped after 30 minutes otherwise. Do not kill it to "finish" a review: a session that ends without a decision reads as no feedback.
@@ -78,14 +78,14 @@ Disclose in layers, each complete alone: the message gives the order and where t
 
 ### 4. Send
 
-- **Thread**: one thread per work stream. If this work already has a thread (the task's thread, or the one the human or the Mayor routed it through), call `read_thread` first and `reply_to` its latest message. Otherwise start one with `subject` and a short `thread` name.
-- `send_message` with the note in `attachments` (absolute path). The body is short Japanese:
+- **Thread**: one thread per work stream. If this work already has a thread (the task's thread, or the one the human or the Mayor routed it through), call `read_thread` first and `reply_to` its latest message. Otherwise start one with `subject` and a short `thread` name. If an older guided review (`submit_guide`) question is still open in that thread, send the new message with `supersedes` (`<message id>/<question id>`) so it closes.
+- `send_message` with the note in `attachments` (absolute path). The body is short Japanese, and its first line is the next step for the human (「次の一手: review の画面で Approve するか、コメントを付けて送信してください: <URL>」), because the human may read only that line:
   1. Which branch or PR, the review session URL, and the chapter order with the commits each chapter comes from, saying which chapter is the heart or carries the risk.
   2. Where the verdict goes: 「review の画面で Approve するか、コメントを付けて送信してください。解説は添付のノートです」. Name the real next step an approval triggers (for example: draft を外す; with no PR: PR を作る, or ブランチを引き渡す on the `$herdr-impl` path, where the human opens the PR). Merge always stays with the human.
   3. Context the human may lack, and where the note's 仮値 and 未確認 items are.
   Do not put a verdict `:::question` in the message: the gate's `decision` is the one entrance.
 - **Add the PR to the thread** (skip with no PR): `thread_pulls` with `thread_id` and `add: ["owner/repo#N"]`, once, when the PR is first presented.
-- Keep the message id and thread id. Then end the turn or go on with other work. Do not poll. When the human writes in the chat meanwhile, say the review waits (one line and the thread link); do not ask the verdict in the chat.
+- Keep the message id and thread id. Then end the turn or go on with other work. Do not poll, and send no timed reminder: a gate can stay open for hours. When the human writes meanwhile, in the chat or in the Inbox thread, end your answer with one line that the review waits and its session URL; do not ask the verdict again in the chat.
 
 ### 5. Handle the outcome
 
