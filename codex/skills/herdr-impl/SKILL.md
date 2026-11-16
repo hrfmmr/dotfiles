@@ -196,7 +196,7 @@ Whatever name is resolved, apply that SAME value to the agent name AND the pane 
    check) — groom BEFORE the review starts so it never shows a stale history.
    Delegate the grooming to the worker with an explicit push
    authorization for this step only (`--force-with-lease`; overrides the
-   default push ban). Then present the whole branch to the human once via
+   default push ban). Then present the branch to the human once per apply unit via
    `$pre-review`: a Plannotator review you start with the gate on, plus an
    explanation note cut along the commits, attached in this work's Inbox
    thread; the gate's `decision` is the verdict and the human answers

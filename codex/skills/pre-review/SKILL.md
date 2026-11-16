@@ -1,11 +1,11 @@
 ---
 name: pre-review
-description: Before the team is asked to review an agent-made branch or PR, show the human the whole branch once. Start a Plannotator review yourself with the gate on (its decision is the verdict), and attach in the Plannotator Inbox an explanation note cut along the commits (what changed, why, where the risk sits, what ran and what did not), saved as a derived note in the vault. Then handle the asynchronous outcome (approved, or annotated) by delegating fixes to the fix worker, re-presenting in a new review session, and recording the verdict in bd. The human-review step of AGENTS.md's Human Review Default and of herdr-impl. Explanation and a verdict, not critique; distinct from review (agent critical review gate). The slash command /plannotator-review is human-only; the agent opens the same screen with the CLI. Use hunk-present only when the human asks for Hunk. Trigger on pre-review, PR を human に見せる, 差分の解説, 解説 md, レビュー前の確認, 人間のレビュー, human review of the diff, Inbox で差分を見せる, plannotator review.
+description: Before the team is asked to review an agent-made branch or PR, show the human the branch once per apply unit. Start a Plannotator review yourself with the gate on (its decision is the verdict), and attach in the Plannotator Inbox an explanation note cut along the commits (what changed, why, where the risk sits, what ran and what did not), saved as a derived note in the vault. Then handle the asynchronous outcome (approved, or annotated) by delegating fixes to the fix worker, re-presenting in a new review session, and recording the verdict in bd. The human-review step of AGENTS.md's Human Review Default and of herdr-impl. Explanation and a verdict, not critique; distinct from review (agent critical review gate). The slash command /plannotator-review is human-only; the agent opens the same screen with the CLI. Use hunk-present only when the human asks for Hunk. Trigger on pre-review, PR を human に見せる, 差分の解説, 解説 md, レビュー前の確認, 人間のレビュー, human review of the diff, Inbox で差分を見せる, plannotator review.
 ---
 
 # pre-review
 
-Show the human an agent-made change before the team sees it, once for the whole branch. Two surfaces carry it. A Plannotator review you start yourself, with the gate on, holds the diff, the line comments, and the `decision` that is the verdict. An explanation note in the Inbox, cut along the commits, gives the background the diff does not carry. Nothing waits in the chat: start the review, send the note, then keep working or end the turn.
+Show the human an agent-made change before the team sees it, once per apply unit. An apply unit is the run of commits that one human-gated apply covers (for example one `terraform apply`); with a single apply or none, it is the whole branch. Two surfaces carry it. A Plannotator review you start yourself, with the gate on, holds the diff, the line comments, and the `decision` that is the verdict. An explanation note in the Inbox, cut along the commits, gives the background the diff does not carry. Nothing waits in the chat: start the review, send the note, then keep working or end the turn.
 
 ## Core principles
 
@@ -45,7 +45,7 @@ git -C "$W" log --reverse --name-status --format='%n%h %s' "$MB"..HEAD   # which
 git -C "$W" log --reverse --format='%h %s%n%b' "$MB"..HEAD               # the why, from the commit bodies
 ```
 
-Use the merge-base, never a two-dot snapshot against the moving base: a snapshot shows the base's later commits as reversed deletions.
+Use the merge-base, never a two-dot snapshot against the moving base: a snapshot shows the base's later commits as reversed deletions. For the first unit, `$MB` is the base. For a later unit, use in its place the head that the previous unit's review ended at (the verdict's `bd` note records it), and put the unit in the review title and in the note's `<topic>`. The commit plan names which rows belong to which unit; the unit ends at the HEAD you present.
 
 ### 2. Start the review
 
@@ -107,6 +107,6 @@ The outcome arrives as the process exit (`decision`) and as an Inbox reply (`Pla
 
 Record one explicit entry in the `bd` issue with `bd update <id> --append-notes` (AGENTS.md, Task State), or in the chat when nothing tracks the work.
 
-- **approved**: who approved, what (PR ref and head commit), and the next step taken.
+- **approved**: who approved, what (the unit, the PR ref, and the head commit, which is the next unit's base), and the next step taken.
 - **changes requested**: each request verbatim with file and line, and the fix round it went into.
 - **pending**: the review was started; the thread (project / thread name / message id); the head commit it shows.

@@ -129,6 +129,7 @@ Rules:
   - The ID is `Ph{n}-C{N}`: `n` is the phase (the design plan's step number, or the order of the phases when the plan has no steps) and `N` the commit within it, so an ID never needs context to resolve. Every progress report names the phase first.
   - The validation signal is the smallest meaningful check that can run on the commit alone (for example `terraform fmt -check` and `terraform validate` for Terraform, a compile or syntax check for other languages). Say in the row what the signal cannot cover (a plan, an apply, a real run).
   - Never cut or merge commits by how many new concepts they hold. Commit granularity is a software-engineering concern (atomic, reversible); a concept-heavy commit gets a thicker explanation at review time (`$pre-review`), still as one commit.
+  - When the work has more than one apply (or another human-gated step that follows a review), say which rows belong to which apply unit. `$pre-review` reviews one unit at a time, and the human approves the grouping with the rows.
   - Write `未確定` for any item you cannot confirm from the plan or the live system. Investigate first (read the plan, inspect read-only) or leave the row open; never fill it by guess. Investigation may change the plan: a row that looked like one change can turn out to be several independent ones. Re-cut only for software reasons, and re-approve the changed rows.
 
 #### Plan Verbosity Guidelines
