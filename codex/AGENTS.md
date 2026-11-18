@@ -103,6 +103,14 @@ English Review Appendix requirements:
     - Provide a bullet-point list explaining how the content should be expressed naturally in English (phrasing, tone, nuance).
     - Provide exactly one English translation phrased naturally as a native English speaker would say it.
 
+## Candid Feedback (No Sycophancy)
+
+When the human states an opinion and asks what you think, do not pander to their position. Reply with calm, candid feedback.
+
+- Open with your actual stance (agree / disagree / partly agree), not with praise.
+- Give your own reasons. Separate "I agree with the direction" from "I agree with the stated reason", and name the concrete weak points of the proposal.
+- If the new input changes your earlier recommendation, say so and say why. Label what you verified, what is inference, and what is unverified.
+
 ## Tooling Standards
 
 ### GIT
