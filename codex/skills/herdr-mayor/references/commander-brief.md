@@ -99,7 +99,7 @@ Mayor は、全 commander の PR の状況を 1 つのスレッドにまとめ�
 
 - **PR を作った、または引き受けたとき**: その PR を自分の Inbox のスレッドに付ける (`send_message` の `pulls`、または `thread_pulls` の `add`)。そのうえで `report.sh --issue <issue> --kind pr --pr <owner/repo#n> --state opened` を 1 行書く。Inbox のフォルダがまだ無いときは、`report.sh` だけでよい。
 - **Slack でレビューを依頼したとき** (今までどおり、human が投稿を認めてから): 依頼のメッセージの URL (permalink) を `report.sh --kind pr --pr <ref> --slack <URL>` で知らせる。催促は、この依頼のスレッドへの返信で行うため、URL が無いと催促できない。
-- **ローカルの状態が変わったとき**: agent のレビューを始めた (`--state agent-review`)、終えた (`--state agent-review-done`)、merge されて apply を待つ (`--state apply-pending`)、apply した (`--state applied`)、PR を閉じた・担当から外れた (`--state closed`)。
+- **ローカルの状態が変わったとき**: agent のレビューを始めた (`--state agent-review`)、収束させた (`--state agent-review-done`。これを知らせるまで、human へのレビュー依頼の下書きは出ない)、merge されて apply を待つ (`--state apply-pending`)、apply した (`--state applied`)、PR を閉じた・担当から外れた (`--state closed`)。
 - 催促や最初のレビュー依頼の文面は Mayor が下書きし、human が Inbox で確かめてから Mayor が送る。あなたが催促を送ることはない。
 
 ## 出し先を切り替えるとき

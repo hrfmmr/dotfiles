@@ -9,7 +9,7 @@
       out/ask-remind.json (one combined reminder for every stalled PR), then saves the
       snapshot. --dry-run writes nothing and prints the result and the drafts instead.
   pr_status.py table upsert <owner/repo#n | url> [--commander N] [--issue I]
-      [--local none|agent-review|apply-pending|applied|closed] [--slack URL]
+      [--local none|agent-review|agent-review-done|apply-pending|applied|closed] [--slack URL]
       [--reminded] [--asked MSG_ID] [--answered] [--clear-asked]
   pr_status.py table show
   pr_status.py ingest "<inbox line>"     apply one report.sh `kind=pr` line to the table
@@ -41,24 +41,29 @@ SNAP = DIR / "snapshot.json"
 OUT = DIR / "out"
 COLS = ["pr", "commander", "issue", "local_state", "slack_url", "reminders",
         "last_reminder_at", "asked_at", "ask_ref", "updated_at"]
-LOCAL_STATES = ("none", "agent-review", "apply-pending", "applied", "closed")
-REPORT_STATES = {"opened": "none", "agent-review": "agent-review", "agent-review-done": "none",
+LOCAL_STATES = ("none", "agent-review", "agent-review-done", "apply-pending", "applied", "closed")
+REPORT_STATES = {"opened": "none", "agent-review": "agent-review", "agent-review-done": "agent-review-done",
                  "apply-pending": "apply-pending", "applied": "applied", "closed": "closed"}
 
 # State order = display order. Labels are what the human reads.
+# Agent review gate: an open PR goes agent-review-wait -> agent-review -> agent-review-done
+# -> waiting-review; the human is asked to request a human review only at agent-review-done.
 STATES = [
     ("ci-failing", "CI 失敗"),
     ("changes-requested", "変更の依頼あり"),
-    ("waiting-review", "human のレビュー待ち (レビュアーあり)"),
-    ("waiting-review-noreviewer", "human のレビュー待ち (レビュアー未定)"),
+    ("draft", "draft"),
+    ("agent-review-wait", "agent review 待ち"),
     ("agent-review", "agent がローカルでレビュー中"),
+    ("agent-review-done", "agent review 収束済み・human レビューの打診待ち"),
+    ("waiting-review", "human のレビュー待ち"),
     ("approved", "承認済み・merge 待ち"),
     ("apply-pending", "merge 済み・apply 待ち"),
-    ("draft", "draft"),
 ]
 LABEL = dict(STATES)
 DONE_STATES = ("done", "closed")
-MARK_STALL, MARK_NOREV, MARK_CONSULT = "停滞", "レビュアー未定", "要相談"
+MARK_STALL, MARK_CONSULT = "停滞", "要相談"
+# Marks on a draft row, so the gate state stays visible while draft wins the state.
+DRAFT_GATE_MARKS = {"agent-review": "agent review 中", "agent-review-done": "agent review 収束済み"}
 
 QUERY = """query($o:String!,$r:String!,$n:Int!){repository(owner:$o,name:$r){pullRequest(number:$n){
  number title url state isDraft reviewDecision mergedAt closedAt createdAt author{login}
@@ -335,6 +340,8 @@ def classify(ref, pr, row, conf, now, hol):
         state = "closed"
     elif pr["isDraft"]:
         state = "draft"
+        if local in DRAFT_GATE_MARKS:
+            marks.append(DRAFT_GATE_MARKS[local])
     elif rollup in ("FAILURE", "ERROR"):
         state = "ci-failing"
     elif pr.get("reviewDecision") == "CHANGES_REQUESTED":
@@ -343,10 +350,11 @@ def classify(ref, pr, row, conf, now, hol):
         state = "approved"
     elif local == "agent-review":
         state = "agent-review"
-    elif reviewers or row.get("slack_url"):
-        state = "waiting-review"
-    else:
-        state = "waiting-review-noreviewer"
+    elif local == "agent-review-done":
+        # a human review request is out once GitHub shows a reviewer or Slack has one
+        state = "waiting-review" if (reviewers or row.get("slack_url")) else "agent-review-done"
+    else:  # nothing reported by the commander yet (none, empty, or an unrelated local value)
+        state = "agent-review-wait"
 
     stall_days = float(conf["stall_business_days"])
     max_rem = int(conf["max_reminders"])
@@ -356,8 +364,7 @@ def classify(ref, pr, row, conf, now, hol):
     asked = parse_ts(row.get("asked_at"))
     ask_clock = max(t for t in (clock, asked) if t)
     ask_idle = business_days(ask_clock, now, conf, hol)
-    if state == "waiting-review-noreviewer":
-        marks.append(MARK_NOREV)
+    if state == "agent-review-done":
         if not asked:
             ask = "request"
     elif state == "waiting-review" and idle >= stall_days:
@@ -367,7 +374,7 @@ def classify(ref, pr, row, conf, now, hol):
         elif ask_idle >= stall_days:
             ask = "remind"
     stale_ask = bool(row.get("ask_ref")) and ask is None and not (
-        MARK_STALL in marks or MARK_NOREV in marks)
+        MARK_STALL in marks or state == "agent-review-done")
     return {
         "pr": ref, "url": pr["url"], "title": pr["title"], "state": state,
         "label": LABEL.get(state, state), "marks": marks,
@@ -438,7 +445,7 @@ def question(item, conf):
     who = f"{item['commander']} ({item['issue']})" if item["commander"] else "担当の commander 不明"
     ch = conf.get("review_channel") or "未設定 (担当の commander に聞いてから送ります)"
     head = f"{item['pr']} のレビュー依頼を Slack に出してよいですか?"
-    ctx = f"{who} の PR で、レビュアーが決まっていません。投稿先: {ch}。"
+    ctx = f"{who} の PR で、agent のレビューが収束し、human へのレビュー依頼はまだ出ていません。投稿先: {ch}。"
     body = (f":::question\n{head}\n\n{ctx}\n\n下書き:\n\n{quote(text)}\n\n"
             "- [ ] 送る\n- [ ] 直して送る — 直した文面をメモに書いてください\n- [ ] 送らない\n\n"
             "Recommended: 送る\n:::")
@@ -475,7 +482,7 @@ def render(items, diff, conf, now, warnings):
             marks = "".join(f"【{m}】" for m in i["marks"])
             who = f"{i['commander']} ({i['issue']})" if i["commander"] else "担当不明"
             extra = f"最後の動き {local_date(i['last_activity'], conf)}"
-            if key.startswith("waiting-review"):
+            if key == "waiting-review":
                 extra += f"、{i['idle_business_days']} 営業日"
                 if i["reminders"]:
                     extra += f"、催促 {i['reminders']} 回"

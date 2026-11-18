@@ -181,7 +181,8 @@ pr` (`commander-brief.md`, section 6); the Mayor ingests those lines into the PR
 - **When:** on every Inbox watcher wake, after the summary, run the skill in a sub-agent
   with `MAYOR_SESSION`. It posts the list only when something changed.
 - **Questions:** a stalled review (no review, comment or push for 2 business days) or a
-  PR with no reviewer gets a `:::question` there with a draft: 送る / 直して送る /
+  PR whose agent review converged (`agent-review-done`) with no human review request yet
+  gets a `:::question` there with a draft: 送る / 直して送る /
   送らない. The answer returns to the Mayor. Only on 送る or 直して送る does the Mayor
   post to Slack, and a reminder only as a reply in the recorded review-request thread
   (the skill's "Answers to the questions"). This is the human's check on an outward

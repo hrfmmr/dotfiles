@@ -2,11 +2,12 @@
 name: pr-status
 description: >-
   Keep one Plannotator Inbox thread that lists where every PR of the Herdr Mayor's
-  commanders stands (draft, agent reviewing locally, waiting for human review with or
-  without a reviewer, changes requested, approved and waiting for merge, merged and
-  waiting for apply, CI failing), marks stalled reviews, PRs with no reviewer and PRs
-  that need a talk, and asks the human before any Slack review request or reminder is
-  posted (stalled reviews go out as one combined reminder). Run by the herdr-mayor skill in a sub-agent on each Mayor wake; also use when
+  commanders stands (CI failing, changes requested, draft, waiting for an agent review,
+  agent reviewing locally, agent review converged and not yet sent to human review,
+  waiting for human review, approved and waiting for merge, merged and waiting for
+  apply), marks stalled reviews and PRs that need a talk, and asks the human before any
+  Slack review request or reminder is posted (a first request only after the agent
+  review converged; stalled reviews go out as one combined reminder). Run by the herdr-mayor skill in a sub-agent on each Mayor wake; also use when
   asked for "PR の状況", "PR status across commanders", "which reviews are stalled",
   "/pr-status", or to record a PR's local state, Slack review-request URL or reminder in
   the Mayor's PR table. Requires the Mayor's state dir; never posts to Slack by itself.
@@ -48,14 +49,26 @@ connects other agents.
 
 One state per PR, first match wins: merged (→ `merge 済み・apply 待ち` when the table says
 `apply-pending` or the repo is in `apply_repos` and not `applied`; otherwise done), closed,
-draft, CI failing (rollup `FAILURE`/`ERROR`), changes requested, approved, agent reviewing
-(table), waiting for human review with a reviewer (GitHub request, a non-author human
-review, or a recorded Slack request), waiting with no reviewer.
+draft, CI failing (rollup `FAILURE`/`ERROR`), changes requested, approved, then the agent
+review gate from the table's `local_state`:
 
-- 停滞: waiting with a reviewer, and no review, comment, push, ready/request event or
+- `agent-review` → `agent がローカルでレビュー中`.
+- `agent-review-done` and no human review request yet → `agent review 収束済み・human
+  レビューの打診待ち`. Only this state gets the first review-request question (once:
+  not when `asked_at` is set).
+- `agent-review-done` and a request is out (GitHub request, a non-author human review, or
+  a recorded Slack request) → `human のレビュー待ち`.
+- anything else (`none`, empty: the commander reported nothing) → `agent review 待ち`. The
+  human decides per PR whether to run an agent review; nothing is asked.
+
+Display order: CI 失敗, 変更の依頼あり, draft, agent review 待ち, agent がローカルでレビュー中,
+agent review 収束済み・human レビューの打診待ち, human のレビュー待ち, 承認済み・merge 待ち,
+merge 済み・apply 待ち. A draft with `local_state` `agent-review` / `agent-review-done`
+stays draft and carries the mark `agent review 中` / `agent review 収束済み`.
+
+- 停滞: waiting for human review, and no review, comment, push, ready/request event or
   reminder for `stall_business_days` (2) business days. Slack replies do not count.
   Business time skips weekends and the holidays file.
-- レビュアー未定: waiting with no reviewer.
 - 要相談: stalled after `max_reminders` (2) reminders. Left out of the reminder.
 
 A stalled PR is due for the reminder when it is under `max_reminders` and was not asked
@@ -88,7 +101,7 @@ PRs span repos. The mention at the top is `review_mention` from config (omitted 
    false (a combined reminder still covering other PRs is not withdrawn; the note says to
    drop that PR from it), then `table upsert <pr> --clear-asked`.
 5. Return to the Mayor only: changed yes/no, counts per state, the PRs marked 停滞 /
-   レビュアー未定 / 要相談, questions sent, warnings. Keep titles and diffs out of the
+   要相談, the PRs at agent review 収束済み, questions sent, warnings. Keep titles and diffs out of the
    return.
 
 Run `date` before writing any time by hand. If `--session` is refused, return the paths of
@@ -127,8 +140,10 @@ draft and the target, then:
 
 Commanders report PR events with `report.sh --kind pr` (herdr-mayor `commander-brief.md`).
 For each `kind=pr` line from `mayor.sh new`, run `python3 $P ingest "<line>"`; it maps
-`--state` to the table (`opened`→none, `agent-review`, `agent-review-done`→none,
-`apply-pending`, `applied`, `closed`) and records `--slack`. Direct edits:
+`--state` to the table (`opened`→none, `agent-review`, `agent-review-done`,
+`apply-pending`, `applied`, `closed`) and records `--slack`. Commanders report
+`agent-review` when the agent review starts and `agent-review-done` when it converges;
+the first human review request is drafted only after `agent-review-done`. Direct edits:
 `python3 $P table upsert <pr> [--commander N --issue I --local S --slack URL]`,
 `python3 $P table show`.
 

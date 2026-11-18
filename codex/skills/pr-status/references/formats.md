@@ -14,7 +14,7 @@ seen); do not edit by hand while a run is going.
 | `pr` | `owner/repo#n` (a GitHub URL is normalized to this) |
 | `commander` | herdr name of the owning commander |
 | `issue` | the commander's issue ID |
-| `local_state` | `none`, `agent-review`, `apply-pending`, `applied`, `closed` |
+| `local_state` | `none`, `agent-review`, `agent-review-done`, `apply-pending`, `applied`, `closed` (`agent-review-done` opens the human review request; before it an open PR is listed as agent review 待ち) |
 | `slack_url` | permalink of the Slack review-request message (its ts is a candidate for the reminder's `since`; a PR first reminded without one gets the reminder's permalink) |
 | `reminders` | reminders posted so far |
 | `last_reminder_at` | UTC time of the last reminder (restarts the stall clock) |
@@ -35,7 +35,7 @@ appends `... | kind=pr | ... | pr=<ref> | state=<s> | slack=<url>`. `ingest` map
 |---|---|
 | `opened` | `none` (creates the row) |
 | `agent-review` | `agent-review` |
-| `agent-review-done` | `none` |
+| `agent-review-done` | `agent-review-done` |
 | `apply-pending` | `apply-pending` |
 | `applied` | `applied` |
 | `closed` | `closed` |
