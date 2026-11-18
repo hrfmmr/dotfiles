@@ -6,7 +6,7 @@ description: >-
   without a reviewer, changes requested, approved and waiting for merge, merged and
   waiting for apply, CI failing), marks stalled reviews, PRs with no reviewer and PRs
   that need a talk, and asks the human before any Slack review request or reminder is
-  posted. Run by the herdr-mayor skill in a sub-agent on each Mayor wake; also use when
+  posted (stalled reviews go out as one combined reminder). Run by the herdr-mayor skill in a sub-agent on each Mayor wake; also use when
   asked for "PR の状況", "PR status across commanders", "which reviews are stalled",
   "/pr-status", or to record a PR's local state, Slack review-request URL or reminder in
   the Mayor's PR table. Requires the Mayor's state dir; never posts to Slack by itself.
@@ -56,14 +56,23 @@ review, or a recorded Slack request), waiting with no reviewer.
   reminder for `stall_business_days` (2) business days. Slack replies do not count.
   Business time skips weekends and the holidays file.
 - レビュアー未定: waiting with no reviewer.
-- 要相談: stalled after `max_reminders` (2) reminders. No more reminder drafts.
+- 要相談: stalled after `max_reminders` (2) reminders. Left out of the reminder.
+
+A stalled PR is due for the reminder when it is under `max_reminders` and was not asked
+within the last stall period. Every due PR goes into ONE combined reminder per run (one
+question, one Slack post), oldest request first. `since` is the day the review was
+requested: the earlier of the Slack request's ts (`p<digits>` of `slack_url`) and the
+PR's first non-bot GitHub `review_requested` event, else its creation. `#N` becomes `owner/repo#N` when the
+PRs span repos. The mention at the top is `review_mention` from config (omitted if empty).
 
 ## Steps (one run)
 
-1. `python3 $P run` (`--dry-run` prints without writing; `--json` for the full result).
-   It writes `out/result.json`, `out/list.md`, `out/send-list.json` when anything changed
-   since the last snapshot (or `post=always`, or the first run), and one
-   `out/ask-<pr>.json` per question due. Then it saves the snapshot.
+1. `python3 $P run` (`--dry-run` prints the list and the question drafts without writing;
+   `--json` for the full result). It writes `out/result.json`, `out/list.md`,
+   `out/send-list.json` when anything changed since the last snapshot (or `post=always`,
+   or the first run), `out/ask-<pr>.json` per first review request due, and
+   `out/ask-remind.json` (the combined reminder) when any PR is due. `result.json`
+   `ask_files` maps each ask file to the PRs it covers. Then it saves the snapshot.
 2. If `out/send-list.json` exists, send it to the dedicated thread:
    `plannotator inbox call --session "$MAYOR_SESSION" send_message - < out/send-list.json`.
    `$MAYOR_SESSION` is the Mayor's session id (the one its Inbox watcher uses), so replies
@@ -71,15 +80,16 @@ review, or a recorded Slack request), waiting with no reviewer.
    Mayor's Inbox project, from config or the `mayor` row of `inbox-projects.tsv`), the
    thread name (`thread_name`) and an idempotency key. No file means nothing changed:
    send nothing.
-3. Send each `out/ask-*.json` the same way, one question per message, then record it:
+3. Send each `out/ask-*.json` the same way, one question per message, then record it for
+   every PR the file covers (`ask_files`):
    `python3 $P table upsert <pr> --asked <message_id from the send result>`.
 4. For each `stale_asks` entry (a question still open for a PR that moved on), send a
-   short note to the same thread with `supersedes: ["<ask_ref>"]`, then
-   `table upsert <pr> --clear-asked`.
+   short note to the same thread, with `supersedes: ["<ask_ref>"]` only when `shared` is
+   false (a combined reminder still covering other PRs is not withdrawn; the note says to
+   drop that PR from it), then `table upsert <pr> --clear-asked`.
 5. Return to the Mayor only: changed yes/no, counts per state, the PRs marked 停滞 /
-   レビュアー未定 / 要相談, questions sent, `need_slack_url` PRs (stalled, but no Slack
-   request URL recorded: the Mayor asks their commanders for it), warnings. Keep titles
-   and diffs out of the return.
+   レビュアー未定 / 要相談, questions sent, warnings. Keep titles and diffs out of the
+   return.
 
 Run `date` before writing any time by hand. If `--session` is refused, return the paths of
 the payload files and let the Mayor send them with its own Inbox tool.
@@ -91,22 +101,23 @@ draft and the target, then:
 
 - 送る / 直して送る: post the draft, or the human's corrected text verbatim, and nothing
   else.
-  - Reminder: reply in the original review-request thread only.
-    `python3 $P slack-thread <slack_url>` gives `channel` and `thread_ts`; post with the
-    Slack tool as a thread reply there. Then `table upsert <pr> --reminded`.
+  - Reminder (combined): post the text as a NEW message in `review_channel` (not a
+    thread reply), get its permalink. Then every PR listed in the posted text counts as
+    reminded: `table upsert <pr> --reminded`, plus `--slack <permalink>` when it had no
+    `slack_url`. A PR the human removed from the text gets `--answered` only.
   - First review request: post a new message in `review_channel`, get its permalink, then
     `table upsert <pr> --slack <permalink> --answered`. If `review_channel` is empty, ask
     the owning commander where its reviews are requested before posting.
   - Say in the dedicated thread that it was sent, with the Slack link.
-- 送らない: `table upsert <pr> --answered`. It is asked again only after another stall
-  period (a first request is not asked again).
+- 送らない: `table upsert <pr> --answered` (for a combined reminder, each listed PR). It is
+  asked again only after another stall period (a first request is not asked again).
 
 ## Rules
 
 - Never post to Slack without the human's 送る / 直して送る answer to that exact question
   (MUST). A relay, a commander or an old answer is not that answer.
-- Never post a reminder anywhere but the original review-request thread. No URL recorded:
-  no reminder (`need_slack_url`).
+- Reminders go out only as the one combined new post in `review_channel`, never as
+  per-PR replies in the original threads.
 - At most `max_reminders` reminders per PR; then only the 要相談 mark.
 - PR status goes only to the dedicated thread, never into the Mayor's summary thread.
 - Read-only on GitHub. Do not add or remove thread pulls; commanders own them.

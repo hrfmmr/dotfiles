@@ -15,7 +15,7 @@ seen); do not edit by hand while a run is going.
 | `commander` | herdr name of the owning commander |
 | `issue` | the commander's issue ID |
 | `local_state` | `none`, `agent-review`, `apply-pending`, `applied`, `closed` |
-| `slack_url` | permalink of the Slack review-request message (reminders reply in its thread) |
+| `slack_url` | permalink of the Slack review-request message (its ts is a candidate for the reminder's `since`; a PR first reminded without one gets the reminder's permalink) |
 | `reminders` | reminders posted so far |
 | `last_reminder_at` | UTC time of the last reminder (restarts the stall clock) |
 | `asked_at` | UTC time the last request/reminder question was sent to the human |
@@ -44,6 +44,9 @@ appends `... | kind=pr | ... | pr=<ref> | state=<s> | slack=<url>`. `ingest` map
 
 `key=value` lines, `#` comments; see `assets/config.example` for every key and default.
 
+`review_mention=` is put verbatim at the top of the combined reminder, in Slack mrkdwn
+(for a user group `<!subteam^GROUP_ID>`, for a user `<@USER_ID>`). Empty: no mention.
+
 ## holidays file
 
 Path from `holidays=`. One date per line as `YYYY-MM-DD`, anything after the date is a
@@ -58,4 +61,5 @@ comment, `#` lines ignored. Weekends are always non-business days.
 
 - `snapshot.json`: per PR `{state, marks, reminders}` from the last run; the diff base.
 - `out/`: the last run's `result.json`, `list.md`, `send-list.json` (only when it should
-  be sent) and `ask-<pr>.json` (send_message payloads). Rewritten on every run.
+  be sent), `ask-<pr>.json` (first review requests) and `ask-remind.json` (the combined
+  reminder) (send_message payloads). Rewritten on every run.

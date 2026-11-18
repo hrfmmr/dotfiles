@@ -5,8 +5,9 @@
       Collect PRs (Inbox thread pulls of each roster commander + the local table),
       read their live state with gh, classify, compare with the last snapshot.
       Writes out/result.json, out/list.md, out/send-list.json (only when changed or
-      post=always) and out/ask-<n>.json (one per question to ask), then saves the
-      snapshot. --dry-run writes nothing and prints the result instead.
+      post=always), out/ask-<pr>.json (one per first review request) and
+      out/ask-remind.json (one combined reminder for every stalled PR), then saves the
+      snapshot. --dry-run writes nothing and prints the result and the drafts instead.
   pr_status.py table upsert <owner/repo#n | url> [--commander N] [--issue I]
       [--local none|agent-review|apply-pending|applied|closed] [--slack URL]
       [--reminded] [--asked MSG_ID] [--answered] [--clear-asked]
@@ -19,6 +20,7 @@ State dir: $PR_STATUS_DIR, default $MAYOR_HOME/pr-status ($MAYOR_HOME default
 """
 import argparse
 import datetime as dt
+import hashlib
 import json
 import os
 import re
@@ -95,6 +97,7 @@ def config():
     c.setdefault("scope", "roster")
     c.setdefault("resolved_lookback_days", "30")
     c.setdefault("post", "change")
+    c.setdefault("review_mention", "")
     if not c.get("mayor_project"):
         rows = [r for r in tsv(HOME / "inbox-projects.tsv") if r and r[0] == "mayor"]
         if rows:
@@ -363,9 +366,6 @@ def classify(ref, pr, row, conf, now, hol):
             marks.append(MARK_CONSULT)
         elif ask_idle >= stall_days:
             ask = "remind"
-    need_slack = ask == "remind" and not row.get("slack_url")
-    if need_slack:
-        ask = None  # never post outside the original thread: get its URL from the commander first
     stale_ask = bool(row.get("ask_ref")) and ask is None and not (
         MARK_STALL in marks or MARK_NOREV in marks)
     return {
@@ -374,7 +374,8 @@ def classify(ref, pr, row, conf, now, hol):
         "commander": row.get("commander", ""), "issue": row.get("issue", ""),
         "local_state": local, "reviewers": reviewers, "slack_url": row.get("slack_url", ""),
         "reminders": reminders, "last_activity": last_activity.strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "idle_business_days": round(idle, 1), "ask": ask, "need_slack_url": need_slack, "stale_ask_ref": row.get("ask_ref") if stale_ask else "",
+        "idle_business_days": round(idle, 1), "ask": ask, "stale_ask_ref": row.get("ask_ref") if stale_ask else "",
+        "created_at": pr["createdAt"],
     }
 
 
@@ -384,32 +385,81 @@ def local_date(ts, conf):
     return parse_ts(ts).astimezone(tz(conf)).strftime("%m-%d")
 
 
+def request_since(item, conf):
+    """Day the review was requested: the earlier of the Slack request ts and the first
+    non-bot GitHub review_requested event; else the PR's creation."""
+    cands = []
+    m = re.search(r"/p(\d{10})\d{6}", item.get("slack_url") or "")
+    if m:
+        cands.append(dt.datetime.fromtimestamp(int(m.group(1)), dt.timezone.utc))
+    o_r, n = item["pr"].split("#")
+    try:
+        out = run_cmd(["gh", "api", "--paginate", f"repos/{o_r}/issues/{n}/timeline", "--jq",
+                       '.[] | select(.event == "review_requested") | {created_at, requested_reviewer}'])
+        cands += [parse_ts(e["created_at"]) for e in map(json.loads, filter(None, out.splitlines()))
+                  if not _bot_reviewer(e, conf)]
+    except Exception:  # noqa: BLE001
+        pass
+    when = min(cands) if cands else parse_ts(item["created_at"])
+    d = when.astimezone(tz(conf))
+    return d, f"{d.month}/{d.day}"
+
+
+def _bot_reviewer(event, conf):
+    rv = event.get("requested_reviewer")
+    if not rv:  # a team request
+        return False
+    return is_bot({"__typename": rv.get("type"), "login": rv.get("login", "")}, conf)
+
+
 def draft(item, conf):
-    if item["ask"] == "remind":
-        n = item["reminders"] + 1
-        return (f"「{item['title']}」のレビューの件で、{local_date(item['last_activity'], conf)} から動きが止まっています。\n"
-                "お手すきのときに見ていただけると助かります。\n"
-                "難しければ、見られそうな時期か、代わりに見られる方を教えてください。"), n
     return (f"レビューをお願いします。\n{item['title']}\n{item['url']}"), 0
+
+
+def remind_draft(items, conf):
+    """One combined reminder for every stalled PR, oldest request first."""
+    rows = sorted(((request_since(i, conf), i) for i in items), key=lambda x: x[0][0])
+    multi = len({i["pr"].split("#")[0] for i in items}) > 1
+    mention = conf.get("review_mention", "")
+    lines = [f"{mention + ' ' if mention else ''}PR {len(items)} 本、レビューのお願いです (再掲) :bow:",
+             "お手すきのときに見ていただけると助かります。", ""]
+    for (_, since), i in rows:
+        num = i["pr"] if multi else "#" + i["pr"].split("#")[1]
+        lines += [f"• {num} {i['title']} (since {since})", f"  {i['url']}"]
+    return "\n".join(lines), [i for _, i in rows]
+
+
+def quote(text):
+    return "\n".join("> " + l if l else ">" for l in text.splitlines())
 
 
 def question(item, conf):
     text, n = draft(item, conf)
-    quoted = "\n".join("> " + l for l in text.splitlines())
     who = f"{item['commander']} ({item['issue']})" if item["commander"] else "担当の commander 不明"
-    if item["ask"] == "remind":
-        where = f"もとのレビュー依頼のスレッドに返信します。\n\n{item['slack_url']}"
-        head = f"{item['pr']} のレビューの催促を Slack に送ってよいですか?"
-        ctx = (f"{who} の PR です。レビュー待ちのまま {item['idle_business_days']} 営業日、レビュー・コメント・push がありません。"
-               f"催促は {n} 回目です (上限 {conf['max_reminders']} 回)。{where}")
-    else:
-        ch = conf.get("review_channel") or "未設定 (担当の commander に聞いてから送ります)"
-        head = f"{item['pr']} のレビュー依頼を Slack に出してよいですか?"
-        ctx = f"{who} の PR で、レビュアーが決まっていません。投稿先: {ch}。"
-    body = (f":::question\n{head}\n\n{ctx}\n\n下書き:\n\n{quoted}\n\n"
+    ch = conf.get("review_channel") or "未設定 (担当の commander に聞いてから送ります)"
+    head = f"{item['pr']} のレビュー依頼を Slack に出してよいですか?"
+    ctx = f"{who} の PR で、レビュアーが決まっていません。投稿先: {ch}。"
+    body = (f":::question\n{head}\n\n{ctx}\n\n下書き:\n\n{quote(text)}\n\n"
             "- [ ] 送る\n- [ ] 直して送る — 直した文面をメモに書いてください\n- [ ] 送らない\n\n"
             "Recommended: 送る\n:::")
     return body, n
+
+
+def remind_question(items, conf):
+    text, ordered = remind_draft(items, conf)
+    ch = conf.get("review_channel") or "未設定 (担当の commander に聞いてから送ります)"
+    head = f"止まっているレビュー {len(ordered)} 本の催促を、まとめて 1 通で Slack に送ってよいですか?"
+    per = []
+    for i in ordered:
+        who = f"{i['commander']} ({i['issue']})" if i["commander"] else "担当の commander 不明"
+        per.append(f"- {i['pr']} — {who}。{i['idle_business_days']} 営業日動きなし、"
+                   f"催促 {i['reminders'] + 1} 回目 (上限 {conf['max_reminders']} 回)")
+    ctx = (f"レビュー待ちのまま、レビュー・コメント・push が止まっている PR です。"
+           f"投稿先: {ch} に新しい投稿として送ります。\n\n" + "\n".join(per))
+    body = (f":::question\n{head}\n\n{ctx}\n\n下書き:\n\n{quote(text)}\n\n"
+            "- [ ] 送る\n- [ ] 直して送る — 直した文面をメモに書いてください (PR を外すときも)\n- [ ] 送らない\n\n"
+            "Recommended: 送る\n:::")
+    return body, text, [i["pr"] for i in ordered]
 
 
 def render(items, diff, conf, now, warnings):
@@ -429,8 +479,6 @@ def render(items, diff, conf, now, warnings):
                 extra += f"、{i['idle_business_days']} 営業日"
                 if i["reminders"]:
                     extra += f"、催促 {i['reminders']} 回"
-                if i["need_slack_url"]:
-                    extra += "、Slack の依頼の URL が未記録"
             lines.append(f"- {marks}[{i['pr']}]({i['url']}) {i['title']} — {who}。{extra}")
         lines.append("")
     done = [i for i in items if i["state"] in DONE_STATES]
@@ -511,22 +559,43 @@ def cmd_run(a):
         payloads["send-list.json"] = {"project_path": project, "thread": conf["thread_name"],
                                       "subject": conf["thread_name"], "body": md,
                                       "idempotency_key": f"pr-status-list-{day}"}
+    ask_files, drafts = {}, {}
     for i in asks:
+        if i["ask"] != "request":
+            continue
         body, n = question(i, conf)
         slug = re.sub(r"[^\w]+", "-", i["pr"])
         payloads[f"ask-{slug}.json"] = {"project_path": project, "thread": conf["thread_name"],
                                         "subject": conf["thread_name"], "body": body,
-                                        "idempotency_key": f"pr-status-{i['ask']}{n}-{slug}-{day[:8]}"}
+                                        "idempotency_key": f"pr-status-request{n}-{slug}-{day[:8]}"}
+        ask_files[f"ask-{slug}.json"] = [i["pr"]]
+    stalled = [i for i in asks if i["ask"] == "remind"]
+    if stalled:
+        body, text, listed = remind_question(stalled, conf)
+        key = hashlib.sha1(" ".join(sorted(f"{i['pr']}:{i['reminders']}" for i in stalled)).encode()).hexdigest()[:10]
+        payloads["ask-remind.json"] = {"project_path": project, "thread": conf["thread_name"],
+                                       "subject": conf["thread_name"], "body": body,
+                                       "idempotency_key": f"pr-status-remind-{key}-{day[:8]}"}
+        ask_files["ask-remind.json"] = listed
+        drafts["remind"] = text
+    open_refs = {}
+    for ref, r in rows.items():
+        if r.get("ask_ref"):
+            open_refs.setdefault(r["ask_ref"], set()).add(ref)
     result = {"now": now.strftime("%Y-%m-%dT%H:%M:%SZ"), "changed": diff["changed"], "post": post,
               "changes": diff["changes"], "items": items, "asks": [i["pr"] for i in asks],
-              "need_slack_url": [i["pr"] for i in items if i["need_slack_url"]],
-              "stale_asks": [{"pr": i["pr"], "ask_ref": i["stale_ask_ref"]} for i in items if i["stale_ask_ref"]],
+              "ask_files": ask_files, "remind_draft": drafts.get("remind", ""),
+              "stale_asks": [{"pr": i["pr"], "ask_ref": i["stale_ask_ref"],
+                              "shared": len(open_refs.get(i["stale_ask_ref"], ())) > 1}
+                             for i in items if i["stale_ask_ref"]],
               "warnings": warnings, "mayor_project": project, "thread": conf["thread_name"],
               "attached_count": len(attached), "table_count": len(rows)}
     if a.dry_run:
         print(json.dumps(result, ensure_ascii=False, indent=1) if a.json else md)
         if not a.json:
-            print(f"changed={'yes' if diff['changed'] else 'no'} asks={len(asks)} (dry run: nothing written)")
+            for name, files in ask_files.items():
+                print(f"--- {name} ({', '.join(files)})\n{payloads[name]['body']}\n")
+            print(f"changed={'yes' if diff['changed'] else 'no'} asks={len(ask_files)} (dry run: nothing written)")
         return
     new_rows = {ref: src for ref, src in attached.items() if ref not in rows}
     if new_rows:  # keep every attached PR in the table, so later upserts keep commander and issue
@@ -543,7 +612,7 @@ def cmd_run(a):
     (OUT / "result.json").write_text(json.dumps(result, ensure_ascii=False, indent=1))
     SNAP.write_text(json.dumps(diff["snapshot"], ensure_ascii=False, indent=1))
     print(json.dumps(result, ensure_ascii=False, indent=1) if a.json else md)
-    print(f"changed={'yes' if diff['changed'] else 'no'} post={'yes' if post else 'no'} asks={len(asks)} out={OUT}")
+    print(f"changed={'yes' if diff['changed'] else 'no'} post={'yes' if post else 'no'} asks={len(ask_files)} out={OUT}")
 
 
 def _safe(fn, arg):

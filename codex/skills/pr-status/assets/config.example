@@ -8,8 +8,12 @@
 # Name of the dedicated PR status thread in the Mayor's project.
 #thread_name=Mayor: PR の状況
 
-# Slack channel where a first review request is posted (name or ID). Empty: ask the commander.
+# Slack channel where a first review request and the combined reminder are posted (name or ID). Empty: ask the commander.
 #review_channel=#<review-channel>
+
+# Mention at the top of the combined stalled-review reminder (Slack mrkdwn, verbatim).
+# Empty: no mention.
+#review_mention=<!subteam^GROUP_ID>
 
 # Holidays file (one YYYY-MM-DD per line, # comments). Weekends are always skipped.
 #holidays=/path/to/holidays.txt
