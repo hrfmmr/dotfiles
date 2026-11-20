@@ -44,7 +44,7 @@ When the human supervises a change (a task they will merge, or work they asked t
 
 1. Agree the commit plan before coding: one commit per purpose, each with a validation signal. `$rough-plan` defines its form and carries the agreement.
 2. Implement as micro-commits per `$commit`, and groom the branch before presenting it.
-3. Present the branch with `$pre-review`, once per apply unit (once for the whole branch when the work has a single apply or none): a Plannotator review that you start yourself with the gate on, and an explanation of the commits, cut along the commit plan, attached in the Inbox.
+3. Present the branch with `$pre-review`, once per apply unit (once for the whole branch when the work has a single apply or none): a Plannotator review that you start yourself with the gate on, and an explanation of the commits, cut along the commit plan, attached in the Inbox as a markdown note and an HTML drill-down (both, for now).
 4. The gate's `decision` is the verdict. Record it in `bd` (see Task State). Merge stays with the human.
 
 Skip it only when the human says so for the task, or when the change needs no review: pure Q&A, a self-evident fix to one file of a few lines, a non-interactive run (`claude -p`, `codex exec`), or an agent that another agent started to do part of a task (worker, reviewer, sub-agent). An agent that owns a whole task, such as a commander the Mayor started, is not exempt.

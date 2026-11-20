@@ -13,7 +13,7 @@ Show the human an agent-made change before the team sees it, once per apply unit
 - **Start the review yourself, with the gate on.** The slash command `/plannotator-review` is human-only (model invocation is disabled), but the same screen opens from the CLI: `plannotator review --git --base <sha> --gate --json`. The `plannotator` tool (`action: review`, `gate: true`) sets the compare base only, so use the CLI when you need to choose the diff type.
 - **The gate's `decision` is the verdict.** It is `approved`, `annotated`, or `dismissed`. Classify by `decision`, never by the `message` text. Notes on an approval are guidance, not a change request. The explanation carries no verdict question.
 - **A session ends when the human submits.** After `annotated`, present again in a new session with a new URL. A running session can keep showing the old diff until it is reloaded, so do not re-stage, commit, or push the presented branch while the human reviews (other worktrees and later work go on); if you must, say exactly what changed and ask for a reload, and record that the viewed version is unconfirmed.
-- **The explanation does not depend on the screen.** You cannot see the human's screen. The note is a markdown file attached in the Inbox, and it is also saved in the vault, because Inbox data is not versioned.
+- **The explanation does not depend on the screen.** You cannot see the human's screen. The explanation is a markdown note and an HTML drill-down (step 3b), both attached in the Inbox and saved in the vault, because Inbox data is not versioned.
 - **Guided review is not the default.** Use `get_guide_brief` and `submit_guide` only when the human asks for a guided review in the Inbox. Hunk is optional too: use `$hunk-present` only when the human asks for Hunk.
 - **Never edit source here.** Fixes go to the fix worker (step 5). This skill writes the note, the message, and Inbox replies.
 - **The presenter owns the Inbox thread and `bd`.** Workers never post to the Inbox or write `bd`; the presenter relays.
@@ -76,10 +76,23 @@ Save it as a derived note in the vault root, named `<bd id>--<topic> diff解説.
 
 Disclose in layers, each complete alone: the message gives the order and where the heart and the risk sit; the note's top gives the position and purpose; each chapter gives what, why, and implications for one unit; the diff on the review screen gives the detail. A deeper layer adds detail instead of repeating the one above.
 
+### 3b. Write the drill-down HTML
+
+For now the explanation is both files: the markdown note and this HTML (the human's default of 2026-11-21; they will decide later whether to keep one). The HTML carries the same facts, so the reader can go from the idea to the code to what the code means, opening each step as needed. A reference example is `aws-iac-ir.9.3--S6-H2 diff ドリルダウン.html` in the vault, with its generator in `.local/review-gate/html-drilldown/` (not versioned). Save yours in the vault root as `<bd id>--<topic> diff ドリルダウン.html`, with the same `bd_issue_id` in a comment at its top.
+
+- One self-contained file: CSS and JS inline, no external request.
+- Open with an overview a cold reader can stand on (`$reader-first`): what the change is for, the question it answers, one worked example marked as an illustration, a table of what is added, how the chapters map to the overview, what the change does not do, how to read the page. A one-paragraph opening is too thin.
+- One chapter per commit, as in the note. Mark the chapters that fix permissions or contracts.
+- Each step has three layers, opened on demand: the idea (why this is written), the code excerpt (lines added by the commit marked; a line with an annotation opens its meaning on click), and what the code means (key points, terms met for the first time, what was checked).
+- Take excerpts from git (`git show <sha>:<file>`, added lines from `git diff -U0`). Find each annotated line by a substring match in the excerpt and stop generating when it is not found, so annotation and code do not drift. The annotation text is written by hand; do not automate it.
+- Say what each "checked" line covers: a local check must not read as a real run. End with what is not verified.
+- Controls: reading depth (idea only, idea and code, all), open or close all, a "read" mark (localStorage), `j` and `k`, chapter navigation.
+- Before attaching: open it in headless Chrome and check for JS errors and that every chapter link works; scan for 12-digit numbers (account IDs) and secrets; look at it in the dark theme. The light theme and how the Inbox shows an attached HTML (sandbox, localStorage) are unconfirmed: say so in the message.
+
 ### 4. Send
 
 - **Thread**: one thread per work stream. If this work already has a thread (the task's thread, or the one the human or the Mayor routed it through), call `read_thread` first and `reply_to` its latest message. Otherwise start one with `subject` and a short `thread` name. If an older guided review (`submit_guide`) question is still open in that thread, send the new message with `supersedes` (`<message id>/<question id>`) so it closes.
-- `send_message` with the note in `attachments` (absolute path). The body is short Japanese, and its first line is the next step for the human (「次の一手: review の画面で Approve するか、コメントを付けて送信してください: <URL>」), because the human may read only that line:
+- `send_message` with the note and the HTML in `attachments` (absolute paths). The body is short Japanese, and its first line is the next step for the human (「次の一手: review の画面で Approve するか、コメントを付けて送信してください: <URL>」), because the human may read only that line:
   1. Which branch or PR, the review session URL, and the chapter order with the commits each chapter comes from, saying which chapter is the heart or carries the risk.
   2. Where the verdict goes: 「review の画面で Approve するか、コメントを付けて送信してください。解説は添付のノートです」. Name the real next step an approval triggers (for example: draft を外す; with no PR: PR を作る, or ブランチを引き渡す on the `$herdr-impl` path, where the human opens the PR). Merge always stays with the human.
   3. Context the human may lack, and where the note's 仮値 and 未確認 items are.
