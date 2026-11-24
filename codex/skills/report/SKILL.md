@@ -142,6 +142,7 @@ These principles apply to the entire deliverable. Assume the reader has no prior
   4. **Conclusion** — conclusion structure
 - Add architecture, comparison, or process diagrams as content warrants.
 - Wrap Japanese node labels in double quotes inside mermaid blocks.
+- Before shipping, render every Mermaid source with `npx -y @mermaid-js/mermaid-cli -i diagram.mmd -o /tmp/out.svg`; require exit 0 and the SVG. Do not put a dotted-edge label containing a dot in `-.text.->` (for example `-.Phase1.5.->`): use `-.->|"Phase 1.5"|` or remove the dot. HTML tags in edge labels, parentheses inside node shapes, and `<br/>` labels are supported and do not need avoidance.
 
 #### Evidence
 - Cite sources inline within each section.

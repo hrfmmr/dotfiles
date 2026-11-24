@@ -179,6 +179,7 @@ Writing rules for discuss mode:
   - Inter-component interactions (sequence diagram)
   - State transitions (state diagram)
   - Configuration comparisons (flowchart with branching)
+- Before shipping, render every Mermaid source with `npx -y @mermaid-js/mermaid-cli -i diagram.mmd -o /tmp/out.svg`; require exit 0 and the SVG. Do not put a dotted-edge label containing a dot in `-.text.->` (for example `-.Phase1.5.->`): use `-.->|"Phase 1.5"|` or remove the dot. HTML tags in edge labels, parentheses inside node shapes, and `<br/>` labels are supported and do not need avoidance.
 
 ### 5. Wikilink Placement
 
