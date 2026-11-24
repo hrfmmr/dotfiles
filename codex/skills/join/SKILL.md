@@ -74,7 +74,7 @@ Example prompt forms:
 - If the repo template does not exist, use `assets/pr-template.md` (own fallback structure) or `gh pr create --fill`.
 - Prefer explicit body create when template is present: `gh pr create --title <title> --head <branch> --base <base> --body-file <rendered-template-file>` (or `--body "<rendered-template-body>"`).
 - To bring an existing PR's body into line with the template, use `gh pr edit <num> --body-file <file>`. This edits a published PR, so get the user's confirmation first.
-- Default to ready-for-review (no drafts unless configured).
+- Default to ready-for-review. Create the PR as a draft when the user says it is unverified (not yet applied or tested), and keep it draft until the user says it is verified.
 - If `issue_refs` includes one or more bd issue IDs and `BEADS_DIR` is present, record PR linkage on each issue immediately after creation:
   - Set external reference: `bd update <issue-id> --external-ref pr:<number>`
   - Append durable log token for extraction: `bd update <issue-id> --append-notes "Linked PR #<number> (pr:<number>)"`
@@ -128,7 +128,7 @@ Process PRs sequentially (blocking per PR on CI):
 1. Resolve target PR set (`--pr <num>` if provided; else open PRs).
 2. List open PRs when needed: `gh pr list --state open --json number,title,headRefName,isDraft`.
 3. For each PR:
-   - If draft, mark ready: `gh pr ready <num>`.
+   - If draft, mark ready (`gh pr ready <num>`) only when the user has said it is verified. Leave a draft the user called unverified as it is.
    - Keep the branch current with `gh pr update-branch <num> --rebase` when available.
    - Enforce CI gate (required checks only; see below).
    - If failing, run the surgical fix loop.
