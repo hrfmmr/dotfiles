@@ -183,8 +183,10 @@ require("lazy").setup({
 	-- Language & Syntax {{{
 	{
 		"nvim-treesitter/nvim-treesitter",
+		branch = "main",
+		lazy = false,
+		build = ":TSUpdate",
 		config = require("plugins.config.treesitter"),
-		-- event = "VeryLazy",
 	},
 	{
 		-- go
