@@ -47,7 +47,18 @@ When the human supervises a change (a task they will merge, or work they asked t
 3. Present the branch with `$pre-review`, once per apply unit (once for the whole branch when the work has a single apply or none): a Plannotator review that you start yourself with the gate on, and an explanation of the commits, cut along the commit plan, attached in the Inbox as an HTML drill-down (no markdown note).
 4. The gate's `decision` is the verdict. Record it in `bd` (see Task State). Merge stays with the human.
 
-Skip it only when the human says so for the task, or when the change needs no review: pure Q&A, a self-evident fix to one file of a few lines, a non-interactive run (`claude -p`, `codex exec`), or an agent that another agent started to do part of a task (worker, reviewer, sub-agent). An agent that owns a whole task, such as a commander the Mayor started, is not exempt.
+Skip it only when the human says so for the task, or when the change needs no review: pure Q&A, a self-evident fix to one file of a few lines that goes out without a PR, a non-interactive run (`claude -p`, `codex exec`), or an agent that another agent started to do part of a task (worker, reviewer, sub-agent). An agent that owns a whole task, such as a commander the Mayor started, is not exempt. A PR is never "too small": every PR an agent opens goes through the PR Flow below.
+
+## PR Flow
+
+Every PR an agent opens follows these steps in order, whatever its size, unless the human says otherwise for that PR. `$join` carries the mechanics.
+
+1. Open it as a draft.
+2. Agent review, while it is still a draft: ask the resident reviewer when one exists (under the Mayor, per its commander brief); otherwise run `$review` or `$herdr-review-loop`.
+3. Fix the findings, push, and reply on each review thread with the fix commit or the reason for not fixing. Then resolve each agent-review thread yourself (the PR author resolves; the reviewer's re-review reopens or re-raises what is not settled). Never resolve a human reviewer's thread or a thread held for a human decision.
+4. Repeat 2 and 3 until the review has no MUST_FIX and no unresolved agent-review thread. That is convergence.
+5. Present the converged head with `$pre-review`, so the human reviews the diff once, after the agent review has stopped changing it. Go on only after the gate's `decision` is `approved`. When the human's comments lead to fixes, have the agent reviewer re-review only those fixes, then present again in a new session; the human then reads only what changed.
+6. Mark it ready for review, then ask the team for review. Merge stays with the human.
 
 ## Issue Tracking
 

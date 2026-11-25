@@ -98,6 +98,8 @@ human ではなく Mayor が動くための知らせは、いつも `report.sh` 
 Mayor は、全 commander の PR の状況を 1 つのスレッドにまとめて human に見せる。GitHub から見えないことは、あなたの知らせで知る。
 
 - **PR を作った、または引き受けたとき**: その PR を自分の Inbox のスレッドに付ける (`send_message` の `pulls`、または `thread_pulls` の `add`)。そのうえで `report.sh --issue <issue> --kind pr --pr <owner/repo#n> --state opened` を 1 行書く。Inbox のフォルダがまだ無いときは、`report.sh` だけでよい。
+- **PR の順番** (AGENTS.md の PR Flow): draft で作る → draft のまま、常駐のレビュー担当にレビューを頼む (次の項) → 指摘を直して push し、各スレッドに直した commit か直さない理由を返信して、agent のレビューのスレッドを自分で resolve する → 再レビュー。MUST_FIX が 0 で、resolve していない agent のレビューのスレッドが 0 になったら「収束」で、`--state agent-review-done` を知らせる → 収束した head を `$pre-review` で human に見せ、`approved` を得る (human のコメントで直した分は、レビュー担当がその分だけ再レビューしてから見せ直す) → draft を外し、チームにレビューを頼む。human が見るのは、agent のレビューで diff が変わらなくなったあとの 1 回だけにする。human のスレッドと、human の判断待ちのスレッドは resolve しない。
+- **PR を開いたら、常駐のレビュー担当にレビューを頼む** (Mayor の roster に常駐のレビュー担当がいるとき。名前は Mayor の知らせか指示書にある): あなたが直接頼む。頼むときは、必ず `~/.claude/skills/herdr-mayor/scripts/mayor.sh relay <レビュー担当の名前> "<PR の URL と、見てほしい点>"` を使う。生の `herdr agent prompt` は使わない (相手が質問を開いていると、依頼の文がその答えの欄に入る)。終了コードが 3 (blocked) か 4 (busy) なら、相手の手が空いてから送り直す。送れたら `report.sh --kind pr --pr <ref> --state agent-review` を書く。human が別の頼み方を指示したときは、そちらに従う。
 - **Slack でレビューを依頼したとき** (今までどおり、human が投稿を認めてから): 依頼のメッセージの URL (permalink) を `report.sh --kind pr --pr <ref> --slack <URL>` で知らせる。催促は、この依頼のスレッドへの返信で行うため、URL が無いと催促できない。
 - **ローカルの状態が変わったとき**: agent のレビューを始めた (`--state agent-review`)、収束させた (`--state agent-review-done`。これを知らせるまで、human へのレビュー依頼の下書きは出ない)、merge されて apply を待つ (`--state apply-pending`)、apply した (`--state applied`)、PR を閉じた・担当から外れた (`--state closed`)。
 - 催促や最初のレビュー依頼の文面は Mayor が下書きし、human が Inbox で確かめてから Mayor が送る。あなたが催促を送ることはない。
