@@ -15,7 +15,7 @@
   "fzf": { "branch": "master", "commit": "ed173e71e44b2a5fa6264ecf232a153dee6994d0" },
   "ghpr-blame.vim": { "branch": "master", "commit": "594888ca0b0bdf8b859ced0413b765113942cf2e" },
   "gitsigns.nvim": { "branch": "main", "commit": "166c03131e6a3528f692dd89f37668d991f17baa" },
-  "lazy.nvim": { "branch": "main", "commit": "85c7ff3711b730b4030d03144f6db6375044ae82" },
+  "lazy.nvim": { "branch": "main", "commit": "306a05526ada86a7b30af95c5cc81ffba93fef97" },
   "mason-lspconfig.nvim": { "branch": "main", "commit": "761d376b5fbe6b21f659432ffadc1205c660176c" },
   "mason.nvim": { "branch": "main", "commit": "2a6940af80375532e5e9e7c1f2fc6319a1b7a69d" },
   "neodev.nvim": { "branch": "main", "commit": "46aa467dca16cf3dfe27098042402066d2ae242d" },
