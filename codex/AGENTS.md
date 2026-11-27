@@ -24,6 +24,7 @@ When writing or rewriting a document for a human reader, use `$reader-first` by 
 
 - Scope: vault notes, Notion pages, reports, plans, and design documents. Chat replies (see Response Format), commit messages, and code comments are out of scope.
 - When a skill with its own format applies (`$report`, `$grasp`, `$unpack`, `$hunk-present`, `$crit-explain`, and similar), follow that skill for structure and fields, and use `$reader-first` for the prose inside each section.
+- After writing or rewriting a Japanese document for a human reader (vault notes, Notion pages, Inbox reports and attachments, HTML artifacts, PR descriptions), polish it with `$yomiyasu` as the last pass. Build the structure and explanation with `$reader-first`; use yomiyasu only for that final pass. Put only the polished text in the document, and attach yomiyasu's check record in the Inbox instead. Do not use it for chat replies, `bd` entries, commit messages, or code comments.
 
 ## Task State
 
